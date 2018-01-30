@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Ski Logger</string>
+
+    <string name="channel_altitude_service">高度記録サービス</string>
+    <string name="msg_svc_ongoing">実行中</string>
+
+    <string name="label_altitude">高度</string>
+    <string name="label_total_asc">上昇\n積算</string>
+    <string name="label_total_desc">下降\n積算</string>
+    <string name="label_count_lift">RUN</string>
+    <string name="btn_start_svc">計測</string>
+    <string name="btn_stop_svc">停止</string>
+    <string name="btn_finish_app">アプリ終了</string>
+
+    <string name="default_altitude">--- m</string>
+    <string name="fmt_meter">%,dm</string>
+
+    <string name="title_missing_sensor">気圧センサーのない端末です</string>
+    <!--<string name="msg_missing_sensor">残念なからご使用中の端末には気圧センサーが搭載されていません。</string>-->
+    <string name="msg_missing_sensor">本アプリは気圧センサー機能を使用するため、残念ながらこの端末ではご利用いただけません。</string>
+</resources>
