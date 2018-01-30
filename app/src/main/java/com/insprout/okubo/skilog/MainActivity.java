@@ -11,8 +11,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
-import com.insprout.skilog.R;
-
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private ServiceMessenger mServiceMessenger;

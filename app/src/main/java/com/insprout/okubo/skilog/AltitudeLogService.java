@@ -17,8 +17,6 @@ import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.insprout.skilog.R;
-
 import java.util.Date;
 import java.util.List;
 
