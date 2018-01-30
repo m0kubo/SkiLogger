@@ -17,6 +17,9 @@ import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.insprout.okubo.skilog.database.DbUtils;
+import com.insprout.okubo.skilog.database.SkiLogData;
+
 import java.util.Date;
 import java.util.List;
 
@@ -234,8 +237,9 @@ public class AltitudeLogService extends Service implements SensorEventListener {
 
         if (val.length >= 1) {
             // 取得した気圧をログに出力する
-            Log.d("pressure", "高度=" + SensorUtils.getAltitude(val[0]) + "ｍ 気圧=" + val[0] + "hPa");
-            logAltitude(SensorUtils.getAltitude(val[0]));
+            float altitude = SensorUtils.getAltitude(val[0]);
+            Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");
+            logAltitude(altitude);
         }
     }
 
@@ -250,16 +254,22 @@ public class AltitudeLogService extends Service implements SensorEventListener {
             // 初回
             mPrevAltitude = altitude;
 
+            DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+
         } else {
             float delta = altitude - mPrevAltitude;             // 高度差分
             if (delta >= THRESHOLD_ALTITUDE) {
                 // 閾値以上に 登った
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalAsc += delta;                             // 登った高度を積算
+
+                DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
             } else if (delta <= -THRESHOLD_ALTITUDE) {
                 // 閾値以上に 降りた
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalDesc += delta;                            // 降りた高度を積算 (下降分は負の値)
+
+                DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
             }
         }
 
@@ -273,9 +283,11 @@ public class AltitudeLogService extends Service implements SensorEventListener {
 
             if (delta <= -THRESHOLD_LIFT_COUNT && mLiftDelta >= 0) {
                 // 閾値以上に 降りた
-                mRunCount++;                                    // 滑走階数カウント
+                mRunCount++;                                    // 滑走回数カウント
                 mLiftAltitude = altitude;                       // リフト最低地点(乗車高度用)を記録
                 mLiftDelta = delta;                             // 下降中(負の値)
+
+                DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
 
             } else if (delta >= THRESHOLD_LIFT_COUNT && mLiftDelta <= 0) {
                 // 閾値以上に 登った

@@ -11,6 +11,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.insprout.okubo.skilog.database.DbUtils;
+import com.insprout.okubo.skilog.database.SkiLogData;
+
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private ServiceMessenger mServiceMessenger;
@@ -153,6 +158,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_stop_svc:
                 stopService();
                 break;
+
+            case R.id.btn_data:
+                getData();
+                break;
+        }
+    }
+
+    private void getData() {
+        long count = DbUtils.count(this);
+        Log.d("database", "レコード数:" + count);
+        List<SkiLogData> data = DbUtils.select(this);
+        for (SkiLogData log : data) {
+            String msg = "" + log.getCreated().toString() + " 高度:" + log.getAltitude() + " 上昇:" + log.getAscTotal() + " 下降:" + log.getDescTotal() + " RUN:" + log.getCount();
+            Log.d("database", msg);
         }
     }
 
