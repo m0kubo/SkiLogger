@@ -1,0 +1,4 @@
+<resources>
+    <!-- ナビゲーション関連サイズ -->
+    <dimen name="text_size_chart_axis">6sp</dimen>
+</resources>

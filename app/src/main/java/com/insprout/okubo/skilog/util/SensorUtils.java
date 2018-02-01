@@ -1,4 +1,4 @@
-package com.insprout.okubo.skilog;
+package com.insprout.okubo.skilog.util;
 
 import android.content.Context;
 import android.hardware.Sensor;

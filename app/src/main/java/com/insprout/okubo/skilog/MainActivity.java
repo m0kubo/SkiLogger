@@ -13,7 +13,9 @@ import android.widget.TextView;
 
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.util.SensorUtils;
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -160,7 +162,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.btn_data:
-                getData();
+                //getData();
+                GraphActivity.startActivity(this);
                 break;
         }
     }
@@ -168,9 +171,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void getData() {
         long count = DbUtils.count(this);
         Log.d("database", "レコード数:" + count);
-        List<SkiLogData> data = DbUtils.select(this);
-        for (SkiLogData log : data) {
-            String msg = "" + log.getCreated().toString() + " 高度:" + log.getAltitude() + " 上昇:" + log.getAscTotal() + " 下降:" + log.getDescTotal() + " RUN:" + log.getCount();
+
+//        List<SkiLogData> data = DbUtils.listByRawQuery(
+//                this,
+//                "SELECT * FROM ski_log WHERE created IN (SELECT MAX(created) FROM ski_log GROUP BY date(created,'+9 hours') )",
+//                null);
+        List<SkiLogData> data = DbUtils.select(this, new Date(System.currentTimeMillis()));
+//        TimeZone.getTimeZone("Europe/Berlin").
+//        for (SkiLogData log : data) {
+        for (int i=0; i<data.size(); i++) {
+            SkiLogData log = data.get(i);
+            String msg = "" + i + ":" + log.getCreated().toString() + " 高度:" + log.getAltitude() + " 上昇:" + log.getAscTotal() + " 下降:" + log.getDescTotal() + " RUN:" + log.getCount();
             Log.d("database", msg);
         }
     }

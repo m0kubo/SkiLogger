@@ -3,7 +3,10 @@ package com.insprout.okubo.skilog.database;
 import android.content.Context;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by okubo on 2018/01/30.
@@ -12,13 +15,85 @@ import java.util.List;
 
 public class DbUtils {
 
-    public static List<SkiLogData> select(Context context) {
+    public static List<SkiLogData> selectAll(Context context) {
         List<SkiLogData> res = new ArrayList<>();
 
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
             res = fbkDatabase.selectFromTable1();
+
+        } catch(Exception ex) {
+            return res;
+
+        } finally {
+            if (fbkDatabase != null) fbkDatabase.close();
+        }
+        return res;
+    }
+
+    public static List<SkiLogData> select(Context context, Date date) {
+        return select(context, date, 0, 0, null);
+    }
+
+    public static List<SkiLogData> select(Context context, Date date, int limit, int offset, String orderBy) {
+        List<SkiLogData> res = new ArrayList<>();
+        if (date == null) return res;
+
+        String selection = String.format(Locale.ENGLISH, "date(created,'%s') = ?", SkiLogDb.utcModifier());
+        String[] selectionArgs = { SkiLogDb.formatDate(date) };
+
+        SkiLogDb fbkDatabase = null;
+        try {
+            fbkDatabase = new SkiLogDb(context);
+            res = fbkDatabase.selectFromTable1(selection, selectionArgs, limit, offset, orderBy, null);
+
+        } catch(Exception ex) {
+            return res;
+
+        } finally {
+            if (fbkDatabase != null) fbkDatabase.close();
+        }
+        return res;
+    }
+
+
+    /**
+     * 日別記録の内 1日で記録時間が最も遅い記録を抽出する
+     * 一日一件、複数日分の記録を返す
+     * @param context コンテキスト
+     * @return データ(複数件)
+     */
+    public static List<SkiLogData> selectDailyLogs(Context context) {
+        List<SkiLogData> res = new ArrayList<>();
+
+        SkiLogDb fbkDatabase = null;
+        try {
+            fbkDatabase = new SkiLogDb(context);
+//            res = fbkDatabase.selectFromTable1();
+            // SQLiteの CURRENT_DATEは UTCで記録されているので、日付で集計する場合は時差を補正する事
+            // 日本時間以外に対応する場合に、考慮すべき
+            res = fbkDatabase.selectDailySummaries(100, 0, "_id DESC");
+
+        } catch(Exception ex) {
+            return res;
+
+        } finally {
+            if (fbkDatabase != null) fbkDatabase.close();
+        }
+        return res;
+    }
+
+    public static List<SkiLogData> listByRawQuery(Context context, String sql, String[] selectionArgs) {
+        List<SkiLogData> res = new ArrayList<>();
+
+        SkiLogDb fbkDatabase = null;
+        try {
+            fbkDatabase = new SkiLogDb(context);
+//            res = fbkDatabase.selectFromTable1();
+            // SQLiteの CURRENT_DATEは UTCで記録されているので、日付で集計する場合は時差を補正する事
+            // 日本時間以外に対応する場合に、考慮すべき
+            res = fbkDatabase.listByRawQuery(sql, selectionArgs);
 
         } catch(Exception ex) {
             return res;

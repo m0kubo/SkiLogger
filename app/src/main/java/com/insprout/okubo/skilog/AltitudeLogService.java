@@ -7,6 +7,8 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,6 +21,7 @@ import android.util.Log;
 
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.util.SensorUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -41,6 +44,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
     private ServiceMessenger.ReplyMessageHandler mReplyHandler; // 返信のためのHandler
 
     private Sensor mSensor = null;
+    private Bitmap mLargeIcon;
 
 
     //////////////////////////
@@ -68,6 +72,10 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         mReplyMessenger = new Messenger(mReplyHandler);
 
         mSensor = SensorUtils.getPressureSensor(this);          // 気圧センサー取得
+
+        mLargeIcon = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+
+        getPreviousLog();
     }
 
 
@@ -95,13 +103,18 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         // サービス破棄時に 気圧センサーリスナーを開放しておく
         if (mSensor != null) SensorUtils.unregisterListener(this, this);
 
+        if (mLargeIcon != null) {
+            mLargeIcon.recycle();                               // Bitmapのリソースを開放
+            mLargeIcon = null;
+        }
+
         super.onDestroy();
     }
 
     /**
      * このサービスを foregroundモードにする
      * android 8.0対応
-     * @param context
+     * @param context コンテキスト
      */
     private void setForegroundMode(Context context) {
         String title = getString(R.string.channel_altitude_service);
@@ -119,6 +132,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         builder.setContentTitle(title)
                 .setContentText(message)
                 .setSmallIcon(R.mipmap.ic_landscape_white_24dp)
+                .setLargeIcon(mLargeIcon)
                 .setOngoing(true);
         startForeground(ID_SERVICE_ONGOING, builder.build());
     }
@@ -126,8 +140,10 @@ public class AltitudeLogService extends Service implements SensorEventListener {
 
     //////////////////////////////////////////////////////////////////////
     //
-    // Service 制御関連 メソッド
+    // Service 制御関連 staticメソッド
     //
+
+    // 基本的に Activityなど他クラスから呼び出される事を想定
 
     /**
      * このServiceが 実行中であるかどうかを返す
@@ -144,9 +160,10 @@ public class AltitudeLogService extends Service implements SensorEventListener {
             return false;
         }
 
+        String className = AltitudeLogService.class.getName();
         for (ActivityManager.RunningServiceInfo serviceInfo : serviceList) {
             // 自身のサービスが実行中かリストから確認する
-            if (AltitudeLogService.class.getName().equals(serviceInfo.service.getClassName())) {
+            if (className.equals(serviceInfo.service.getClassName())) {
                 return true;
             }
         }
@@ -312,4 +329,15 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         mReplyData[3] = (float) mRunCount;
         mReplyHandler.replyMessage(mReplyData);
     }
+
+    private void getPreviousLog() {
+        // 同日にすでに記録があった場合は、積算、滑走回数を引き継ぐ
+        List<SkiLogData> data = DbUtils.select(this, new Date(System.currentTimeMillis()), 1, 0, "_id DESC");
+        if (data != null && data.size() >= 1) {
+            mRunCount = data.get(0).getCount();
+            mTotalAsc = data.get(0).getAscTotal();
+            mTotalDesc = data.get(0).getDescTotal();
+        }
+    }
+
 }

@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -25,16 +26,17 @@ import java.util.TimeZone;
 public class SkiLogDb {
     private static final String TAG = "database";
 
+    private final static String SQLITE_DATE_FORMAT = "yyyy-MM-dd";
     private final static String SQLITE_TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private final static String SQLITE_TIMEZONE = "UTC";
 
     private static final String TABLE_1 = "ski_log";
-    private static final String COL_1_0 = "_id";
-    private static final String COL_1_1 = "altitude";
-    private static final String COL_1_2 = "asc_total";
-    private static final String COL_1_3 = "desc_total";
-    private static final String COL_1_4 = "count";
-    private static final String COL_1_5 = "created";
+    private static final String COL_1_0 = "_id";                                // TABLE_1の 第0カラム(PRIMARY KEY)
+    private static final String COL_1_1 = "altitude";                           // TABLE_1の 第1カラム
+    private static final String COL_1_2 = "asc_total";                          // TABLE_1の 第2カラム
+    private static final String COL_1_3 = "desc_total";                         // TABLE_1の 第3カラム
+    private static final String COL_1_4 = "count";                              // TABLE_1の 第4カラム
+    private static final String COL_1_5 = "created";                            // TABLE_1の 第5カラム
     private static final String SQLITE_COUNT_1 = "COUNT(" + COL_1_0 + ")";      // sqliteは COUNT(*)だと遅い
 
     /**
@@ -178,15 +180,20 @@ public class SkiLogDb {
     /** ファイルデータを検索 */
 
     public List<SkiLogData> selectFromTable1() {
-        return selectFromTable1(null, null, 0, 0, null );
+        return selectFromTable1(null, null, 0, 0, null, null);
     }
 
     public List<SkiLogData> selectFromTable1(long recordId) {
         String[] args = { Long.toString(recordId) };
-        return selectFromTable1(COL_1_0 + " = ?", args, 0, 0, null );
+        return selectFromTable1(COL_1_0 + " = ?", args, 0, 0, null, null);
     }
 
-    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int limit, int offset, String orderBy) {
+
+//    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int limit, int offset, String orderBy) {
+//        return selectFromTable1(selection, selectionArgs, limit, offset, orderBy, null);
+//    }
+
+    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int limit, int offset, String orderBy, String groupBy) {
         Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
 
@@ -195,13 +202,13 @@ public class SkiLogDb {
                     null,           // 全カラム返却
                     selection,
                     selectionArgs,
-                    null,
+                    groupBy,
                     null,
                     orderBy,
                     (limit > 0 ? String.format("%s,%s", offset, limit) : null));
 
             while( cursor.moveToNext() ) {
-                // redmine #4251 start
+                // 取得したデータを格納する
                 SkiLogData data = new SkiLogData();
                 data.setId(cursor.getLong(cursor.getColumnIndex(COL_1_0)));
                 data.setAltitude(cursor.getFloat(cursor.getColumnIndex(COL_1_1)));
@@ -209,7 +216,82 @@ public class SkiLogDb {
                 data.setDescTotal(cursor.getFloat(cursor.getColumnIndex(COL_1_3)));
                 data.setCount(cursor.getInt(cursor.getColumnIndex(COL_1_4)));
                 data.setCreated(getSQLiteDate(cursor, COL_1_5));
-                // ここでは オブジェクトで返す
+                result.add(data);
+            }
+
+        } catch (SQLiteException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+
+        } finally {
+            // Cursorを忘れずにcloseする
+            if (cursor != null) cursor.close();
+        }
+        return result;
+    }
+
+    public List<SkiLogData> selectDailySummaries(int limit, int offset, String orderBy) {
+        Cursor cursor = null;
+        List<SkiLogData> result = new ArrayList<>();
+        String groupBy = String.format("date(created,'%s')", utcModifier());
+
+        try{
+            cursor = mDb.query( TABLE_1,
+                    new String[] { "MIN(_id)", "MAX(altitude)", "MAX(asc_total)", "MIN(desc_total)", "MAX(count)", "MIN(created)" },           // 全カラム返却
+                    null,
+                    null,
+                    groupBy,
+                    null,
+                    orderBy,
+                    (limit > 0 ? String.format("%s,%s", offset, limit) : null));
+
+            while( cursor.moveToNext() ) {
+                // 取得したデータを格納する
+                SkiLogData data = new SkiLogData();
+                data.setId(cursor.getLong(0));
+                data.setAltitude(cursor.getFloat(1));
+                data.setAscTotal(cursor.getFloat(2));
+                data.setDescTotal(cursor.getFloat(3));
+                data.setCount(cursor.getInt(4));
+                data.setCreated(toDate(cursor.getString(5)));
+                result.add(data);
+            }
+
+        } catch (SQLiteException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+
+        } finally {
+            // Cursorを忘れずにcloseする
+            if (cursor != null) cursor.close();
+        }
+        return result;
+    }
+
+    /**
+     * SQLを rawQueryで実行して その結果を SkiLogDataクラスの Listを返す
+     * ただし、SQLの結果列は、SkiLogDataクラスに格納できる形式であること
+     * (ski_logテーブルの デフォルトカラム列と 同様であること。SELECT * FROM ski_log ～ であれば問題なし)
+     * @param sql
+     * @param selectionArgs
+     * @return
+     */
+    public List<SkiLogData> listByRawQuery(String sql, String[] selectionArgs) {
+        Cursor cursor = null;
+        List<SkiLogData> result = new ArrayList<>();
+
+        try{
+            cursor = mDb.rawQuery(sql, selectionArgs);
+
+            while( cursor.moveToNext() ) {
+                // 取得したデータを格納する
+                SkiLogData data = new SkiLogData();
+                data.setId(cursor.getLong(0));
+                data.setAltitude(cursor.getFloat(1));
+                data.setAscTotal(cursor.getFloat(2));
+                data.setDescTotal(cursor.getFloat(3));
+                data.setCount(cursor.getInt(4));
+                data.setCreated(toDate(cursor.getString(5)));
                 result.add(data);
             }
 
@@ -241,7 +323,7 @@ public class SkiLogDb {
                     null,
                     null);
 
-            if (cursor.moveToNext()) {
+            if (cursor.moveToFirst()) {
                 count =cursor.getInt(0);
             }
 
@@ -257,6 +339,12 @@ public class SkiLogDb {
     }
 
 
+    /**
+     * 指定のカラムから SQLiteの TimeStampを Date型に変換して返す
+     * @param cursor SQLiteの cursorオブジェクト
+     * @param columnName TimeStampが格納されているカラム名
+     * @return 変換されたDate値
+     */
     private Date getSQLiteDate(Cursor cursor, String columnName) {
         if (cursor == null) return null;
         return toDate(cursor.getString(cursor.getColumnIndex(columnName)));
@@ -279,4 +367,26 @@ public class SkiLogDb {
         }
     }
 
+    /**
+     * 与えられた date型変数から SQLite形式の日付文字列に変換する
+     * 日付のみ(時刻は無し)
+     * @param date 変換する日時
+     * @return SQLite形式の日付文字列
+     */
+    public static String formatDate(Date date) {
+        if (date == null || date.getTime() == Long.MIN_VALUE) return null;
+        SimpleDateFormat df = new SimpleDateFormat(SQLITE_DATE_FORMAT, Locale.getDefault());
+        return df.format(date);
+    }
+
+    /**
+     * 現在の端末設定での TimeZoneとUTCの時差を SQLiteの 時差modifier文字列で返す
+     * JSTの場合は、時差9時間なので "+32400 seconds"が 返る
+     * @return SQLiteの modifier文字列
+     */
+    public static String utcModifier() {
+        // 現在の端末設定の TimeZoneと UTCの時差(秒数)を取得
+        int timeDiff = TimeZone.getDefault().getRawOffset() / 1000;
+        return String.format(Locale.ENGLISH, "%+d seconds", timeDiff);
+    }
 }
