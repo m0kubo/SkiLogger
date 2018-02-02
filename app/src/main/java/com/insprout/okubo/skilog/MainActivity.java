@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.btn_data:
                 //getData();
-                GraphActivity.startActivity(this);
+                ChartActivity.startActivity(this);
                 break;
         }
     }

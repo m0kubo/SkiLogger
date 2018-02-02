@@ -4,9 +4,9 @@
     <string name="channel_altitude_service">高度記録サービス</string>
     <string name="msg_svc_ongoing">実行中</string>
 
-    <string name="title_altitude">高度：</string>
-    <string name="title_asc">積算高度：</string>
+    <string name="fmt_title_chart">高度記録：%s</string>
 
+    <string name="label_accumulate">積算高度</string>
     <string name="label_altitude">高度</string>
     <string name="label_total_asc">上昇\n積算</string>
     <string name="label_total_desc">下降\n積算</string>
@@ -17,6 +17,7 @@
     <string name="btn_start_svc">計測</string>
     <string name="btn_stop_svc">停止</string>
     <string name="btn_finish_app">アプリ終了</string>
+    <string name="btn_chart">チャート</string>
 
     <string name="default_altitude">--- m</string>
     <string name="fmt_meter">%,dm</string>

@@ -15,7 +15,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textSize="28sp"
-            android:text="data"
+            android:text="@string/btn_chart"
             android:onClick="onClick"/>
     </FrameLayout>
     <LinearLayout

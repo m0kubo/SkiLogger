@@ -257,7 +257,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         if (val.length >= 1) {
             // 取得した気圧をログに出力する
             float altitude = SensorUtils.getAltitude(val[0]);
-            Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");
+//            Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");
 
             if (!TimeUtils.getDate(mRecordTime).equals(TimeUtils.getDate(System.currentTimeMillis()))) {
                 // 日付が変わった場合は 値をリセットする
