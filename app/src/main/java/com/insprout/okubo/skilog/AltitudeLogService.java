@@ -22,6 +22,7 @@ import android.util.Log;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.util.SensorUtils;
+import com.insprout.okubo.skilog.util.TimeUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -242,6 +243,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
     private float mLiftAltitude = INVALID_ALTITUDE;
     private float mTotalDesc = 0.0f;
     private float mTotalAsc = 0.0f;
+    private long mRecordTime = System.currentTimeMillis();
     private int mRunCount = 0;
     private int mLiftDelta = 0;
 
@@ -256,6 +258,18 @@ public class AltitudeLogService extends Service implements SensorEventListener {
             // 取得した気圧をログに出力する
             float altitude = SensorUtils.getAltitude(val[0]);
             Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");
+
+            if (!TimeUtils.getDate(mRecordTime).equals(TimeUtils.getDate(System.currentTimeMillis()))) {
+                // 日付が変わった場合は 値をリセットする
+                mPrevAltitude = INVALID_ALTITUDE;
+                mLiftAltitude = INVALID_ALTITUDE;
+                mTotalDesc = 0.0f;
+                mTotalAsc = 0.0f;
+                mRunCount = 0;
+                mLiftDelta = 0;
+                mRecordTime = System.currentTimeMillis();
+            }
+            //
             logAltitude(altitude);
         }
     }
@@ -270,8 +284,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         if (mPrevAltitude == INVALID_ALTITUDE) {
             // 初回
             mPrevAltitude = altitude;
-
-            DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+            recordLog(altitude);
 
         } else {
             float delta = altitude - mPrevAltitude;             // 高度差分
@@ -279,14 +292,13 @@ public class AltitudeLogService extends Service implements SensorEventListener {
                 // 閾値以上に 登った
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalAsc += delta;                             // 登った高度を積算
+                recordLog(altitude);
 
-                DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
             } else if (delta <= -THRESHOLD_ALTITUDE) {
                 // 閾値以上に 降りた
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalDesc += delta;                            // 降りた高度を積算 (下降分は負の値)
-
-                DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+                recordLog(altitude);
             }
         }
 
@@ -304,7 +316,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
                 mLiftAltitude = altitude;                       // リフト最低地点(乗車高度用)を記録
                 mLiftDelta = delta;                             // 下降中(負の値)
 
-                DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+                recordLog(altitude);
 
             } else if (delta >= THRESHOLD_LIFT_COUNT && mLiftDelta <= 0) {
                 // 閾値以上に 登った
@@ -321,7 +333,6 @@ public class AltitudeLogService extends Service implements SensorEventListener {
             }
         }
 
-
         // 表示用の値を 配列で一度にActivityへ送る
         mReplyData[0] = altitude;
         mReplyData[1] = mTotalAsc;
@@ -330,13 +341,20 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         mReplyHandler.replyMessage(mReplyData);
     }
 
+    private void recordLog(float altitude) {
+        mRecordTime = System.currentTimeMillis();
+        DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+    }
+
     private void getPreviousLog() {
-        // 同日にすでに記録があった場合は、積算、滑走回数を引き継ぐ
+        // 同日にすでに記録があった場合は、前回高度、積算、滑走回数を引き継ぐ
         List<SkiLogData> data = DbUtils.select(this, new Date(System.currentTimeMillis()), 1, 0, "_id DESC");
         if (data != null && data.size() >= 1) {
-            mRunCount = data.get(0).getCount();
-            mTotalAsc = data.get(0).getAscTotal();
-            mTotalDesc = data.get(0).getDescTotal();
+            SkiLogData log = data.get(0);
+            mPrevAltitude = log.getAltitude();
+            mTotalAsc = log.getAscTotal();
+            mTotalDesc = log.getDescTotal();
+            mRunCount = log.getCount();
         }
     }
 

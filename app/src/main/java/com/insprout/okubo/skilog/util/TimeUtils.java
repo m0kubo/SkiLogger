@@ -35,29 +35,36 @@ public class TimeUtils {
     // Dateオブジェクトの getYear()メソッドが  非推奨になったため 推奨されるCalendarオブジェクトで作成
     public static int getYear(Date date) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
+        if (date != null) cal.setTime(date);
         return cal.get(Calendar.YEAR);
     }
 
     // Dateオブジェクトの getMonth()メソッドが deprecatedになったため 推奨されるCalendarオブジェクトで作成
     public static int getMonth(Date date) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
+        if (date != null) cal.setTime(date);
         return cal.get(Calendar.MONTH);
     }
 
     // Dateオブジェクトの getDay()メソッドが deprecatedになったため 推奨されるCalendarオブジェクトで作成
     public static int getDay(Date date) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
+        if (date != null) cal.setTime(date);
         return cal.get(Calendar.DAY_OF_MONTH);
     }
 
     // Dateオブジェクトの getHour()メソッドが deprecatedになったため 推奨されるCalendarオブジェクトで作成
     public static int getHour(Date date) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
+        if (date != null) cal.setTime(date);
         return cal.get(Calendar.HOUR_OF_DAY);
+    }
+
+    // Dateオブジェクトの getMinutes()メソッドが deprecatedになったため 推奨されるCalendarオブジェクトで作成
+    public static int getMinutes(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        return cal.get(Calendar.MINUTE);
     }
 
 
@@ -75,25 +82,39 @@ public class TimeUtils {
         return cal.getTime();
     }
 
+    public static long subDate(Date date1, Date date2) {
+        if (date1 == null || date2 == null) return 0;
+        return date1.getTime() - date2.getTime();
+    }
+
     /**
      * 指定日付の 0時0分の時刻を Date型で返す
      * @param date 指定日時
      * @return 指定日の am0:00を示すDate型
      */
-    public static Date getAM00(Date date) {
+    public static Date getDate(Date date) {
         Calendar cal = Calendar.getInstance();
         if (date != null) cal.setTime(date);
         cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
     }
 
-    // Dateオブジェクトの getMinutes()メソッドが deprecatedになったため 推奨されるCalendarオブジェクトで作成
-    public static int getMinutes(Date date) {
+    /**
+     * unixtimeで指定される時間の 0時0分の時刻を Date型で返す
+     * @param timeInMills unixtime
+     * @return 指定日の am0:00を示すDate型
+     */
+    public static Date getDate(long timeInMills) {
         Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-        return cal.get(Calendar.MINUTE);
+        cal.setTimeInMillis(timeInMills);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 
     // Calendarオブジェクトで作成 年、月、日、時、分、秒、ミリ秒 を一度に取得する
