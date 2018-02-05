@@ -189,11 +189,11 @@ public class SkiLogDb {
     }
 
 
-//    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int limit, int offset, String orderBy) {
-//        return selectFromTable1(selection, selectionArgs, limit, offset, orderBy, null);
+//    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int offset, int limit, String orderBy) {
+//        return selectFromTable1(selection, selectionArgs, offset, limit, orderBy, null);
 //    }
 
-    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int limit, int offset, String orderBy, String groupBy) {
+    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int offset, int limit, String orderBy, String groupBy) {
         Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
 
@@ -230,7 +230,7 @@ public class SkiLogDb {
         return result;
     }
 
-    public List<SkiLogData> selectDailySummaries(int limit, int offset, String orderBy) {
+    public List<SkiLogData> selectDailySummaries(int offset, int limit, String orderBy) {
         Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
         String groupBy = String.format("date(created,'%s')", utcModifier());

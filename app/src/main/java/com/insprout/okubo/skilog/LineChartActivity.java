@@ -2,7 +2,6 @@ package com.insprout.okubo.skilog;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
 import android.os.Bundle;
@@ -11,15 +10,18 @@ import android.view.View;
 import android.widget.RadioGroup;
 
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.util.UiUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.TimeUtils;
 
@@ -30,9 +32,11 @@ import java.util.Date;
 import java.util.List;
 
 
-public class ChartActivity extends AppCompatActivity implements View.OnClickListener {
+public class LineChartActivity extends AppCompatActivity implements View.OnClickListener {
+    private final static int MAX_DATA_COUNT = 100;
 
-    private Date mTargetDate;
+    private int mDateIndex = -1;
+    private List<Date> mDateList;
     private RadioGroup mRgChartType;
 
     private LineChart mChart;
@@ -45,7 +49,7 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chart);
+        setContentView(R.layout.activity_line_chart);
 
         initVars();                                             // 変数などの初期化
         initView();                                             // View関連の初期化
@@ -53,18 +57,29 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
 
 
     private void initVars() {
-        mTargetDate = new Date(System.currentTimeMillis());
-        setTitle(mTargetDate);
+        mDateList = new ArrayList<>();
+        List<SkiLogData>data = DbUtils.selectDailyLogs(this, 0, MAX_DATA_COUNT);
+        if (data == null || data.isEmpty()) {
+            mDateIndex = -1;
+
+        } else {
+            // データは 新しい順で格納されているので、逆順に格納しておく
+            for(int i=data.size()-1; i>=0; i--) {
+                mDateList.add(data.get(i).getCreated());
+            }
+            mDateIndex = mDateList.size() - 1;
+        }
+        updateUi(mDateIndex);
 
         // 高度のチャート
-        int color = Color.BLUE;
+        int color = SdkUtils.getColor(this, R.color.colorAltitude);
         mChartDataSet1[0] = newLineDataSet(new ArrayList<Entry>(), getString(R.string.label_altitude), color);
         mChartDataSet1[0].setDrawFilled(true);
-        mChartDataSet1[0].setFillColor(Color.BLUE);
+        mChartDataSet1[0].setFillColor(color);
 
         // 上昇・下降積算のチャート
-        int colorAsc = Color.BLACK;
-        int colorDesc = SdkUtils.getColor(this, R.color.colorAccent);
+        int colorAsc = SdkUtils.getColor(this, R.color.colorAccumulateAsc);
+        int colorDesc = SdkUtils.getColor(this, R.color.colorAccumulateDesc);
         mChartDataSet2[0] = newLineDataSet(new ArrayList<Entry>(), getString(R.string.label_graph_asc), colorAsc);
         mChartDataSet2[0].setDrawFilled(false);
         mChartDataSet2[1] = newLineDataSet(new ArrayList<Entry>(), getString(R.string.label_graph_desc), colorDesc);
@@ -105,13 +120,34 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
         mRgChartType.check(R.id.btn_altitude);
     }
 
-    private boolean setupChartValues(Date targetDate) {
+    private void updateUi(int dateIndex) {
+        Date date;
+
+        // タイトルに データの日付を表示する
+        if (dateIndex >= 0 && dateIndex < mDateList.size()) {
+            date = mDateList.get(dateIndex);
+        } else {
+            date = new Date(System.currentTimeMillis());
+        }
+        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+        setTitle(getString(R.string.fmt_title_chart,df.format(date)));
+
+        // 前データ、次データへのボタンの 有効無効
+        UiUtils.enableView(this, R.id.btn_prev, dateIndex >= 1);
+        UiUtils.enableView(this, R.id.btn_next, dateIndex < mDateList.size() - 1);
+    }
+
+    private boolean setupChartValues(int dateIndex) {
         // 3種のチャート用データを設定する
         mChartDataSet1[0].getValues().clear();                  // 高度チャート用データ
         mChartDataSet2[0].getValues().clear();                  // 上昇積算チャート用データ
         mChartDataSet2[1].getValues().clear();                  // 下降積算チャート用データ
 
         // DBから 指定日のデータを取得する
+        if (dateIndex < 0 || dateIndex >= mDateList.size()) {
+            return false;
+        }
+        Date targetDate = mDateList.get(dateIndex);
         List<SkiLogData> data = DbUtils.select(this, targetDate);
         if (targetDate == null || data == null || data.size() == 0) {
             return false;
@@ -165,7 +201,7 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
         mChart.clear();
 
         // 表示データを取得する
-        if (setupChartValues(mTargetDate)) {
+        if (setupChartValues(mDateIndex)) {
             // 高度チャートを描画する
             drawChart(mChartDataSet1, mChartAxis1);
         }
@@ -176,7 +212,7 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
         mChart.clear();
 
         // 表示データを取得する
-        if (setupChartValues(mTargetDate)) {
+        if (setupChartValues(mDateIndex)) {
             // 積算チャート(2種類)を描画する
             drawChart(mChartDataSet2, mChartAxis2);
         }
@@ -202,7 +238,7 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
 
     private void updateChartAltitude() {
         // 表示データを取得する
-        if (setupChartValues(mTargetDate)) {
+        if (setupChartValues(mDateIndex)) {
             // 高度チャートを描画する
             updateChart(mChartDataSet1, mChartAxis1);
         } else {
@@ -212,7 +248,7 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
 
     private void updateChartAccumulate() {
         // 表示データを取得する
-        if (setupChartValues(mTargetDate)) {
+        if (setupChartValues(mDateIndex)) {
             // 積算チャート(2種類)を描画する
             updateChart(mChartDataSet2, mChartAxis2);
         } else {
@@ -297,19 +333,30 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
         xAxis.setAxisMinimum(axis.left);
         xAxis.enableGridDashedLine(10f, 10f, 0f);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                // X軸の valueは 0時(am0:00)からの経過時間を示す。1.5で 1時間30分
+                int hour = (int)value;
+                int minutes = (int)((value - hour) * 60);
+                return getString(R.string.fmt_time, hour, minutes);
+            }
+        });
 
-        YAxis leftAxis = mChart.getAxisLeft();
+        YAxis yAxis = mChart.getAxisLeft();
         // Y軸最大最小設定
-        leftAxis.setAxisMaximum(axis.top);
-        leftAxis.setAxisMinimum(axis.bottom);
+        yAxis.setAxisMaximum(axis.top);
+        yAxis.setAxisMinimum(axis.bottom);
         // Grid横軸を破線
-        leftAxis.enableGridDashedLine(10f, 10f, 0f);
-        leftAxis.setDrawZeroLine(true);
-    }
-
-    private void setTitle(Date date) {
-        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
-        setTitle(getString(R.string.fmt_title_chart,df.format(date)));
+        yAxis.enableGridDashedLine(10f, 10f, 0f);
+        yAxis.setDrawZeroLine(true);
+        yAxis.setValueFormatter(new IAxisValueFormatter() {
+            @Override
+            public String getFormattedValue(float value, AxisBase axis) {
+                // Y軸の valueは高度を示す
+                return getString(R.string.fmt_meter, (int)value);
+            }
+        });
     }
 
 
@@ -318,14 +365,14 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
         int id = view.getId();
         switch(id) {
             case R.id.btn_prev:
-                mTargetDate = TimeUtils.addDays(mTargetDate, -1);
-                setTitle(mTargetDate);
+                if (mDateIndex > 0) mDateIndex--;
+                updateUi(mDateIndex);
                 updateChart();
                 break;
 
             case R.id.btn_next:
-                mTargetDate = TimeUtils.addDays(mTargetDate, 1);
-                setTitle(mTargetDate);
+                if (mDateIndex < mDateList.size() - 1) mDateIndex++;
+                updateUi(mDateIndex);
                 updateChart();
                 break;
         }
@@ -353,7 +400,7 @@ public class ChartActivity extends AppCompatActivity implements View.OnClickList
 
 
     public static void startActivity(Activity context) {
-        Intent intent = new Intent(context, ChartActivity.class);
+        Intent intent = new Intent(context, LineChartActivity.class);
         context.startActivity(intent);
     }
 

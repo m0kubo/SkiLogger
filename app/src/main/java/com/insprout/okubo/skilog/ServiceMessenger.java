@@ -124,7 +124,7 @@ public class ServiceMessenger implements ServiceConnection {
     //
 
     /**
-     * Serviceプロセスから Activityのコールバックへ返信するためのHandler
+     * Serviceプロセスから Activityのコールバックへ返信するためのHandlerクラス
      * (Handler のメモリーリーク対策のために staticクラスにする)
      */
     static class ReplyMessageHandler extends Handler {
@@ -145,6 +145,9 @@ public class ServiceMessenger implements ServiceConnection {
                     break;
             }
         }
+
+
+        // 返信するデータの型ごとにメソッドを分ける
 
         public void replyMessage(String message) {
             try {
@@ -168,7 +171,7 @@ public class ServiceMessenger implements ServiceConnection {
     }
 
     /**
-     * Serviceプロセスへ Activityへのコールバックを登録するためのHandler
+     * Serviceプロセスへ Activityへのコールバックを登録するためのHandlerクラス
      * (Handler のメモリーリーク対策のために staticクラスにする)
      */
     private static class SetCallbackHandler extends Handler {

@@ -19,7 +19,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ChartActivity"
+            android:name=".LineChartActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".BarChartActivity"
             android:screenOrientation="portrait">
         </activity>
 

@@ -20,7 +20,8 @@
     <string name="btn_chart">チャート</string>
 
     <string name="default_altitude">--- m</string>
-    <string name="fmt_meter">%,dm</string>
+    <string name="fmt_meter">%,3dm</string>
+    <string name="fmt_time">"%d:%02d"</string>
 
     <string name="title_missing_sensor">気圧センサーのない端末です</string>
     <!--<string name="msg_missing_sensor">残念なからご使用中の端末には気圧センサーが搭載されていません。</string>-->

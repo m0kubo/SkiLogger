@@ -161,9 +161,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 stopService();
                 break;
 
-            case R.id.btn_data:
-                //getData();
-                ChartActivity.startActivity(this);
+            case R.id.btn_chart:
+                LineChartActivity.startActivity(this);
+                break;
+
+            case R.id.btn_test:
+                BarChartActivity.startActivity(this);
                 break;
         }
     }

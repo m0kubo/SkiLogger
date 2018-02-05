@@ -239,6 +239,9 @@ public class AltitudeLogService extends Service implements SensorEventListener {
     private final static float THRESHOLD_ALTITUDE = 5.0f;
     private final static float THRESHOLD_LIFT_COUNT = 50.0f;
 
+    private final static float VALID_MAX_PRESSURE = 1150.0f;        // 気圧センサーが不正な値を計測してしまう件の対応
+
+
     private float mPrevAltitude = INVALID_ALTITUDE;
     private float mLiftAltitude = INVALID_ALTITUDE;
     private float mTotalDesc = 0.0f;
@@ -246,6 +249,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
     private long mRecordTime = System.currentTimeMillis();
     private int mRunCount = 0;
     private int mLiftDelta = 0;
+
 
     private float[] mReplyData = new float[ 4 ];
 
@@ -255,6 +259,13 @@ public class AltitudeLogService extends Service implements SensorEventListener {
         float[] val = sensorEvent.values.clone();
 
         if (val.length >= 1) {
+            // KYY24の気圧センサーの不具合対策
+            // 基準値よりも高い気圧が報告された場合は無視する。
+            if (val[0] > VALID_MAX_PRESSURE) {
+                Log.e("pressure", "基準値を超える数値: 気圧=" + val[0] + "hPa");
+                return;
+            }
+
             // 取得した気圧をログに出力する
             float altitude = SensorUtils.getAltitude(val[0]);
 //            Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");

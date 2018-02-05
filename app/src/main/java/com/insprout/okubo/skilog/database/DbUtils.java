@@ -36,7 +36,7 @@ public class DbUtils {
         return select(context, date, 0, 0, null);
     }
 
-    public static List<SkiLogData> select(Context context, Date date, int limit, int offset, String orderBy) {
+    public static List<SkiLogData> select(Context context, Date date, int offset, int limit, String orderBy) {
         List<SkiLogData> res = new ArrayList<>();
         if (date == null) return res;
 
@@ -46,7 +46,7 @@ public class DbUtils {
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.selectFromTable1(selection, selectionArgs, limit, offset, orderBy, null);
+            res = fbkDatabase.selectFromTable1(selection, selectionArgs, offset, limit, orderBy, null);
 
         } catch(Exception ex) {
             return res;
@@ -60,11 +60,23 @@ public class DbUtils {
 
     /**
      * 日別記録の内 1日で記録時間が最も遅い記録を抽出する
-     * 一日一件、複数日分の記録を返す
+     * 一日一件、複数日分の記録を返す。最大100日分
      * @param context コンテキスト
      * @return データ(複数件)
      */
     public static List<SkiLogData> selectDailyLogs(Context context) {
+        return selectDailyLogs(context, 0, 100);
+    }
+
+    /**
+     * 日別記録の内 1日で記録時間が最も遅い記録を抽出する
+     * 一日一件、複数日分の記録を返す。
+     * @param context コンテキスト
+     * @param offset 取得するデータのオフセット
+     * @param limit 取得するデータの件数上限
+     * @return データ(複数件)
+     */
+    public static List<SkiLogData> selectDailyLogs(Context context, int offset, int limit) {
         List<SkiLogData> res = new ArrayList<>();
 
         SkiLogDb fbkDatabase = null;
@@ -73,7 +85,7 @@ public class DbUtils {
 //            res = fbkDatabase.selectFromTable1();
             // SQLiteの CURRENT_DATEは UTCで記録されているので、日付で集計する場合は時差を補正する事
             // 日本時間以外に対応する場合に、考慮すべき
-            res = fbkDatabase.selectDailySummaries(100, 0, "_id DESC");
+            res = fbkDatabase.selectDailySummaries(offset, limit, "_id DESC");
 
         } catch(Exception ex) {
             return res;

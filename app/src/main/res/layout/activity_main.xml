@@ -5,19 +5,32 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" >
+        android:layout_weight="1"
+        android:orientation="horizontal">
+        <View
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
         <Button
-            android:id="@+id/btn_data"
+            android:id="@+id/btn_test"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:textSize="28sp"
+            android:text="TEST"
+            android:onClick="onClick"/>
+        <Button
+            android:id="@+id/btn_chart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:textSize="28sp"
             android:text="@string/btn_chart"
             android:onClick="onClick"/>
-    </FrameLayout>
+    </LinearLayout>
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -41,7 +54,7 @@
             android:gravity="end"
             android:minWidth="100dp"
             android:text="@string/default_altitude"
-            android:textColor="#0000cd"
+            android:textColor="@color/colorAltitude"
             android:textSize="45sp"/>
     </LinearLayout>
     <LinearLayout
@@ -66,7 +79,7 @@
             android:gravity="end"
             android:minWidth="80dp"
             android:text="@string/default_altitude"
-            android:textColor="#000000"
+            android:textColor="@color/colorAccumulateAsc"
             android:textSize="36sp"/>
         <TextView
             android:layout_width="wrap_content"
@@ -83,7 +96,7 @@
             android:layout_gravity="center"
             android:gravity="end"
             android:minWidth="80dp"
-            android:textColor="#dc143c"
+            android:textColor="@color/colorAccumulateDesc"
             android:text="@string/default_altitude"
             android:textSize="36sp"/>
     </LinearLayout>
