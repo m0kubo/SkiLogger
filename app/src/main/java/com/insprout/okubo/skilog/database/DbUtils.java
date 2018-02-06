@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * Created by okubo on 2018/01/30.
@@ -15,13 +14,18 @@ import java.util.TimeZone;
 
 public class DbUtils {
 
-    public static List<SkiLogData> selectAll(Context context) {
-        List<SkiLogData> res = new ArrayList<>();
+    /**
+     * Logデータの件数を取得する
+     * @param context コンテキスト
+     * @return 件数
+     */
+    public static long count(Context context) {
+        long res = 0;
 
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.selectFromTable1();
+            res = fbkDatabase.countFromTable1();
 
         } catch(Exception ex) {
             return res;
@@ -32,6 +36,27 @@ public class DbUtils {
         return res;
     }
 
+    /**
+     * Log用 Tableに新規行を挿入する
+     * @param context コンテキスト
+     * @param data insertするLogデータ
+     * @return 挿入された行の id。エラーの場合は0
+     */
+    public static long insert(Context context, SkiLogData data) {
+        long id = 0;
+
+        SkiLogDb database = null;
+        try {
+            database = new SkiLogDb(context);
+            id = database.insert(data);
+
+        } finally {
+            if (database != null) database.close();
+        }
+        return id;
+    }
+
+
     public static List<SkiLogData> select(Context context, Date date) {
         return select(context, date, 0, 0, null);
     }
@@ -41,6 +66,7 @@ public class DbUtils {
         if (date == null) return res;
 
         String selection = String.format(Locale.ENGLISH, "date(created,'%s') = ?", SkiLogDb.utcModifier());
+        //String selection = String.format(Locale.ENGLISH, "date(created,'%s') = ? AND altitude > -500", SkiLogDb.utcModifier());
         String[] selectionArgs = { SkiLogDb.formatDate(date) };
 
         SkiLogDb fbkDatabase = null;
@@ -59,33 +85,20 @@ public class DbUtils {
 
 
     /**
-     * 日別記録の内 1日で記録時間が最も遅い記録を抽出する
-     * 一日一件、複数日分の記録を返す。最大100日分
-     * @param context コンテキスト
-     * @return データ(複数件)
-     */
-    public static List<SkiLogData> selectDailyLogs(Context context) {
-        return selectDailyLogs(context, 0, 100);
-    }
-
-    /**
-     * 日別記録の内 1日で記録時間が最も遅い記録を抽出する
-     * 一日一件、複数日分の記録を返す。
+     * 日別記録のサマリー情報を取得する。1日1サマリー、複数日分の記録を返す。
+     * orderは 日付の古い順
      * @param context コンテキスト
      * @param offset 取得するデータのオフセット
      * @param limit 取得するデータの件数上限
      * @return データ(複数件)
      */
-    public static List<SkiLogData> selectDailyLogs(Context context, int offset, int limit) {
+    public static List<SkiLogData> selectLogSummaries(Context context, int offset, int limit) {
         List<SkiLogData> res = new ArrayList<>();
 
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-//            res = fbkDatabase.selectFromTable1();
-            // SQLiteの CURRENT_DATEは UTCで記録されているので、日付で集計する場合は時差を補正する事
-            // 日本時間以外に対応する場合に、考慮すべき
-            res = fbkDatabase.selectDailySummaries(offset, limit, "_id DESC");
+            res = fbkDatabase.selectLogSummaries(offset, limit);
 
         } catch(Exception ex) {
             return res;
@@ -96,16 +109,25 @@ public class DbUtils {
         return res;
     }
 
-    public static List<SkiLogData> listByRawQuery(Context context, String sql, String[] selectionArgs) {
+    /**
+     * 日別記録のサマリー情報を取得する。1日1サマリー、複数日分の記録を返す。
+     * orderは 日付の古い順
+     * @param context コンテキスト
+     * @param fromDate 指定日時以降のデータを取得する (指定時刻ジャストのデータを含む)
+     * @param toDate 指定日時未満のデータを取得する (指定時刻ジャストのデータは含まない)
+     * @return データ(複数件)
+     */
+    public static List<SkiLogData> selectLogSummaries(Context context, Date fromDate, Date toDate) {
         List<SkiLogData> res = new ArrayList<>();
 
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-//            res = fbkDatabase.selectFromTable1();
-            // SQLiteの CURRENT_DATEは UTCで記録されているので、日付で集計する場合は時差を補正する事
-            // 日本時間以外に対応する場合に、考慮すべき
-            res = fbkDatabase.listByRawQuery(sql, selectionArgs);
+//            res = DbUtils.listByRawQuery(
+//                    context,
+//                    "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created, ?))",
+//                    new String[]{SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate), SkiLogDb.utcModifier()});
+            res = fbkDatabase.selectLogSummaries(fromDate, toDate);
 
         } catch(Exception ex) {
             return res;
@@ -116,28 +138,13 @@ public class DbUtils {
         return res;
     }
 
-
-    public static long insert(Context context, SkiLogData data) {
-        long id = 0;
-
-        SkiLogDb database = null;
-        try {
-            database = new SkiLogDb(context);
-            id = database.insert(data);
-
-        } finally {
-            if (database != null) database.close();
-        }
-        return id;
-    }
-
-    public static long count(Context context) {
-        long res = 0;
+    public static List<SkiLogData> listByRawQuery(Context context, String sql, String[] sqlArgs) {
+        List<SkiLogData> res = new ArrayList<>();
 
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.countFromTable1();
+            res = fbkDatabase.listByRawQuery(sql, sqlArgs);
 
         } catch(Exception ex) {
             return res;
@@ -147,5 +154,6 @@ public class DbUtils {
         }
         return res;
     }
+
 
 }

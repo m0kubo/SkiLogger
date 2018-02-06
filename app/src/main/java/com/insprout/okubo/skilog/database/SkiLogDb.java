@@ -230,16 +230,42 @@ public class SkiLogDb {
         return result;
     }
 
-    public List<SkiLogData> selectDailySummaries(int offset, int limit, String orderBy) {
+    public List<SkiLogData> selectLogSummaries(int offset, int limit) {
+        return selectLogSummaries(null, null, offset, limit, null);
+    }
+
+    public List<SkiLogData> selectLogSummaries(Date fromDate, Date toDate) {
+        return selectLogSummaries(fromDate, toDate, 0, 0, null);
+    }
+
+    public List<SkiLogData> selectLogSummaries(Date fromDate, Date toDate, int offset, int limit, String orderBy) {
         Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
         String groupBy = String.format("date(created,'%s')", utcModifier());
+        String where = null;
+        String whereArgs[] = null;
+
+        if (fromDate != null && toDate != null) {
+            // 開始日時、終了日時が指定されている場合
+            where = "created >= ? AND created < ?";
+            whereArgs = new String[] { formatUtcDateTime(fromDate), formatUtcDateTime(toDate) };
+
+        } else if (fromDate != null) {
+            // 開始日時のみが指定されている場合
+            where = "created >= ?";
+            whereArgs = new String[] { formatUtcDateTime(fromDate) };
+
+        } else if (toDate != null) {
+            // 終了日時のみが指定されている場合
+            where = "created < ?";
+            whereArgs = new String[] { formatUtcDateTime(toDate) };
+        }
 
         try{
             cursor = mDb.query( TABLE_1,
-                    new String[] { "MIN(_id)", "MAX(altitude)", "MAX(asc_total)", "MIN(desc_total)", "MAX(count)", "MIN(created)" },           // 全カラム返却
-                    null,
-                    null,
+                    new String[] { "MAX(_id)", "MAX(altitude)", "MAX(asc_total)", "MIN(desc_total)", "MAX(count)", "MAX(created)" },           // 全カラム返却
+                    where,
+                    whereArgs,
                     groupBy,
                     null,
                     orderBy,
@@ -253,7 +279,7 @@ public class SkiLogDb {
                 data.setAscTotal(cursor.getFloat(2));
                 data.setDescTotal(cursor.getFloat(3));
                 data.setCount(cursor.getInt(4));
-                data.setCreated(toDate(cursor.getString(5)));
+                data.setCreated(toUtcDate(cursor.getString(5)));
                 result.add(data);
             }
 
@@ -272,9 +298,9 @@ public class SkiLogDb {
      * SQLを rawQueryで実行して その結果を SkiLogDataクラスの Listを返す
      * ただし、SQLの結果列は、SkiLogDataクラスに格納できる形式であること
      * (ski_logテーブルの デフォルトカラム列と 同様であること。SELECT * FROM ski_log ～ であれば問題なし)
-     * @param sql
-     * @param selectionArgs
-     * @return
+     * @param sql SQLコマンド
+     * @param selectionArgs SQLコマンドに渡すパラメータ列
+     * @return SQLの結果 (SkiLogDataクラスのList形式)
      */
     public List<SkiLogData> listByRawQuery(String sql, String[] selectionArgs) {
         Cursor cursor = null;
@@ -291,7 +317,7 @@ public class SkiLogDb {
                 data.setAscTotal(cursor.getFloat(2));
                 data.setDescTotal(cursor.getFloat(3));
                 data.setCount(cursor.getInt(4));
-                data.setCreated(toDate(cursor.getString(5)));
+                data.setCreated(toUtcDate(cursor.getString(5)));
                 result.add(data);
             }
 
@@ -339,6 +365,11 @@ public class SkiLogDb {
     }
 
 
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // static
+    //
+
     /**
      * 指定のカラムから SQLiteの TimeStampを Date型に変換して返す
      * @param cursor SQLiteの cursorオブジェクト
@@ -347,7 +378,7 @@ public class SkiLogDb {
      */
     private Date getSQLiteDate(Cursor cursor, String columnName) {
         if (cursor == null) return null;
-        return toDate(cursor.getString(cursor.getColumnIndex(columnName)));
+        return toUtcDate(cursor.getString(cursor.getColumnIndex(columnName)));
     }
 
     /**
@@ -355,7 +386,7 @@ public class SkiLogDb {
      * @param sqliteTimeStamp SQLiteの タイムスタンプ文字列
      * @return 変換されたDate値
      */
-    private static Date toDate(String sqliteTimeStamp) {
+    private static Date toUtcDate(String sqliteTimeStamp) {
         try {
             @SuppressLint("SimpleDateFormat")
             SimpleDateFormat dfUtc = new SimpleDateFormat(SQLITE_TIMESTAMP_FORMAT);
@@ -369,7 +400,7 @@ public class SkiLogDb {
 
     /**
      * 与えられた date型変数から SQLite形式の日付文字列に変換する
-     * 日付のみ(時刻は無し)
+     * 日付のみ(時刻は無し)。端末設定のタイムゾーン
      * @param date 変換する日時
      * @return SQLite形式の日付文字列
      */
@@ -377,6 +408,31 @@ public class SkiLogDb {
         if (date == null || date.getTime() == Long.MIN_VALUE) return null;
         SimpleDateFormat df = new SimpleDateFormat(SQLITE_DATE_FORMAT, Locale.getDefault());
         return df.format(date);
+    }
+
+    /**
+     * 与えられた date型変数から SQLite形式の日時文字列に変換する
+     * 端末設定のタイムゾーン
+     * @param date 変換する日時
+     * @return SQLite形式の日時文字列
+     */
+    public static String formatDateTime(Date date) {
+        if (date == null || date.getTime() == Long.MIN_VALUE) return null;
+        SimpleDateFormat df = new SimpleDateFormat(SQLITE_TIMESTAMP_FORMAT, Locale.getDefault());
+        return df.format(date);
+    }
+
+    /**
+     * 与えられた date型変数から SQLite形式のUTCでの日時文字列に変換する
+     * @param date 変換する日時
+     * @return SQLite形式の日時文字列
+     */
+    public static String formatUtcDateTime(Date date) {
+        if (date == null || date.getTime() == Long.MIN_VALUE) return null;
+        @SuppressLint("SimpleDateFormat")
+        SimpleDateFormat dfUtc = new SimpleDateFormat(SQLITE_TIMESTAMP_FORMAT);
+        dfUtc.setTimeZone(TimeZone.getTimeZone(SQLITE_TIMEZONE));
+        return dfUtc.format(date);
     }
 
     /**

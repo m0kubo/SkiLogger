@@ -58,14 +58,14 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     private void initVars() {
         mDateList = new ArrayList<>();
-        List<SkiLogData>data = DbUtils.selectDailyLogs(this, 0, MAX_DATA_COUNT);
+        List<SkiLogData>data = DbUtils.selectLogSummaries(this, 0, MAX_DATA_COUNT);
         if (data == null || data.isEmpty()) {
             mDateIndex = -1;
 
         } else {
             // データは 新しい順で格納されているので、逆順に格納しておく
-            for(int i=data.size()-1; i>=0; i--) {
-                mDateList.add(data.get(i).getCreated());
+            for(SkiLogData log : data) {
+                mDateList.add(log.getCreated());
             }
             mDateIndex = mDateList.size() - 1;
         }
@@ -130,11 +130,41 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             date = new Date(System.currentTimeMillis());
         }
         DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
-        setTitle(getString(R.string.fmt_title_chart,df.format(date)));
+        setTitle(getString(R.string.fmt_title_chart, df.format(date)));
 
         // 前データ、次データへのボタンの 有効無効
         UiUtils.enableView(this, R.id.btn_prev, dateIndex >= 1);
         UiUtils.enableView(this, R.id.btn_next, dateIndex < mDateList.size() - 1);
+    }
+
+    private void removeInvalidData(List<SkiLogData> data) {
+        float prevAccumulateAsc = 0f;
+        float prevAccumulateDesc = 0f;
+        float adjustedAccumulateAsc = 0f;
+        float adjustedAccumulateDesc = 0f;
+
+        for(SkiLogData log : data) {
+            float asc = log.getAscTotal() - prevAccumulateAsc;
+            prevAccumulateAsc = log.getAscTotal();
+            if (asc > 2000.0f) {
+                // 異常なデータ
+                adjustedAccumulateAsc += asc;
+            }
+            log.setAscTotal(log.getAscTotal() - adjustedAccumulateAsc);
+
+            float desc = log.getDescTotal() - prevAccumulateDesc;
+            prevAccumulateDesc = log.getDescTotal();
+            if (-desc > 2000.0f) {
+                // 異常なデータ
+                adjustedAccumulateDesc += desc;
+            }
+            log.setDescTotal(log.getDescTotal() - adjustedAccumulateDesc);
+        }
+//        for (int i=data.size()-1; i>=0; i--) {
+//            if (data.get(i).getAltitude() < 500.0f) {
+//                data.remove(i);
+//            }
+//        }
     }
 
     private boolean setupChartValues(int dateIndex) {
@@ -152,14 +182,15 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         if (targetDate == null || data == null || data.size() == 0) {
             return false;
         }
+//        removeInvalidData(data);
 
         // 取得したデータをチャート用の データクラスに格納する。また データの最大値/最小値も記録しておく
-        float minX = Float.POSITIVE_INFINITY;
-        float maxX = Float.NEGATIVE_INFINITY;
-        float minY1 = Float.POSITIVE_INFINITY;
-        float maxY1 = Float.NEGATIVE_INFINITY;
-        float minY2 = Float.POSITIVE_INFINITY;
-        float maxY2 = Float.NEGATIVE_INFINITY;
+        float minX = 24.0f;//Float.POSITIVE_INFINITY;
+        float maxX = 0.0f;//Float.NEGATIVE_INFINITY;
+        float minY1 = 0.0f;
+        float maxY1 = 0.0f;
+        float minY2 = 0.0f;
+        float maxY2 = 0.0f;
 
         // チャート用の データクラスに格納する
         long timeAm0 = TimeUtils.getDate(targetDate).getTime();

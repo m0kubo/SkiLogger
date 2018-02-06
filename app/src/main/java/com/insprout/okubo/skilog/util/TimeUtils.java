@@ -68,6 +68,13 @@ public class TimeUtils {
     }
 
 
+    public static Date addYears(Date date, int years) {
+        Calendar cal = Calendar.getInstance();
+        if (date != null) cal.setTime(date);
+        cal.add(Calendar.YEAR, years);
+        return cal.getTime();
+    }
+
     public static Date addDays(Date date, int days) {
         Calendar cal = Calendar.getInstance();
         if (date != null) cal.setTime(date);

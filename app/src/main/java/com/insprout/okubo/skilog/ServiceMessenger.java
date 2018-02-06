@@ -45,7 +45,7 @@ public class ServiceMessenger implements ServiceConnection {
     public ServiceMessenger(Context context, OnServiceMessageListener listener) {
         mContext = context;
 
-        mServiceIntent = new Intent(context, AltitudeLogService.class);
+        mServiceIntent = new Intent(context, SkiLogService.class);
         mServiceIntent.setPackage(mContext.getPackageName());
         mCallbackHandler = new SetCallbackHandler(listener);
         mCallbackMessenger = new Messenger(mCallbackHandler);

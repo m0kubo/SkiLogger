@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initVars() {
-        AltitudeLogService.registerNotifyChannel(this);         // Android8.0対応 notificationチャンネルの登録
+        SkiLogService.registerNotifyChannel(this);         // Android8.0対応 notificationチャンネルの登録
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
 
         // サービスの実行状況に合わせて、Messengerや ボタンなどを設定する
-        boolean svcRunning = AltitudeLogService.isRunning(this);
+        boolean svcRunning = SkiLogService.isRunning(this);
         if (svcRunning) mServiceMessenger.bind();
         enableButtons(svcRunning);
     }
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void startService() {
         Log.d("WatchService", "startService()");
         enableButtons(true);
-        AltitudeLogService.startService(this);
+        SkiLogService.startService(this);
 
         mServiceMessenger.bind();
         // 不足のエラーで Serviceが開始できなかった場合のために、一定時間後にServiceの起動状態を確認して ボタンに反映する
@@ -122,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void stopService() {
         Log.d("WatchService", "stopService()");
         enableButtons(false);
-        AltitudeLogService.stopService(this);
+        SkiLogService.stopService(this);
 
         mServiceMessenger.unbind();
     }
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Handler().postDelayed(new Runnable() {
              @Override
              public void run() {
-                 enableButtons(AltitudeLogService.isRunning(MainActivity.this));
+                 enableButtons(SkiLogService.isRunning(MainActivity.this));
              }
         },
         1000);

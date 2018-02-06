@@ -35,7 +35,8 @@ import java.util.List;
  * この Serviceプロセスが稼働していれば、高度測定中とみなす
  */
 
-public class AltitudeLogService extends Service implements SensorEventListener {
+public class SkiLogService extends Service implements SensorEventListener {
+    private static final String TAG = "LogService";
 
     private static String CHANNEL_ID_SERVICE = "ID_SVC_ALTITUDE";
     private static final int ID_SERVICE_ONGOING = 100;
@@ -161,7 +162,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
             return false;
         }
 
-        String className = AltitudeLogService.class.getName();
+        String className = SkiLogService.class.getName();
         for (ActivityManager.RunningServiceInfo serviceInfo : serviceList) {
             // 自身のサービスが実行中かリストから確認する
             if (className.equals(serviceInfo.service.getClassName())) {
@@ -179,7 +180,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
      */
     public static void startService(Context context) {
         // サービス起動
-        Intent serviceIntent = new Intent(context, AltitudeLogService.class);
+        Intent serviceIntent = new Intent(context, SkiLogService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(serviceIntent);
         } else {
@@ -193,7 +194,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
      */
     public static void stopService(Context context) {
         // サービス起動
-        Intent serviceIntent = new Intent(context, AltitudeLogService.class);
+        Intent serviceIntent = new Intent(context, SkiLogService.class);
         context.stopService(serviceIntent);
     }
 
@@ -262,7 +263,7 @@ public class AltitudeLogService extends Service implements SensorEventListener {
             // KYY24の気圧センサーの不具合対策
             // 基準値よりも高い気圧が報告された場合は無視する。
             if (val[0] > VALID_MAX_PRESSURE) {
-                Log.e("pressure", "基準値を超える数値: 気圧=" + val[0] + "hPa");
+                Log.e(TAG, "基準値を超える数値: 気圧=" + val[0] + "hPa");
                 return;
             }
 
@@ -354,7 +355,10 @@ public class AltitudeLogService extends Service implements SensorEventListener {
 
     private void recordLog(float altitude) {
         mRecordTime = System.currentTimeMillis();
-        DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+        long id = DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+        if (id <= 0) {
+            Log.e(TAG, "DB error: fail to insert");
+        }
     }
 
     private void getPreviousLog() {

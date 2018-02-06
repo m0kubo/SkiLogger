@@ -27,7 +27,7 @@
             android:screenOrientation="portrait">
         </activity>
 
-        <service android:name=".AltitudeLogService" />
+        <service android:name=".SkiLogService" />
 
     </application>
 
