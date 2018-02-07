@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 無効時 -->
+    <item android:state_enabled="false">
+        <shape
+            android:shape="ring"
+            android:innerRadius="0dp"
+            android:thickness="@dimen/radius_circle_large_button"
+            android:useLevel="false" >
+            <solid android:color="#808080" />
+            <size android:height="@dimen/size_circle_large_button" android:width="@dimen/size_circle_large_button" />
+        </shape>
+    </item>
+    <!-- 押下時 -->
+    <item android:state_pressed="true">
+        <shape
+            android:shape="ring"
+            android:innerRadius="0dp"
+            android:thickness="@dimen/radius_circle_large_button"
+            android:useLevel="false" >
+            <solid android:color="#c06900" />
+            <size android:height="@dimen/size_circle_large_button" android:width="@dimen/size_circle_large_button" />
+        </shape>
+    </item>
+    <!-- 標準状態 -->
+    <item>
+        <shape
+            android:shape="ring"
+            android:innerRadius="0dp"
+            android:thickness="@dimen/radius_circle_large_button"
+            android:useLevel="false" >
+            <solid android:color="#ff8c00" />
+            <size android:height="@dimen/size_circle_large_button" android:width="@dimen/size_circle_large_button" />
+        </shape>
+    </item>
+</selector>

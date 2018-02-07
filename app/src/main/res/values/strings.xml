@@ -14,13 +14,14 @@
     <string name="label_count_lift">RUN</string>
     <string name="label_graph_asc">上昇積算</string>
     <string name="label_graph_desc">下降積算</string>
+    <string name="label_status_stop">状態：STOP</string>
+    <string name="label_status_logging">状態：Logging&#8230;</string>
 
     <string name="btn_start_svc">計測</string>
     <string name="btn_stop_svc">停止</string>
     <string name="btn_finish_app">アプリ終了</string>
-    <string name="btn_chart">チャート</string>
 
-    <string name="default_altitude">--- m</string>
+    <string name="default_altitude"> --- m</string>
     <string name="fmt_meter">%,3dm</string>
     <string name="fmt_time">"%d:%02d"</string>
 

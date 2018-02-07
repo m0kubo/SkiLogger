@@ -1,4 +1,10 @@
 <resources>
     <!-- ナビゲーション関連サイズ -->
     <dimen name="text_size_chart_axis">5sp</dimen>
+
+    <dimen name="size_circle_medium_button">54dp</dimen>
+    <dimen name="radius_circle_medium_button">26dp</dimen>
+
+    <dimen name="size_circle_large_button">70dp</dimen>
+    <dimen name="radius_circle_large_button">34dp</dimen>
 </resources>

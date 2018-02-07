@@ -8,4 +8,20 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AltitudeText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <!--<item name="android:drawablePadding">3dp</item>-->
+        <item name="android:text">@string/default_altitude</item>
+        <item name="android:textSize">40sp</item>
+    </style>
+
+    <style name="ActionButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:background">@drawable/bg_circle_large</item>
+        <item name="android:onClick">onClick</item>
+    </style>
+
 </resources>

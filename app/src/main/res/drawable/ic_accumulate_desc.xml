@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@mipmap/ic_accumulate_desc"
+        android:gravity="bottom"
+        android:top="5dp"/>
+    <!--<item
+        android:drawable="@mipmap/ic_file_upload_black_24dp"
+        android:gravity="bottom"
+        android:top="10dp"/>-->
+</layer-list>

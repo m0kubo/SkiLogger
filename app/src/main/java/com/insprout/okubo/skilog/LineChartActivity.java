@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioGroup;
 
@@ -55,6 +57,16 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         initView();                                             // View関連の初期化
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     private void initVars() {
         mDateList = new ArrayList<>();
@@ -87,6 +99,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void initView() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
         mRgChartType = findViewById(R.id.rg_chart_type);
         mRgChartType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {

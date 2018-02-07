@@ -13,7 +13,9 @@ import android.widget.TextView;
 
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.SensorUtils;
+import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -27,6 +29,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvTotalAsc;
     private TextView mTvTotalDesc;
     private TextView mTvCount;
+
+    private boolean mReadyData = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +65,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initVars() {
-        SkiLogService.registerNotifyChannel(this);         // Android8.0対応 notificationチャンネルの登録
+        SkiLogService.registerNotifyChannel(this);              // Android8.0対応 notificationチャンネルの登録
+
+        mReadyData = (DbUtils.count(this) >= 1);                  // 記録データが存在するかどうか
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -100,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // サービスの実行状況に合わせて、Messengerや ボタンなどを設定する
         boolean svcRunning = SkiLogService.isRunning(this);
         if (svcRunning) mServiceMessenger.bind();
-        enableButtons(svcRunning);
+        updateUi(svcRunning);
     }
 
     @Override
@@ -111,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void startService() {
         Log.d("WatchService", "startService()");
-        enableButtons(true);
+        updateUi(true);
         SkiLogService.startService(this);
 
         mServiceMessenger.bind();
@@ -121,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void stopService() {
         Log.d("WatchService", "stopService()");
-        enableButtons(false);
+        updateUi(false);
         SkiLogService.stopService(this);
 
         mServiceMessenger.unbind();
@@ -132,10 +138,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return getString(R.string.fmt_meter, (int)(altitude + 0.5f));
     }
 
-    private void enableButtons(boolean serviceRunning) {
+    private void updateUi(boolean serviceRunning) {
+        // ステータス表示
+        UiUtils.setText(this, R.id.tv_status, (serviceRunning ? R.string.label_status_logging : R.string.label_status_stop));
+
         // サービス起動・停止ボタンの 有効無効
-        findViewById(R.id.btn_start_svc).setEnabled(mSensor!=null && !serviceRunning);
-        findViewById(R.id.btn_stop_svc).setEnabled(mSensor!=null && serviceRunning);
+        UiUtils.enableView(this, R.id.btn_start_svc, (mSensor!=null && !serviceRunning));
+        UiUtils.enableView(this, R.id.btn_stop_svc, (mSensor!=null && serviceRunning));
+
+        UiUtils.enableView(this, R.id.btn_chart, mReadyData);
+        UiUtils.enableView(this, R.id.btn_chart2, mReadyData);
     }
 
     private void confirmServiceStatus() {
@@ -143,7 +155,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         new Handler().postDelayed(new Runnable() {
              @Override
              public void run() {
-                 enableButtons(SkiLogService.isRunning(MainActivity.this));
+                 boolean isRunning = SkiLogService.isRunning(MainActivity.this);
+                 if (isRunning) mReadyData = true;              // サービスが起動できたら、新規データがあると見做す
+                 updateUi(isRunning);
              }
         },
         1000);
@@ -155,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(id) {
             case R.id.btn_start_svc:
                 startService();
+                SdkUtils.requestDisableDozeModeIfNeeded(this);
                 break;
 
             case R.id.btn_stop_svc:
@@ -165,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 LineChartActivity.startActivity(this);
                 break;
 
-            case R.id.btn_test:
+            case R.id.btn_chart2:
                 BarChartActivity.startActivity(this);
                 break;
         }

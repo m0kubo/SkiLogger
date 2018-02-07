@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rotate
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@mipmap/ic_eject_white_36dp"
+    android:fromDegrees="90"
+    android:pivotX="53%"
+    android:pivotY="53%">
+</rotate>

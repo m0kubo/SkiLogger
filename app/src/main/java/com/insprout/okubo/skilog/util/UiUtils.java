@@ -18,6 +18,13 @@ public class UiUtils {
         }
     }
 
+    public static void setText(Activity activity, int id, int textId) {
+        View view = activity.findViewById(id);
+        if (view instanceof TextView) {
+            ((TextView)view).setText(textId);
+        }
+    }
+
     public static void setText(Activity activity, int id, String text) {
         View view = activity.findViewById(id);
         if (view instanceof TextView) {

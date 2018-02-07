@@ -3,7 +3,9 @@ package com.insprout.okubo.skilog;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -53,6 +55,16 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         initView();                                             // View関連の初期化
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     private void initVars() {
         mToday = getStartDateOfSeason(new Date(System.currentTimeMillis()));
@@ -72,6 +84,9 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void initView() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+
         mChart = findViewById(R.id.bar_chart);
         setupChart();
         updateUi();
@@ -198,8 +213,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         dataSet.setValueFormatter(new IValueFormatter() {
             @Override
             public String getFormattedValue(float value, Entry entry, int dataSetIndex, ViewPortHandler viewPortHandler) {
-//                return getString(R.string.fmt_meter, (int)value);
-                return mXAxisLabels[ (int)entry.getX() ];
+                return getString(R.string.fmt_meter, (int)value);
+//                return mXAxisLabels[ (int)entry.getX() ];
             }
         });
         //ハイライトさせない

@@ -5,150 +5,103 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="horizontal">
-        <View
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"/>
-        <Button
-            android:id="@+id/btn_test"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textSize="28sp"
-            android:text="TEST"
-            android:onClick="onClick"/>
-        <Button
-            android:id="@+id/btn_chart"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:textSize="28sp"
-            android:text="@string/btn_chart"
-            android:onClick="onClick"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="5dp"
-        android:orientation="horizontal">
+        android:layout_weight="1">
+
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tv_status"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginStart="3dp"
-            android:layout_marginEnd="3dp"
-            android:gravity="center"
-            android:text="@string/label_altitude"
-            android:textSize="28sp"/>
-        <TextView
-            android:id="@+id/tv_altitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:gravity="end"
-            android:minWidth="100dp"
-            android:text="@string/default_altitude"
-            android:textColor="@color/colorAltitude"
-            android:textSize="45sp"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:gravity="bottom"
-        android:orientation="horizontal">
-        <TextView
+            android:paddingTop="15dp"
+            android:paddingStart="28dp"
+            android:paddingEnd="8dp"
+            android:text="@string/label_status_stop"
+            android:textSize="30sp"/>
+
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginStart="3dp"
-            android:layout_marginEnd="3dp"
-            android:text="@string/label_total_asc"
-            android:textSize="16sp"/>
-        <TextView
-            android:id="@+id/tv_total_asc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:layout_marginBottom="5dp"
             android:gravity="end"
-            android:minWidth="80dp"
-            android:text="@string/default_altitude"
-            android:textColor="@color/colorAccumulateAsc"
-            android:textSize="36sp"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginStart="18dp"
-            android:layout_marginEnd="3dp"
-            android:text="@string/label_total_desc"
-            android:textSize="16sp"/>
-        <TextView
-            android:id="@+id/tv_total_desc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="end"
-            android:minWidth="80dp"
-            android:textColor="@color/colorAccumulateDesc"
-            android:text="@string/default_altitude"
-            android:textSize="36sp"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="150dp"
-        android:layout_gravity="center_horizontal"
-        android:gravity="end"
-        android:orientation="horizontal">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginStart="3dp"
-            android:layout_marginEnd="3dp"
-            android:text="@string/label_count_lift"
-            android:textSize="16sp"/>
-        <TextView
-            android:id="@+id/tv_count_lift"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:text="0"
-            android:textColor="#000000"
-            android:textSize="36sp"/>
-    </LinearLayout>
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+            android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="@string/label_count_lift"
+                    android:textSize="16sp"/>
+                <TextView
+                    android:id="@+id/tv_count_lift"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="#000000"
+                    android:textSize="34sp"/>
+            </LinearLayout>
+            <TextView
+                android:id="@+id/tv_altitude"
+                android:minWidth="100dp"
+                android:drawableStart="@drawable/ic_altitude"
+                android:textColor="@color/colorAltitude"
+                android:textSize="48sp"
+                style="@style/AltitudeText" />
+            <TextView
+                android:id="@+id/tv_total_asc"
+                android:drawableStart="@drawable/ic_accumulate_asc"
+                android:textColor="@color/colorAccumulateAsc"
+                style="@style/AltitudeText" />
+            <TextView
+                android:id="@+id/tv_total_desc"
+                android:drawableStart="@drawable/ic_accumulate_desc"
+                android:textColor="@color/colorAccumulateDesc"
+                style="@style/AltitudeText"/>
+        </LinearLayout>
+
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="5dp"
         android:orientation="horizontal">
-        <Button
+
+        <ImageButton
+            android:id="@+id/btn_chart2"
+            android:src="@mipmap/ic_equalizer_white_36dp"
+            android:background="@drawable/bg_circle_medium"
+            style="@style/ActionButton" />
+        <ImageButton
+            android:id="@+id/btn_chart"
+            android:src="@mipmap/ic_timeline_white_36dp"
+            android:background="@drawable/bg_circle_medium"
+            style="@style/ActionButton" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
             android:id="@+id/btn_start_svc"
-            android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_weight="1"
-            android:textSize="28sp"
-            android:text="@string/btn_start_svc"
-            android:onClick="onClick"/>
-        <Button
+            android:src="@drawable/ic_record"
+            android:background="@drawable/bg_circle2_large"
+            style="@style/ActionButton" />
+        <ImageButton
             android:id="@+id/btn_stop_svc"
-            android:layout_width="0dp"
-            android:layout_height="100dp"
-            android:layout_weight="1"
-            android:textSize="28sp"
-            android:text="@string/btn_stop_svc"
-            android:onClick="onClick"/>
+            android:src="@mipmap/ic_pause_white_36dp"
+            android:background="@drawable/bg_circle2_large"
+            style="@style/ActionButton" />
 
     </LinearLayout>
 </LinearLayout>
