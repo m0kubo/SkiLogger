@@ -164,7 +164,7 @@ public class SkiLogDb {
         return deleteFromTable1(COL_1_0 + " = ?", args );
     }
 
-    private boolean deleteFromTable1(String selection, String[] selectionArgs) {
+    public boolean deleteFromTable1(String selection, String[] selectionArgs) {
         try {
             int count = mDb.delete(TABLE_1, selection, selectionArgs);
             if (count == 0) return false;

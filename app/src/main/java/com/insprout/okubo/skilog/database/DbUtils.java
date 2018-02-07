@@ -57,6 +57,33 @@ public class DbUtils {
     }
 
 
+    /**
+     * 指定された日付の ログデータを削除する。
+     * @param context コンテキスト
+     * @param date 削除するデータの日付。(時刻は無視される。日付のみが有効)
+     * @return 結果
+     */
+    public static boolean deleteLogs(Context context, Date date) {
+        boolean res;
+        if (date == null) return false;
+
+        String selection = String.format(Locale.ENGLISH, "date(created,'%s') = ?", SkiLogDb.utcModifier());
+        String[] selectionArgs = { SkiLogDb.formatDate(date) };
+
+        SkiLogDb fbkDatabase = null;
+        try {
+            fbkDatabase = new SkiLogDb(context);
+            res = fbkDatabase.deleteFromTable1(selection, selectionArgs);
+
+        } catch(Exception ex) {
+            return false;
+
+        } finally {
+            if (fbkDatabase != null) fbkDatabase.close();
+        }
+        return res;
+    }
+
     public static List<SkiLogData> select(Context context, Date date) {
         return select(context, date, 0, 0, null);
     }

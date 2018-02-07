@@ -1,6 +1,8 @@
 package com.insprout.okubo.skilog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
@@ -39,6 +41,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     private int mDateIndex = -1;
     private List<Date> mDateList;
+    private DateFormat mDateFormat;
     private RadioGroup mRgChartType;
 
     private LineChart mChart;
@@ -69,13 +72,15 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
 
     private void initVars() {
+        mDateFormat = DateFormat.getDateInstance(DateFormat.SHORT);
+
         mDateList = new ArrayList<>();
         List<SkiLogData>data = DbUtils.selectLogSummaries(this, 0, MAX_DATA_COUNT);
         if (data == null || data.isEmpty()) {
             mDateIndex = -1;
 
         } else {
-            // データは 新しい順で格納されているので、逆順に格納しておく
+            // 取得したログの 日付情報のリストを作成する
             for(SkiLogData log : data) {
                 mDateList.add(log.getCreated());
             }
@@ -99,6 +104,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void initView() {
+        UiUtils.setVisibility(this, R.id.btn_delete, View.VISIBLE);     // 削除ボタン表示
+
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
@@ -135,20 +142,20 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void updateUi(int dateIndex) {
-        Date date;
-
-        // タイトルに データの日付を表示する
-        if (dateIndex >= 0 && dateIndex < mDateList.size()) {
-            date = mDateList.get(dateIndex);
-        } else {
-            date = new Date(System.currentTimeMillis());
-        }
-        DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
-        setTitle(getString(R.string.fmt_title_chart, df.format(date)));
+        setTitle(getString(R.string.fmt_title_chart, mDateFormat.format(getTargetDate(dateIndex))));
 
         // 前データ、次データへのボタンの 有効無効
         UiUtils.enableView(this, R.id.btn_prev, dateIndex >= 1);
         UiUtils.enableView(this, R.id.btn_next, dateIndex < mDateList.size() - 1);
+    }
+
+    private Date getTargetDate(int dateIndex) {
+        // タイトルに データの日付を表示する
+        if (dateIndex >= 0 && dateIndex < mDateList.size()) {
+            return mDateList.get(dateIndex);
+        } else {
+            return new Date(System.currentTimeMillis());
+        }
     }
 
     private void removeInvalidData(List<SkiLogData> data) {
@@ -404,6 +411,40 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         });
     }
 
+    private void deleteLogs(Date targetDate) {
+        boolean res = DbUtils.deleteLogs(this, targetDate);
+        if (res) {
+            // 対象日付を削除する。
+            mDateList.remove(mDateIndex);
+            if (mDateIndex >= mDateList.size()) {
+                mDateIndex--;
+            }
+            // チャートの表示を更新する
+            updateUi(mDateIndex);
+            updateChart();
+        }
+    }
+
+    private void confirmDeleteLogs() {
+        if (mDateIndex < 0) return;
+
+        final Date targetDate = getTargetDate(mDateIndex);
+        if (targetDate == null) return;
+        // データ削除
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.title_delete_logs)
+                .setMessage(getString(R.string.fmt_msg_delete_logs,  mDateFormat.format(getTargetDate(mDateIndex))))
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // アプリ終了
+                        deleteLogs(targetDate);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
 
     @Override
     public void onClick(View view) {
@@ -419,6 +460,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 if (mDateIndex < mDateList.size() - 1) mDateIndex++;
                 updateUi(mDateIndex);
                 updateChart();
+                break;
+
+            case R.id.btn_delete:
+                confirmDeleteLogs();
                 break;
         }
     }

@@ -18,6 +18,13 @@ public class UiUtils {
         }
     }
 
+    public static void setVisibility(Activity activity, int id, int visibility) {
+        View view = activity.findViewById(id);
+        if (view != null) {
+            view.setVisibility(visibility);
+        }
+    }
+
     public static void setText(Activity activity, int id, int textId) {
         View view = activity.findViewById(id);
         if (view instanceof TextView) {

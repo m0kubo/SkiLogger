@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -10,14 +10,25 @@
     android:orientation="horizontal">
 
     <ImageButton
-        android:id="@+id/btn_next"
-        android:layout_alignParentEnd="true"
-        android:src="@mipmap/ic_skip_next_white_36dp"
-        style="@style/ActionButton" />
-    <ImageButton
-        android:id="@+id/btn_prev"
-        android:layout_toStartOf="@+id/btn_next"
-        android:src="@mipmap/ic_skip_previous_white_36dp"
+        android:id="@+id/btn_delete"
+        android:visibility="gone"
+        android:src="@mipmap/ic_delete_white_36dp"
+        android:background="@drawable/bg_circle2_medium"
         style="@style/ActionButton" />
 
-</RelativeLayout>
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1" />
+
+    <ImageButton
+        android:id="@+id/btn_prev"
+        android:src="@mipmap/ic_skip_previous_white_36dp"
+        style="@style/ActionButton" />
+    <ImageButton
+        android:id="@+id/btn_next"
+        android:src="@mipmap/ic_skip_next_white_36dp"
+        style="@style/ActionButton" />
+
+
+</LinearLayout>
