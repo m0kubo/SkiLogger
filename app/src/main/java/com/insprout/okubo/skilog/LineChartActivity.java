@@ -190,35 +190,31 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         }
     }
 
-    private void removeInvalidData(List<SkiLogData> data) {
-        float prevAccumulateAsc = 0f;
-        float prevAccumulateDesc = 0f;
-        float adjustedAccumulateAsc = 0f;
-        float adjustedAccumulateDesc = 0f;
-
-        for(SkiLogData log : data) {
-            float asc = log.getAscTotal() - prevAccumulateAsc;
-            prevAccumulateAsc = log.getAscTotal();
-            if (asc > 2000.0f) {
-                // 異常なデータ
-                adjustedAccumulateAsc += asc;
-            }
-            log.setAscTotal(log.getAscTotal() - adjustedAccumulateAsc);
-
-            float desc = log.getDescTotal() - prevAccumulateDesc;
-            prevAccumulateDesc = log.getDescTotal();
-            if (-desc > 2000.0f) {
-                // 異常なデータ
-                adjustedAccumulateDesc += desc;
-            }
-            log.setDescTotal(log.getDescTotal() - adjustedAccumulateDesc);
-        }
-//        for (int i=data.size()-1; i>=0; i--) {
-//            if (data.get(i).getAltitude() < 500.0f) {
-//                data.remove(i);
+//    private void removeInvalidData(List<SkiLogData> data) {
+//        float prevAltitude = Float.NEGATIVE_INFINITY;
+//        float accumulateAsc = 0f;
+//        float accumulateDesc = 0f;
+//
+//        for(SkiLogData log : data) {
+//            float altitude = log.getAltitude();
+//            if (prevAltitude == Float.NEGATIVE_INFINITY) prevAltitude = altitude;
+//            float delta = altitude - prevAltitude;             // 高度差分
+//            if (delta > 0) {
+//                // 閾値以上に 登った
+//                prevAltitude = altitude;                       // 高度を記録
+//                accumulateAsc += delta;                             // 登った高度を積算
+//
+//            } else if (delta < 0) {
+//                // 閾値以上に 降りた
+//                prevAltitude = altitude;                       // 高度を記録
+//                accumulateDesc += delta;                            // 降りた高度を積算 (下降分は負の値)
 //            }
+//            log.setAscTotal(accumulateAsc);
+//            log.setDescTotal(accumulateDesc);
+//
+//            DbUtils.update(this, log);
 //        }
-    }
+//    }
 
     private boolean setupChartValues(int dateIndex) {
         // 3種のチャート用データを設定する
@@ -235,7 +231,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         if (targetDate == null || data == null || data.size() == 0) {
             return false;
         }
-//        removeInvalidData(data);
 
         // 取得したデータをチャート用の データクラスに格納する。また データの最大値/最小値も記録しておく
         float minX = 24.0f;//Float.POSITIVE_INFINITY;

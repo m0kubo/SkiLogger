@@ -56,6 +56,26 @@ public class DbUtils {
         return id;
     }
 
+    /**
+     * Log用 Tableの行を更新する
+     * @param context コンテキスト
+     * @param data updateするLogデータ
+     * @return updateされた行の行数。成功の場合は1。エラーの場合は0
+     */
+    public static long update(Context context, SkiLogData data) {
+        long id = 0;
+
+        SkiLogDb database = null;
+        try {
+            database = new SkiLogDb(context);
+            id = database.update(data);
+
+        } finally {
+            if (database != null) database.close();
+        }
+        return id;
+    }
+
 
     /**
      * 指定された日付の ログデータを削除する。
