@@ -1,10 +1,13 @@
 package com.insprout.okubo.skilog;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
@@ -37,7 +40,7 @@ import java.util.Locale;
 public class BarChartActivity extends AppCompatActivity implements View.OnClickListener {
     private final static int START_MONTH_OF_SEASON = 9;         // 月の指定は 0～11。(0⇒1月  11⇒12月)
 
-    private Date mToday;
+    private Date mThisSeasonFrom;
     private Date mDateOldest;
     private Date mDateFrom, mDateTo;
 
@@ -55,30 +58,58 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         initView();                                             // View関連の初期化
     }
 
+
+    // タイトルメニュー用 設定
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.titlebar, menu);
+        return true;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case android.R.id.home:
                 finish();
                 return true;
+
+            case R.id.menu_delete_logs:
+                confirmDeleteLogs();
+                return true;
+
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // 削除メニューの状態を設定
+        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
+        if (mDateFrom != null) {
+            deleteMenu.setEnabled(true);
+            deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, getTitleString()));
+
+        } else {
+            deleteMenu.setEnabled(false);
+            deleteMenu.setTitle(R.string.menu_delete_logs);
+        }
+        return true;
+    }
+
 
     private void initVars() {
-        mToday = getStartDateOfSeason(new Date(System.currentTimeMillis()));
+        mThisSeasonFrom = getStartDateOfSeason(new Date(System.currentTimeMillis()));
 
         // スキーシーズンの 開始日付と終了日付を設定する
-        mDateFrom = new Date(mToday.getTime());
+        mDateFrom = new Date(mThisSeasonFrom.getTime());
         mDateTo = MiscUtils.addYears(mDateFrom, 1);
         List<SkiLogData> logs = DbUtils.selectLogSummaries(this, 0, 1);    // 最古の1件を取得する
         // データの 下限日付を取得しておく
         if (logs != null && !logs.isEmpty()) {
-//            mDateOldest = getStartDateOfSeason(logs.get(0).getCreated());
             mDateOldest = logs.get(0).getCreated();
         } else {
-            mDateOldest = mToday;
+            mDateOldest = mThisSeasonFrom;
         }
 
     }
@@ -94,14 +125,20 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         updateUi();
     }
 
+    // タイトル表記を返す。
+    // 年は年度での年表 (スキーシーズンは年末年始をまたぐので)
+    private String getTitleString() {
+        int[] date = MiscUtils.getDateValues(mDateFrom);
+        if (date[1] >= START_MONTH_OF_SEASON) date[0]++;
+        return getString(R.string.fmt_title_chart2, date[0]);
+    }
+
     private void updateUi() {
-        int year = MiscUtils.getYear(mDateFrom);
-        if (START_MONTH_OF_SEASON > 0) year++;
-        setTitle(getString(R.string.fmt_title_chart2, year));
+        setTitle(getTitleString());
 
         // 前データ、次データへのボタンの 有効無効
-        UiUtils.enableView(this, R.id.btn_prev, mDateOldest.before(mDateFrom));
-        UiUtils.enableView(this, R.id.btn_next, mDateFrom.before(mToday));
+        UiUtils.enableView(this, R.id.btn_negative, mDateOldest.before(mDateFrom));
+        UiUtils.enableView(this, R.id.btn_positive, mDateFrom.before(mThisSeasonFrom));
     }
 
     private Date getStartDateOfSeason(Date date) {
@@ -230,18 +267,58 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         return bars;
     }
 
+
+    private void deleteLogs() {
+        if (mDateFrom == null || mDateTo == null) return;       // 念のためチェック
+        boolean res = DbUtils.deleteLogs(this, mDateFrom, mDateTo);
+        if (res) {
+            if (!mDateOldest.before(mDateFrom)) {
+                // データの 参照期間を更新しておく
+                List<SkiLogData> logs = DbUtils.selectLogSummaries(this, 0, 1);    // 最古の1件を取得する
+                if (logs != null && !logs.isEmpty()) {
+                    mDateOldest = logs.get(0).getCreated();
+                } else {
+                    mDateOldest = mThisSeasonFrom;
+                }
+            }
+            // チャートの表示を更新する
+            //setupChart();
+            mChart.clear();
+            updateUi();
+        }
+    }
+
+    private void confirmDeleteLogs() {
+        if (mDateFrom == null || mDateTo == null) return;       // 念のためチェック
+        // データ削除
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.title_delete_logs)
+                .setMessage(getString(R.string.fmt_msg_delete_logs, getTitleString()))
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // アプリ終了
+                        deleteLogs();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+
     @Override
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-            case R.id.btn_prev:
+            case R.id.btn_negative:
                 mDateFrom = MiscUtils.addYears(mDateFrom, -1);
                 mDateTo = MiscUtils.addYears(mDateTo, -1);
                 updateUi();
                 setupChart();
                 break;
 
-            case R.id.btn_next:
+            case R.id.btn_positive:
                 mDateFrom = MiscUtils.addYears(mDateFrom, 1);
                 mDateTo = MiscUtils.addYears(mDateTo, 1);
                 updateUi();

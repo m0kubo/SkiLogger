@@ -4,29 +4,25 @@
     <string name="channel_altitude_service">高度記録サービス</string>
     <string name="msg_svc_ongoing">実行中</string>
 
-    <string name="fmt_title_chart">高度記録：%s</string>
-    <string name="fmt_title_chart2">高度記録：シーズン%d</string>
+    <string name="fmt_meter">%,3dm</string>
+    <string name="fmt_time">"%d:%02d"</string>
+    <string name="fmt_title_chart">表示日 %s</string>
+    <string name="fmt_title_chart2">シーズン %d</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
 
     <string name="menu_delete_logs">記録削除</string>
 
     <string name="label_accumulate">積算高度</string>
     <string name="label_altitude">高度</string>
-    <string name="label_total_asc">上昇\n積算</string>
-    <string name="label_total_desc">下降\n積算</string>
     <string name="label_count_lift">RUN</string>
     <string name="label_graph_asc">上昇積算</string>
     <string name="label_graph_desc">下降積算</string>
     <string name="label_status_stop">状態：STOP</string>
     <string name="label_status_logging">状態：Logging&#8230;</string>
 
-    <string name="btn_start_svc">計測</string>
-    <string name="btn_stop_svc">停止</string>
     <string name="btn_finish_app">アプリ終了</string>
 
     <string name="default_altitude"> --- m</string>
-    <string name="fmt_meter">%,3dm</string>
-    <string name="fmt_time">"%d:%02d"</string>
 
     <string name="title_delete_logs">記録削除</string>
     <string name="fmt_msg_delete_logs">%sの記録を削除しますか？\n\n削除したデータは復活できません。</string>

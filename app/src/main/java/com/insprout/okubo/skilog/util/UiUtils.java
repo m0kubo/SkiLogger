@@ -2,6 +2,7 @@ package com.insprout.okubo.skilog.util;
 
 import android.app.Activity;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 /**
@@ -43,6 +44,14 @@ public class UiUtils {
         View view = activity.findViewById(id);
         if (view instanceof TextView) {
             ((TextView)view).setText(text);
+        }
+    }
+
+    public static void setDrawables(Activity activity, int id, int foregroundResId, int backgroundResId) {
+        View view = activity.findViewById(id);
+        if (view instanceof ImageButton) {
+            ((ImageButton)view).setImageResource(foregroundResId);
+            ((ImageButton)view).setBackgroundResource(backgroundResId);
         }
     }
 

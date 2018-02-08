@@ -19,12 +19,6 @@
         android:src="@mipmap/ic_timeline_white_36dp"
         android:background="@drawable/bg_circle_medium"
         style="@style/ActionButton" />
-    <!--<ImageButton
-        android:id="@+id/btn_delete"
-        android:visibility="gone"
-        android:src="@mipmap/ic_delete_white_36dp"
-        android:background="@drawable/bg_circle2_medium"
-        style="@style/ActionButton" />-->
 
     <View
         android:layout_width="0dp"
@@ -32,11 +26,11 @@
         android:layout_weight="1" />
 
     <ImageButton
-        android:id="@+id/btn_prev"
+        android:id="@+id/btn_negative"
         android:src="@mipmap/ic_skip_previous_white_36dp"
         style="@style/ActionButton" />
     <ImageButton
-        android:id="@+id/btn_next"
+        android:id="@+id/btn_positive"
         android:src="@mipmap/ic_skip_next_white_36dp"
         style="@style/ActionButton" />
 

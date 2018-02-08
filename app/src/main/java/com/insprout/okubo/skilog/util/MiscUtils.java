@@ -147,7 +147,7 @@ public class MiscUtils {
      * @param date 入力する日付
      * @return 7個のint型配列。内容は先頭から 年、月、日、時、分、秒、ミリ秒
      */
-    public static int[] getTimeValues(Date date) {
+    public static int[] getDateValues(Date date) {
         int time[] = new int [7];
 
         Calendar cal = Calendar.getInstance();

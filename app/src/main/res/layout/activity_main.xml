@@ -67,41 +67,6 @@
 
     </FrameLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="bottom"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="5dp"
-        android:orientation="horizontal">
+    <include layout="@layout/inc_footer" />
 
-        <ImageButton
-            android:id="@+id/btn_chart2"
-            android:src="@mipmap/ic_equalizer_white_36dp"
-            android:background="@drawable/bg_circle_medium"
-            style="@style/ActionButton" />
-        <ImageButton
-            android:id="@+id/btn_chart1"
-            android:src="@mipmap/ic_timeline_white_36dp"
-            android:background="@drawable/bg_circle_medium"
-            style="@style/ActionButton" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
-
-        <ImageButton
-            android:id="@+id/btn_start_svc"
-            android:src="@drawable/ic_record"
-            android:background="@drawable/bg_circle2_large"
-            style="@style/ActionButton" />
-        <ImageButton
-            android:id="@+id/btn_stop_svc"
-            android:src="@mipmap/ic_pause_white_36dp"
-            android:background="@drawable/bg_circle2_large"
-            style="@style/ActionButton" />
-
-    </LinearLayout>
 </LinearLayout>

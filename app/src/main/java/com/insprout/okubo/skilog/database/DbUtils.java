@@ -84,6 +84,34 @@ public class DbUtils {
         return res;
     }
 
+    /**
+     * 指定された日付の ログデータを削除する。
+     * @param context コンテキスト
+     * @param fromDate 指定日時以降のデータを取得する (指定時刻ジャストのデータを含む)
+     * @param toDate 指定日時未満のデータを取得する (指定時刻ジャストのデータは含まない)
+     * @return 結果
+     */
+    public static boolean deleteLogs(Context context, Date fromDate, Date toDate) {
+        if (fromDate == null || toDate == null || !fromDate.before(toDate)) return false;
+
+        boolean res;
+        String selection = "created >= ? AND created < ?";
+        String[] selectionArgs = new String[] { SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) };
+
+        SkiLogDb fbkDatabase = null;
+        try {
+            fbkDatabase = new SkiLogDb(context);
+            res = fbkDatabase.deleteFromTable1(selection, selectionArgs);
+
+        } catch(Exception ex) {
+            return false;
+
+        } finally {
+            if (fbkDatabase != null) fbkDatabase.close();
+        }
+        return res;
+    }
+
     public static List<SkiLogData> select(Context context, Date date) {
         return select(context, date, 0, 0, null);
     }

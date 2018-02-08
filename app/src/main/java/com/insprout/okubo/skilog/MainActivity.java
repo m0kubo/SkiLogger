@@ -92,6 +92,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
+        UiUtils.setDrawables(this, R.id.btn_positive, R.drawable.ic_record, R.drawable.bg_circle2_large);
+        UiUtils.setDrawables(this, R.id.btn_negative, R.mipmap.ic_pause_white_36dp, R.drawable.bg_circle2_large);
+
         mTvAltitude = findViewById(R.id.tv_altitude);
         mTvTotalAsc = findViewById(R.id.tv_total_asc);
         mTvTotalDesc = findViewById(R.id.tv_total_desc);
@@ -143,8 +146,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         UiUtils.setText(this, R.id.tv_status, (serviceRunning ? R.string.label_status_logging : R.string.label_status_stop));
 
         // サービス起動・停止ボタンの 有効無効
-        UiUtils.enableView(this, R.id.btn_start_svc, (mSensor!=null && !serviceRunning));
-        UiUtils.enableView(this, R.id.btn_stop_svc, (mSensor!=null && serviceRunning));
+        UiUtils.enableView(this, R.id.btn_positive, (mSensor!=null && !serviceRunning));
+        UiUtils.enableView(this, R.id.btn_negative, (mSensor!=null && serviceRunning));
 
         UiUtils.enableView(this, R.id.btn_chart1, mReadyData);
         UiUtils.enableView(this, R.id.btn_chart2, mReadyData);
@@ -169,12 +172,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-            case R.id.btn_start_svc:
+            case R.id.btn_positive:
                 startService();
                 SdkUtils.requestDisableDozeModeIfNeeded(this);
                 break;
 
-            case R.id.btn_stop_svc:
+            case R.id.btn_negative:
                 stopService();
                 break;
 

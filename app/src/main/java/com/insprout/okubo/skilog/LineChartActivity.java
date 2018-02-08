@@ -78,17 +78,18 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
             case R.id.menu_delete_logs:
                 confirmDeleteLogs();
-                break;
+                return true;
 
         }
+
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // 削除メニューの状態を設定
-        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
         Date targetDate = getTargetDate(mDateIndex);
+        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
         if (targetDate != null) {
             deleteMenu.setEnabled(true);
             deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, mDateFormat.format(targetDate)));
@@ -176,8 +177,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         setTitle(getString(R.string.fmt_title_chart, mDateFormat.format(date != null ? date : new Date(System.currentTimeMillis()))));
 
         // 前データ、次データへのボタンの 有効無効
-        UiUtils.enableView(this, R.id.btn_prev, dateIndex >= 1);
-        UiUtils.enableView(this, R.id.btn_next, dateIndex < mDateList.size() - 1);
+        UiUtils.enableView(this, R.id.btn_negative, dateIndex >= 1);
+        UiUtils.enableView(this, R.id.btn_positive, dateIndex < mDateList.size() - 1);
     }
 
     private Date getTargetDate(int dateIndex) {
@@ -481,13 +482,13 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-            case R.id.btn_prev:
+            case R.id.btn_negative:
                 if (mDateIndex > 0) mDateIndex--;
                 updateUi(mDateIndex);
                 updateChart();
                 break;
 
-            case R.id.btn_next:
+            case R.id.btn_positive:
                 if (mDateIndex < mDateList.size() - 1) mDateIndex++;
                 updateUi(mDateIndex);
                 updateChart();
