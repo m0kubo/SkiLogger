@@ -9,6 +9,7 @@ import java.util.List;
 
 /**
  * Created by okubo on 2018/01/25.
+ * 気圧センサー関連の ユーティリティメソッド
  */
 
 public class SensorUtils {

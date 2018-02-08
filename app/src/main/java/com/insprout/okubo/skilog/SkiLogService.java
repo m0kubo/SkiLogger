@@ -22,7 +22,7 @@ import android.util.Log;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.util.SensorUtils;
-import com.insprout.okubo.skilog.util.TimeUtils;
+import com.insprout.okubo.skilog.util.MiscUtils;
 
 import java.util.Date;
 import java.util.List;
@@ -271,7 +271,7 @@ public class SkiLogService extends Service implements SensorEventListener {
             float altitude = SensorUtils.getAltitude(val[0]);
 //            Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");
 
-            if (!TimeUtils.getDate(mRecordTime).equals(TimeUtils.getDate(System.currentTimeMillis()))) {
+            if (!MiscUtils.getDate(mRecordTime).equals(MiscUtils.getDate(System.currentTimeMillis()))) {
                 // 日付が変わった場合は 値をリセットする
                 mPrevAltitude = INVALID_ALTITUDE;
                 mLiftAltitude = INVALID_ALTITUDE;

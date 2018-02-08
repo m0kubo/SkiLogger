@@ -25,6 +25,13 @@ public class UiUtils {
         }
     }
 
+    public static void setSelected(Activity activity, int id, boolean selected) {
+        View view = activity.findViewById(id);
+        if (view != null) {
+            view.setSelected(selected);
+        }
+    }
+
     public static void setText(Activity activity, int id, int textId) {
         View view = activity.findViewById(id);
         if (view instanceof TextView) {

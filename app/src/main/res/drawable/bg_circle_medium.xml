@@ -23,6 +23,17 @@
             <size android:height="@dimen/size_circle_medium_button" android:width="@dimen/size_circle_medium_button" />
         </shape>
     </item>
+    <!-- 選択時 -->
+    <item android:state_selected="true">
+        <shape
+            android:shape="ring"
+            android:innerRadius="0dp"
+            android:thickness="@dimen/radius_circle_medium_button"
+            android:useLevel="false" >
+            <solid android:color="#c06900" />
+            <size android:height="@dimen/size_circle_medium_button" android:width="@dimen/size_circle_medium_button" />
+        </shape>
+    </item>
     <!-- 標準状態 -->
     <item>
         <shape

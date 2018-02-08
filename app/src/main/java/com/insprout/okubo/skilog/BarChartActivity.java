@@ -23,8 +23,8 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
-import com.insprout.okubo.skilog.util.TimeUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.text.SimpleDateFormat;
@@ -71,7 +71,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
         // スキーシーズンの 開始日付と終了日付を設定する
         mDateFrom = new Date(mToday.getTime());
-        mDateTo = TimeUtils.addYears(mDateFrom, 1);
+        mDateTo = MiscUtils.addYears(mDateFrom, 1);
         List<SkiLogData> logs = DbUtils.selectLogSummaries(this, 0, 1);    // 最古の1件を取得する
         // データの 下限日付を取得しておく
         if (logs != null && !logs.isEmpty()) {
@@ -84,6 +84,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void initView() {
+        UiUtils.setSelected(this, R.id.btn_chart2, true);
+
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
@@ -93,7 +95,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void updateUi() {
-        int year = TimeUtils.getYear(mDateFrom);
+        int year = MiscUtils.getYear(mDateFrom);
         if (START_MONTH_OF_SEASON > 0) year++;
         setTitle(getString(R.string.fmt_title_chart2, year));
 
@@ -103,11 +105,11 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private Date getStartDateOfSeason(Date date) {
-        int year = TimeUtils.getYear(date);
-        int month = TimeUtils.getMonth(date);
+        int year = MiscUtils.getYear(date);
+        int month = MiscUtils.getMonth(date);
         if (month < START_MONTH_OF_SEASON) year--;
 
-        return TimeUtils.toDate(year, START_MONTH_OF_SEASON, 1);
+        return MiscUtils.toDate(year, START_MONTH_OF_SEASON, 1);
     }
 
     private void setupChart() {
@@ -176,7 +178,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 //            for (int j=0; j<logs0.size(); j++) {
 //                SkiLogData log = logs0.get(j);
 //                SkiLogData log1 = new SkiLogData(log.getAltitude(), log.getAscTotal(), log.getDescTotal(), log.getCount());
-//                log1.setCreated(TimeUtils.addDays(log.getCreated(), -(i * 10 - j)));
+//                log1.setCreated(MiscUtils.addDays(log.getCreated(), -(i * 10 - j)));
 //                logs.add(log1);
 //            }
 //        }
@@ -198,8 +200,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
             float accumulate = -log.getDescTotal();
             entries.add(new BarEntry(i, accumulate));
-            mYAxisMax = maxValue(mYAxisMax, accumulate);
-            mYAxisMin = minValue(mYAxisMin, accumulate);
+            mYAxisMax = MiscUtils.maxValue(mYAxisMax, accumulate);
+            mYAxisMin = MiscUtils.minValue(mYAxisMin, accumulate);
         }
         // 縦軸は 100ｍごとの区切りに補正しておく
         int boundary = 100;
@@ -233,39 +235,26 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         int id = view.getId();
         switch(id) {
             case R.id.btn_prev:
-                mDateFrom = TimeUtils.addYears(mDateFrom, -1);
-                mDateTo = TimeUtils.addYears(mDateTo, -1);
+                mDateFrom = MiscUtils.addYears(mDateFrom, -1);
+                mDateTo = MiscUtils.addYears(mDateTo, -1);
                 updateUi();
                 setupChart();
                 break;
 
             case R.id.btn_next:
-                mDateFrom = TimeUtils.addYears(mDateFrom, 1);
-                mDateTo = TimeUtils.addYears(mDateTo, 1);
+                mDateFrom = MiscUtils.addYears(mDateFrom, 1);
+                mDateTo = MiscUtils.addYears(mDateTo, 1);
                 updateUi();
                 setupChart();
                 break;
+
+            case R.id.btn_chart1:
+                UiUtils.setSelected(this, R.id.btn_chart1, true);
+                UiUtils.setSelected(this, R.id.btn_chart2, false);
+                LineChartActivity.startActivity(this);
+                finish();
+                break;
         }
-    }
-
-    private float minValue(float... values) {
-        if (values.length == 0) return Float.NEGATIVE_INFINITY;
-
-        float min = Float.POSITIVE_INFINITY;
-        for (float value : values) {
-            if (value < min) min = value;
-        }
-        return min;
-    }
-
-    private float maxValue(float... values) {
-        if (values.length == 0) return Float.POSITIVE_INFINITY;
-
-        float max = Float.NEGATIVE_INFINITY;
-        for (float value : values) {
-            if (value > max) max = value;
-        }
-        return max;
     }
 
     public static void startActivity(Activity context) {

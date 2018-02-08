@@ -146,8 +146,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         UiUtils.enableView(this, R.id.btn_start_svc, (mSensor!=null && !serviceRunning));
         UiUtils.enableView(this, R.id.btn_stop_svc, (mSensor!=null && serviceRunning));
 
-        UiUtils.enableView(this, R.id.btn_chart, mReadyData);
+        UiUtils.enableView(this, R.id.btn_chart1, mReadyData);
         UiUtils.enableView(this, R.id.btn_chart2, mReadyData);
+        UiUtils.setSelected(this, R.id.btn_chart1, false);
+        UiUtils.setSelected(this, R.id.btn_chart2, false);
     }
 
     private void confirmServiceStatus() {
@@ -176,31 +178,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 stopService();
                 break;
 
-            case R.id.btn_chart:
+            case R.id.btn_chart1:
+                UiUtils.setSelected(this, R.id.btn_chart1, true);
                 LineChartActivity.startActivity(this);
                 break;
 
             case R.id.btn_chart2:
+                UiUtils.setSelected(this, R.id.btn_chart2, true);
                 BarChartActivity.startActivity(this);
                 break;
-        }
-    }
-
-    private void getData() {
-        long count = DbUtils.count(this);
-        Log.d("database", "レコード数:" + count);
-
-//        List<SkiLogData> data = DbUtils.listByRawQuery(
-//                this,
-//                "SELECT * FROM ski_log WHERE created IN (SELECT MAX(created) FROM ski_log GROUP BY date(created,'+9 hours') )",
-//                null);
-        List<SkiLogData> data = DbUtils.select(this, new Date(System.currentTimeMillis()));
-//        TimeZone.getTimeZone("Europe/Berlin").
-//        for (SkiLogData log : data) {
-        for (int i=0; i<data.size(); i++) {
-            SkiLogData log = data.get(i);
-            String msg = "" + i + ":" + log.getCreated().toString() + " 高度:" + log.getAltitude() + " 上昇:" + log.getAscTotal() + " 下降:" + log.getDescTotal() + " RUN:" + log.getCount();
-            Log.d("database", msg);
         }
     }
 

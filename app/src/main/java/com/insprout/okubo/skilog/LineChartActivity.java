@@ -9,6 +9,7 @@ import android.graphics.RectF;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioGroup;
@@ -25,9 +26,9 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
-import com.insprout.okubo.skilog.util.TimeUtils;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -60,14 +61,43 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         initView();                                             // View関連の初期化
     }
 
+    // タイトルメニュー用 設定
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.titlebar, menu);
+        return true;
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case android.R.id.home:
                 finish();
                 return true;
+
+            case R.id.menu_delete_logs:
+                confirmDeleteLogs();
+                break;
+
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // 削除メニューの状態を設定
+        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
+        Date targetDate = getTargetDate(mDateIndex);
+        if (targetDate != null) {
+            deleteMenu.setEnabled(true);
+            deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, mDateFormat.format(targetDate)));
+
+        } else {
+            deleteMenu.setEnabled(false);
+            deleteMenu.setTitle(R.string.menu_delete_logs);
+        }
+        return true;
     }
 
 
@@ -104,7 +134,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void initView() {
-        UiUtils.setVisibility(this, R.id.btn_delete, View.VISIBLE);     // 削除ボタン表示
+        UiUtils.setSelected(this, R.id.btn_chart1, true);
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
@@ -142,7 +172,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void updateUi(int dateIndex) {
-        setTitle(getString(R.string.fmt_title_chart, mDateFormat.format(getTargetDate(dateIndex))));
+        Date date = getTargetDate(dateIndex);
+        setTitle(getString(R.string.fmt_title_chart, mDateFormat.format(date != null ? date : new Date(System.currentTimeMillis()))));
 
         // 前データ、次データへのボタンの 有効無効
         UiUtils.enableView(this, R.id.btn_prev, dateIndex >= 1);
@@ -154,7 +185,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         if (dateIndex >= 0 && dateIndex < mDateList.size()) {
             return mDateList.get(dateIndex);
         } else {
-            return new Date(System.currentTimeMillis());
+            return null;
         }
     }
 
@@ -214,7 +245,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         float maxY2 = 0.0f;
 
         // チャート用の データクラスに格納する
-        long timeAm0 = TimeUtils.getDate(targetDate).getTime();
+        long timeAm0 = MiscUtils.getDate(targetDate).getTime();
         for (SkiLogData log : data) {
 //            String msg = "" + log.getCreated().toString() + " 高度:" + log.getAltitude() + " 上昇:" + log.getAscTotal() + " 下降:" + log.getDescTotal() + " RUN:" + log.getCount();
 //            Log.d("database", msg);
@@ -228,13 +259,13 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             mChartDataSet2[0].getValues().add(new Entry(time, ascent, null, null));
             mChartDataSet2[1].getValues().add(new Entry(time, descent, null, null));
 
-            // ついでにデータの最大値/最小値を記録しておく
-            maxX = maxValue(maxX, time);
-            minX = minValue(minX, time);
-            maxY1 = maxValue(maxY1, altitude);
-            minY1 = minValue(minY1, altitude);
-            maxY2 = maxValue(maxY2, ascent, descent);
-            minY2 = minValue(minY2, ascent, descent);
+            // ついでにデータの最大値、最小値を記録しておく (チャートの軸表示用)
+            maxX = MiscUtils.maxValue(maxX, time);
+            minX = MiscUtils.minValue(minX, time);
+            maxY1 = MiscUtils.maxValue(maxY1, altitude);
+            minY1 = MiscUtils.minValue(minY1, altitude);
+            maxY2 = MiscUtils.maxValue(maxY2, ascent, descent);
+            minY2 = MiscUtils.minValue(minY2, ascent, descent);
         }
 
         // チャートの表示領域を記録
@@ -433,7 +464,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         // データ削除
         new AlertDialog.Builder(this)
                 .setTitle(R.string.title_delete_logs)
-                .setMessage(getString(R.string.fmt_msg_delete_logs,  mDateFormat.format(getTargetDate(mDateIndex))))
+                .setMessage(getString(R.string.fmt_msg_delete_logs,  mDateFormat.format(targetDate)))
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
@@ -462,30 +493,13 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 updateChart();
                 break;
 
-            case R.id.btn_delete:
-                confirmDeleteLogs();
+            case R.id.btn_chart2:
+                UiUtils.setSelected(this, R.id.btn_chart1, false);
+                UiUtils.setSelected(this, R.id.btn_chart2, true);
+                BarChartActivity.startActivity(this);
+                finish();
                 break;
         }
-    }
-
-    private float minValue(float... values) {
-        if (values.length == 0) return Float.NEGATIVE_INFINITY;
-
-        float min = Float.POSITIVE_INFINITY;
-        for (float value : values) {
-            if (value < min) min = value;
-        }
-        return min;
-    }
-
-    private float maxValue(float... values) {
-        if (values.length == 0) return Float.POSITIVE_INFINITY;
-
-        float max = Float.NEGATIVE_INFINITY;
-        for (float value : values) {
-            if (value > max) max = value;
-        }
-        return max;
     }
 
 
