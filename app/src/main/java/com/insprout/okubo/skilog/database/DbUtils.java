@@ -198,11 +198,11 @@ public class DbUtils {
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-//            res = DbUtils.listByRawQuery(
-//                    context,
-//                    "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created, ?))",
-//                    new String[]{SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate), SkiLogDb.utcModifier()});
-            res = fbkDatabase.selectLogSummaries(fromDate, toDate);
+            //res = fbkDatabase.selectLogSummaries(fromDate, toDate);
+            res = DbUtils.listByRawQuery(
+                    context,
+                    "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created, ?))",
+                    new String[]{SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate), SkiLogDb.utcModifier()});
 
         } catch(Exception ex) {
             return res;
