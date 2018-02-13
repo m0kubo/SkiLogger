@@ -38,16 +38,21 @@ import java.util.List;
 
 
 public class LineChartActivity extends AppCompatActivity implements View.OnClickListener {
-    private final static int MAX_DATA_COUNT = 100;
+    private final static int MAX_DATA_COUNT = 0;
 
     private int mDateIndex = -1;
     private List<Date> mDateList;
     private DateFormat mDateFormat;
     private RadioGroup mRgChartType;
 
+    private int mColor;
+    private int mColorAsc;
+    private int mColorDesc;
+
     private LineChart mChart;
-    private LineDataSet[] mChartDataSet1 = new LineDataSet[ 1 ];
-    private LineDataSet[] mChartDataSet2 = new LineDataSet[ 2 ];
+    private ArrayList<Entry> mChartValues11;
+    private ArrayList<Entry> mChartValues21;
+    private ArrayList<Entry> mChartValues22;
     private RectF mChartAxis1;
     private RectF mChartAxis2;
 
@@ -119,19 +124,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         }
         updateUi(mDateIndex);
 
-        // 高度のチャート
-        int color = SdkUtils.getColor(this, R.color.colorAltitude);
-        mChartDataSet1[0] = newLineDataSet(new ArrayList<Entry>(), getString(R.string.label_altitude), color);
-        mChartDataSet1[0].setDrawFilled(true);
-        mChartDataSet1[0].setFillColor(color);
-
-        // 上昇・下降積算のチャート
-        int colorAsc = SdkUtils.getColor(this, R.color.colorAccumulateAsc);
-        int colorDesc = SdkUtils.getColor(this, R.color.colorAccumulateDesc);
-        mChartDataSet2[0] = newLineDataSet(new ArrayList<Entry>(), getString(R.string.label_graph_asc), colorAsc);
-        mChartDataSet2[0].setDrawFilled(false);
-        mChartDataSet2[1] = newLineDataSet(new ArrayList<Entry>(), getString(R.string.label_graph_desc), colorDesc);
-        mChartDataSet2[1].setDrawFilled(false);
+        // チャートの色を設定
+        mColor = SdkUtils.getColor(this, R.color.colorAltitude);
+        mColorAsc = SdkUtils.getColor(this, R.color.colorAccumulateAsc);
+        mColorDesc = SdkUtils.getColor(this, R.color.colorAccumulateDesc);
     }
 
     private void initView() {
@@ -190,37 +186,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         }
     }
 
-//    private void removeInvalidData(List<SkiLogData> data) {
-//        float prevAltitude = Float.NEGATIVE_INFINITY;
-//        float accumulateAsc = 0f;
-//        float accumulateDesc = 0f;
-//
-//        for(SkiLogData log : data) {
-//            float altitude = log.getAltitude();
-//            if (prevAltitude == Float.NEGATIVE_INFINITY) prevAltitude = altitude;
-//            float delta = altitude - prevAltitude;             // 高度差分
-//            if (delta > 0) {
-//                // 閾値以上に 登った
-//                prevAltitude = altitude;                       // 高度を記録
-//                accumulateAsc += delta;                             // 登った高度を積算
-//
-//            } else if (delta < 0) {
-//                // 閾値以上に 降りた
-//                prevAltitude = altitude;                       // 高度を記録
-//                accumulateDesc += delta;                            // 降りた高度を積算 (下降分は負の値)
-//            }
-//            log.setAscTotal(accumulateAsc);
-//            log.setDescTotal(accumulateDesc);
-//
-//            DbUtils.update(this, log);
-//        }
-//    }
-
     private boolean setupChartValues(int dateIndex) {
-        // 3種のチャート用データを設定する
-        mChartDataSet1[0].getValues().clear();                  // 高度チャート用データ
-        mChartDataSet2[0].getValues().clear();                  // 上昇積算チャート用データ
-        mChartDataSet2[1].getValues().clear();                  // 下降積算チャート用データ
+        mChartValues11 = new ArrayList<>();
+        mChartValues21 = new ArrayList<>();
+        mChartValues22 = new ArrayList<>();
 
         // DBから 指定日のデータを取得する
         if (dateIndex < 0 || dateIndex >= mDateList.size()) {
@@ -251,9 +220,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             float altitude = log.getAltitude();
             float ascent = log.getAscTotal();
             float descent = -log.getDescTotal();
-            mChartDataSet1[0].getValues().add(new Entry(time, altitude, null, null));
-            mChartDataSet2[0].getValues().add(new Entry(time, ascent, null, null));
-            mChartDataSet2[1].getValues().add(new Entry(time, descent, null, null));
+            mChartValues11.add(new Entry(time, altitude, null, null));
+            mChartValues21.add(new Entry(time, ascent, null, null));
+            mChartValues22.add(new Entry(time, descent, null, null));
 
             // ついでにデータの最大値、最小値を記録しておく (チャートの軸表示用)
             maxX = MiscUtils.maxValue(maxX, time);
@@ -276,25 +245,56 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         return true;
     }
 
+
     private void drawChartAltitude() {
         mChart.clear();
 
         // 表示データを取得する
-        if (setupChartValues(mDateIndex)) {
-            // 高度チャートを描画する
-            drawChart(mChartDataSet1, mChartAxis1);
+        if (!setupChartValues(mDateIndex)) {
+            return;
         }
-    }
 
+        // チャートの 軸表示設定
+        setupAxis(mChartAxis1);
+
+        ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
+        // add the datasets
+        String label = getString(R.string.label_altitude);
+        dataSets.add(newLineDataSet(mChartValues11, label, mColor, true));
+        // create a data object with the datasets
+        LineData lineData = new LineData(dataSets);
+
+        // set data
+        mChart.setData(lineData);
+
+        //mChart.animateX(2500);
+        mChart.invalidate();
+    }
 
     private void drawChartAccumulate() {
         mChart.clear();
 
         // 表示データを取得する
-        if (setupChartValues(mDateIndex)) {
-            // 積算チャート(2種類)を描画する
-            drawChart(mChartDataSet2, mChartAxis2);
+        if (!setupChartValues(mDateIndex)) {
+            return;
         }
+
+        // チャートの 軸表示設定
+        setupAxis(mChartAxis2);
+
+        ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
+        // add the datasets
+        String label = getString(R.string.label_accumulate);
+        dataSets.add(newLineDataSet(mChartValues21, label, mColorAsc, false));
+        dataSets.add(newLineDataSet(mChartValues22, label, mColorDesc, false));
+        // create a data object with the datasets
+        LineData lineData = new LineData(dataSets);
+
+        // set data
+        mChart.setData(lineData);
+
+        //mChart.animateX(2500);
+        mChart.invalidate();
     }
 
     private void updateChart() {
@@ -317,66 +317,22 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     private void updateChartAltitude() {
         // 表示データを取得する
-        if (setupChartValues(mDateIndex)) {
-            // 高度チャートを描画する
-            updateChart(mChartDataSet1, mChartAxis1);
-        } else {
+        if (!setupChartValues(mDateIndex)) {
             mChart.clear();
-        }
-    }
-
-    private void updateChartAccumulate() {
-        // 表示データを取得する
-        if (setupChartValues(mDateIndex)) {
-            // 積算チャート(2種類)を描画する
-            updateChart(mChartDataSet2, mChartAxis2);
-        } else {
-            mChart.clear();
-        }
-    }
-
-
-    private void drawChart(LineDataSet[] dataSets, RectF axis) {
-        if (dataSets == null) return;
-        for (LineDataSet dataSet : dataSets) {
-            if (dataSet.getValues().isEmpty()) return;
+            return;
         }
 
-        mChart.clear();
-        // チャートの 軸表示設定
-        setupAxis(axis);
-
-        ArrayList<ILineDataSet> lineDataSets = new ArrayList<ILineDataSet>();
-        // add the datasets
-        lineDataSets.addAll(Arrays.asList(dataSets));
-        // create a data object with the datasets
-        LineData lineData = new LineData(lineDataSets);
-
-        // set data
-        mChart.setData(lineData);
-
-        //mChart.animateX(2500);
-        mChart.invalidate();
-    }
-
-    /**
-     * Chartには 必要な LineDataSetが設定されている前提で、チャートを更新する
-     */
-    private void updateChart(LineDataSet[] dataSets, RectF axis) {
-        if (dataSets == null) return;
-        for (LineDataSet dataSet : dataSets) {
-            if (dataSet.getValues().isEmpty()) return;
-        }
-
-        if (mChart.getData() == null) {
+        LineData lineData = mChart.getData();
+        if (lineData == null) {
             // Chart.clear()などが行われるとLineDataは nullになっているので、その場合は新規にチャートを描く
-            drawChart(dataSets, axis);
+            drawChartAltitude();
             return;
         }
 
         // チャートの 軸表示設定
-        setupAxis(axis);
+        setupAxis(mChartAxis1);
 
+        ((LineDataSet)lineData.getDataSetByIndex(0)).setValues(mChartValues11);
         mChart.getData().notifyDataChanged();
         mChart.notifyDataSetChanged();
 
@@ -384,7 +340,33 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChart.invalidate();
     }
 
-    private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color) {
+    private void updateChartAccumulate() {
+        // 表示データを取得する
+        if (!setupChartValues(mDateIndex)) {
+            mChart.clear();
+            return;
+        }
+
+        LineData lineData = mChart.getData();
+        if (lineData == null) {
+            // Chart.clear()などが行われるとLineDataは nullになっているので、その場合は新規にチャートを描く
+            drawChartAccumulate();
+            return;
+        }
+
+        // チャートの 軸表示設定
+        setupAxis(mChartAxis2);
+
+        ((LineDataSet)lineData.getDataSetByIndex(0)).setValues(mChartValues21);
+        ((LineDataSet)lineData.getDataSetByIndex(1)).setValues(mChartValues22);
+        mChart.getData().notifyDataChanged();
+        mChart.notifyDataSetChanged();
+
+        //mChart.animateX(2500);
+        mChart.invalidate();
+    }
+
+    private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean lineFilled) {
         LineDataSet dataSet = new LineDataSet(yValues, label);
 
         dataSet.setDrawIcons(false);
@@ -398,9 +380,12 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         dataSet.setColor(color);
         dataSet.setCircleColor(color);
-//        dataSet.setDrawFilled(false);
-        dataSet.setDrawFilled(true);
-        dataSet.setFillColor(color);
+        if (lineFilled) {
+            dataSet.setDrawFilled(true);
+            dataSet.setFillColor(color);
+        } else {
+            dataSet.setDrawFilled(false);
+        }
 
         return dataSet;
     }
