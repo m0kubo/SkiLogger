@@ -164,7 +164,7 @@ public class DbUtils {
      * orderは 日付の古い順
      * @param context コンテキスト
      * @param offset 取得するデータのオフセット
-     * @param limit 取得するデータの件数上限
+     * @param limit 取得するデータの件数上限。0以下の値が指定された場合は全件を取得する
      * @return データ(複数件)
      */
     public static List<SkiLogData> selectLogSummaries(Context context, int offset, int limit) {
