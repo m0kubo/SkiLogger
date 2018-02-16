@@ -18,7 +18,8 @@
     <string name="label_graph_asc">上昇積算</string>
     <string name="label_graph_desc">下降積算</string>
     <string name="label_status_stop">状態：STOP</string>
-    <string name="label_status_logging">状態：Logging&#8230;</string>
+    <string name="label_status_start">状態：START</string>
+    <string name="label_status_starting">状態：Starting&#8230;</string>
 
     <string name="btn_finish_app">アプリ終了</string>
 

@@ -252,7 +252,7 @@ public class SkiLogService extends Service implements SensorEventListener {
     private int mLiftDelta = 0;
 
 
-    private float[] mReplyData = new float[ 4 ];
+    private long[] mReplyData = new long[ 5 ];
 
 
     @Override
@@ -345,20 +345,29 @@ public class SkiLogService extends Service implements SensorEventListener {
             }
         }
 
-        // 表示用の値を 配列で一度にActivityへ送る
-        mReplyData[0] = altitude;
-        mReplyData[1] = mTotalAsc;
-        mReplyData[2] = mTotalDesc;
-        mReplyData[3] = (float) mRunCount;
-        mReplyHandler.replyMessage(mReplyData);
+        // チャート更新用にデータをActivityに送る
+        replyData(-1, altitude, mTotalAsc, mTotalDesc, mRunCount);
     }
+
 
     private void recordLog(float altitude) {
         mRecordTime = System.currentTimeMillis();
+        // チャート更新用にデータをActivityに送る
+        replyData(mRecordTime, altitude, mTotalAsc, mTotalDesc, mRunCount);
+
         long id = DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
         if (id <= 0) {
             Log.e(TAG, "DB error: fail to insert");
         }
+    }
+
+    private void replyData(long time, float altitude, float totalAsc, float totalDesc, int runCount) {
+        mReplyData[0] = time;
+        mReplyData[1] = (long)(altitude * 1000);        // ミリメートル単位の値にして送信する
+        mReplyData[2] = (long)(totalAsc * 1000);        // ミリメートル単位の値にして送信する
+        mReplyData[3] = (long)(totalDesc * 1000);       // ミリメートル単位の値にして送信する
+        mReplyData[4] = runCount;
+        mReplyHandler.replyMessage(mReplyData);
     }
 
     private void getPreviousLog() {

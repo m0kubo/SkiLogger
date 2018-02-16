@@ -215,6 +215,20 @@ public class MiscUtils {
     }
 
     /**
+     * ２つの Dateが (端末設定のTimeZoneで)同じ日付か判断する
+     * (時分秒は考慮しない。年月日のみ)
+     * @param date1 比較されるDate
+     * @param date2 比較するDate
+     * @return 結果
+     */
+    public static boolean isSameDate(Date date1, Date date2) {
+        int[] time1 = getDateValues(date1);
+        int[] time2 = getDateValues(date2);
+
+        return (time1[0]==time2[0] && time1[1]==time2[1] && time1[2]==time2[2]);
+    }
+
+    /**
      * 指定日付の 0時0分の時刻を Date型で返す
      * @param date 指定日時
      * @return 指定日の am0:00を示すDate型

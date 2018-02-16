@@ -12,13 +12,9 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.SensorUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
-
-import java.util.Date;
-import java.util.List;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -58,12 +54,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        mServiceMessenger.unbind();
-        super.onDestroy();
-    }
-
     private void initVars() {
         SkiLogService.registerNotifyChannel(this);              // Android8.0対応 notificationチャンネルの登録
 
@@ -74,17 +64,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onReceiveMessage(Message msg) {
                 switch (msg.what) {
-                    case ServiceMessenger.MSG_REPLY_STRING:
-                        // 文字列型データの受信
-                        mTvAltitude.setText((String)msg.obj);
-                        break;
+//                    case ServiceMessenger.MSG_REPLY_STRING:
+//                        // 文字列型データの受信
+//                        mTvAltitude.setText((String)msg.obj);
+//                        break;
 
-                    case ServiceMessenger.MSG_REPLY_FLOAT_ARRAY:
-                        float[] data = (float[]) msg.obj;
-                        mTvAltitude.setText(formattedAltitude(data[0]));
-                        mTvTotalAsc.setText(formattedAltitude(data[1]));
-                        mTvTotalDesc.setText(formattedAltitude(-data[2]));
-                        mTvCount.setText(String.valueOf((int)data[3]));
+                    case ServiceMessenger.MSG_REPLY_LONG_ARRAY:
+                        long[] data = (long[]) msg.obj;
+                        mTvAltitude.setText(formattedAltitude(data[1]));
+                        mTvTotalAsc.setText(formattedAltitude(data[2]));
+                        mTvTotalDesc.setText(formattedAltitude(-data[3]));
+                        mTvCount.setText(String.valueOf(data[4]));
                         break;
                 }
             }
@@ -121,9 +111,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void startService() {
         Log.d("WatchService", "startService()");
         updateUi(true);
+        UiUtils.setText(this, R.id.tv_status, R.string.label_status_starting);
         SkiLogService.startService(this);
 
-        mServiceMessenger.bind();
+        try {
+            mServiceMessenger.bind();
+        } catch(Exception e) {
+            updateUi(false);
+        }
         // 不足のエラーで Serviceが開始できなかった場合のために、一定時間後にServiceの起動状態を確認して ボタンに反映する
         confirmServiceStatus();
     }
@@ -137,13 +132,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    private String formattedAltitude(float altitude) {
-        return getString(R.string.fmt_meter, (int)(altitude + 0.5f));
+    // ミリメートル単位の高度値を 表示用の文字列に変換する
+    private String formattedAltitude(long altitude) {
+        return getString(R.string.fmt_meter, (altitude + 500) / 1000);
     }
 
     private void updateUi(boolean serviceRunning) {
         // ステータス表示
-        UiUtils.setText(this, R.id.tv_status, (serviceRunning ? R.string.label_status_logging : R.string.label_status_stop));
+        UiUtils.setText(this, R.id.tv_status, (serviceRunning ? R.string.label_status_start : R.string.label_status_stop));
 
         // サービス起動・停止ボタンの 有効無効
         UiUtils.enableView(this, R.id.btn_positive, (mSensor!=null && !serviceRunning));

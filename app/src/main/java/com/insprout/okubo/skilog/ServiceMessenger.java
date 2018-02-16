@@ -28,10 +28,10 @@ public class ServiceMessenger implements ServiceConnection {
     // メッセージ返信用イベントコード
     public static final int MSG_REPLY_STRING = 1;
     public static final int MSG_REPLY_INT = 2;
-    public static final int MSG_REPLY_FLOAT = 3;
+    public static final int MSG_REPLY_LONG = 3;
     public static final int MSG_REPLY_STRING_ARRAY = 11;
     public static final int MSG_REPLY_INT_ARRAY = 12;
-    public static final int MSG_REPLY_FLOAT_ARRAY = 13;
+    public static final int MSG_REPLY_LONG_ARRAY = 13;
 
 
     private Context mContext;
@@ -159,15 +159,35 @@ public class ServiceMessenger implements ServiceConnection {
             }
         }
 
-        public void replyMessage(float[] data) {
+//        public void replyMessage(int[] data) {
+//            try {
+//                for (Messenger callback : mCallbackMessengers) {
+//                    callback.send(Message.obtain(null, ServiceMessenger.MSG_REPLY_INT_ARRAY, data));
+//                }
+//            } catch (RemoteException e) {
+//                //e.printStackTrace();
+//            }
+//        }
+
+        public void replyMessage(long[] data) {
             try {
                 for (Messenger callback : mCallbackMessengers) {
-                    callback.send(Message.obtain(null, ServiceMessenger.MSG_REPLY_FLOAT_ARRAY, data));
+                    callback.send(Message.obtain(null, ServiceMessenger.MSG_REPLY_LONG_ARRAY, data));
                 }
             } catch (RemoteException e) {
                 //e.printStackTrace();
             }
         }
+
+//        public void replyMessage(float[] data) {
+//            try {
+//                for (Messenger callback : mCallbackMessengers) {
+//                    callback.send(Message.obtain(null, ServiceMessenger.MSG_REPLY_FLOAT_ARRAY, data));
+//                }
+//            } catch (RemoteException e) {
+//                //e.printStackTrace();
+//            }
+//        }
     }
 
     /**

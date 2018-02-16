@@ -7,8 +7,10 @@ import android.content.Intent;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,14 +34,15 @@ import com.insprout.okubo.skilog.util.SdkUtils;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 
 public class LineChartActivity extends AppCompatActivity implements View.OnClickListener {
+    private final static String TAG = "chart";
     private final static int MAX_DATA_COUNT = 0;
 
+    private ServiceMessenger mServiceMessenger;
     private int mDateIndex = -1;
     private List<Date> mDateList;
     private DateFormat mDateFormat;
@@ -107,6 +110,21 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // サービスの実行状況に合わせて、Messengerや ボタンなどを設定する
+        if (SkiLogService.isRunning(this)) mServiceMessenger.bind();
+    }
+
+    @Override
+    public void onPause() {
+        if (SkiLogService.isRunning(this)) mServiceMessenger.unbind();
+        super.onPause();
+    }
+
+
     private void initVars() {
         mDateFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 
@@ -128,6 +146,28 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mColor = SdkUtils.getColor(this, R.color.colorAltitude);
         mColorAsc = SdkUtils.getColor(this, R.color.colorAccumulateAsc);
         mColorDesc = SdkUtils.getColor(this, R.color.colorAccumulateDesc);
+
+        // Serviceプロセスとの 通信クラス作成
+        mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
+            @Override
+            public void onReceiveMessage(Message msg) {
+                switch (msg.what) {
+                    case ServiceMessenger.MSG_REPLY_LONG_ARRAY:
+                        Date targetDate = getTargetDate(mDateIndex);
+                        if (targetDate == null) return;
+
+                        long[] data = (long[]) msg.obj;
+                        if (data[0] <= 0) return;
+
+                        Date timeAm00 = MiscUtils.getDate(new Date(data[0]));
+                        Log.d(TAG, "received data: date=" + timeAm00);
+                        if (MiscUtils.isSameDate(timeAm00, targetDate)) {
+                            appendData((data[0] - timeAm00.getTime()) / (60 * 60 * 1000.0f), data[1] * 0.001f, data[2] * 0.001f, -data[3] * 0.001f);
+                        }
+                        break;
+                }
+            }
+        });
     }
 
     private void initView() {
@@ -192,10 +232,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChartValues22 = new ArrayList<>();
 
         // DBから 指定日のデータを取得する
-        if (dateIndex < 0 || dateIndex >= mDateList.size()) {
-            return false;
-        }
-        Date targetDate = mDateList.get(dateIndex);
+        Date targetDate = getTargetDate(dateIndex);
+        if (targetDate == null) return false;
+
         List<SkiLogData> data = DbUtils.select(this, targetDate);
         if (targetDate == null || data == null || data.size() == 0) {
             return false;
@@ -216,17 +255,17 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 //            Log.d("database", msg);
 
             // X軸は 対象日の午前0時からの経過時間とする
-            float time = (log.getCreated().getTime() - timeAm0) / (60 * 60 * 1000.0f);
+            float hours = (log.getCreated().getTime() - timeAm0) / (60 * 60 * 1000.0f);
             float altitude = log.getAltitude();
             float ascent = log.getAscTotal();
             float descent = -log.getDescTotal();
-            mChartValues11.add(new Entry(time, altitude, null, null));
-            mChartValues21.add(new Entry(time, ascent, null, null));
-            mChartValues22.add(new Entry(time, descent, null, null));
+            mChartValues11.add(new Entry(hours, altitude));
+            mChartValues21.add(new Entry(hours, ascent));
+            mChartValues22.add(new Entry(hours, descent));
 
             // ついでにデータの最大値、最小値を記録しておく (チャートの軸表示用)
-            maxX = MiscUtils.maxValue(maxX, time);
-            minX = MiscUtils.minValue(minX, time);
+            maxX = MiscUtils.maxValue(maxX, hours);
+            minX = MiscUtils.minValue(minX, hours);
             maxY1 = MiscUtils.maxValue(maxY1, altitude);
             minY1 = MiscUtils.minValue(minY1, altitude);
             maxY2 = MiscUtils.maxValue(maxY2, ascent, descent);
@@ -243,6 +282,65 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChartAxis2 = new RectF(minX, (float)(Math.ceil(maxY2 / boundary) * boundary), maxX, (float)(Math.floor(minY2 / boundary) * boundary));
 
         return true;
+    }
+
+    private void appendData(float hours, float altitude, float ascent, float descent) {
+        Log.d(TAG, "appendData: hour=" + hours);
+        Log.d(TAG, "appendData: altitude=" + altitude);
+        Log.d(TAG, "appendData: ascent=" + ascent);
+        Log.d(TAG, "appendData: descent=" + descent);
+        mChartValues11.add(new Entry(hours, altitude));
+        mChartValues21.add(new Entry(hours, ascent));
+        mChartValues22.add(new Entry(hours, descent));
+
+        // 必要があればチャートの表示目盛り更新
+        float maxX = (float)Math.ceil(hours);
+        float maxY = MiscUtils.maxValue(ascent, descent);
+        float minY = MiscUtils.minValue(ascent, descent);
+        int boundary = 100;
+        if (maxX > mChartAxis1.right) mChartAxis1.right = maxX;
+        if (altitude > mChartAxis1.top) mChartAxis1.top = (float)(Math.floor(altitude / boundary) * boundary);
+        if (altitude < mChartAxis1.bottom) mChartAxis1.bottom = (float)(Math.floor(altitude / boundary) * boundary);
+        if (maxX > mChartAxis2.right) mChartAxis2.right = maxX;
+        if (maxY > mChartAxis2.top) mChartAxis2.top = (float)(Math.floor(maxY / boundary) * boundary);
+        if (minY < mChartAxis2.bottom) mChartAxis2.bottom = (float)(Math.floor(minY / boundary) * boundary);
+
+        LineData data = mChart.getData();
+        if (data == null) return;
+
+        // 表示中のチャート種により処理を分ける
+        int chartId = mRgChartType.getCheckedRadioButtonId();
+        switch (chartId) {
+            case R.id.btn_accumulate:
+                Log.d(TAG, "appendData: btn_accumulate");
+                // 積算チャート
+                if (data.getDataSetCount() != 2) return;
+                //新しいデータを追加
+                data.addEntry(new Entry(hours, ascent), 0);
+                data.addEntry(new Entry(hours, descent), 1);
+                data.notifyDataChanged();
+                mChart.getXAxis().setAxisMaximum(mChartAxis2.right);
+                mChart.getAxisLeft().setAxisMaximum(mChartAxis2.top);
+                mChart.getAxisLeft().setAxisMinimum(mChartAxis2.bottom);
+                break;
+
+            default:
+                // 高度チャート
+                Log.d(TAG, "appendData: btn_altitude");
+                if (data.getDataSetCount() != 1) return;
+                //新しいデータを追加
+                data.addEntry(new Entry(hours, altitude), 0);
+                data.notifyDataChanged();
+                mChart.getXAxis().setAxisMaximum(mChartAxis1.right);
+                mChart.getAxisLeft().setAxisMaximum(mChartAxis1.top);
+                mChart.getAxisLeft().setAxisMinimum(mChartAxis1.bottom);
+                break;
+        }
+
+        //更新を通知
+        //mChart.setVisibleXRangeMaximum(maxX);
+        mChart.notifyDataSetChanged();
+        mChart.moveViewToX(hours);
     }
 
 
