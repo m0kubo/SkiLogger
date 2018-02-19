@@ -252,9 +252,6 @@ public class SkiLogService extends Service implements SensorEventListener {
     private int mLiftDelta = 0;
 
 
-    private long[] mReplyData = new long[ 5 ];
-
-
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         float[] val = sensorEvent.values.clone();
@@ -292,11 +289,13 @@ public class SkiLogService extends Service implements SensorEventListener {
 
     // 高度を記録する
     private void logAltitude(float altitude) {
+        long recordedTime = -1;
+
         // 上昇累積/下降累積 算出
         if (mPrevAltitude == INVALID_ALTITUDE) {
             // 初回
             mPrevAltitude = altitude;
-            recordLog(altitude);
+            recordedTime = recordLog(altitude);
 
         } else {
             float delta = altitude - mPrevAltitude;             // 高度差分
@@ -304,13 +303,13 @@ public class SkiLogService extends Service implements SensorEventListener {
                 // 閾値以上に 登った
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalAsc += delta;                             // 登った高度を積算
-                recordLog(altitude);
+                recordedTime = recordLog(altitude);
 
             } else if (delta <= -THRESHOLD_ALTITUDE) {
                 // 閾値以上に 降りた
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalDesc += delta;                            // 降りた高度を積算 (下降分は負の値)
-                recordLog(altitude);
+                recordedTime = recordLog(altitude);
             }
         }
 
@@ -328,7 +327,7 @@ public class SkiLogService extends Service implements SensorEventListener {
                 mLiftAltitude = altitude;                       // リフト最低地点(乗車高度用)を記録
                 mLiftDelta = delta;                             // 下降中(負の値)
 
-                recordLog(altitude);
+                recordedTime = recordLog(altitude);
 
             } else if (delta >= THRESHOLD_LIFT_COUNT && mLiftDelta <= 0) {
                 // 閾値以上に 登った
@@ -346,28 +345,30 @@ public class SkiLogService extends Service implements SensorEventListener {
         }
 
         // チャート更新用にデータをActivityに送る
-        replyData(-1, altitude, mTotalAsc, mTotalDesc, mRunCount);
+        replyData(recordedTime, altitude, mTotalAsc, mTotalDesc, mRunCount);
     }
 
 
-    private void recordLog(float altitude) {
+    private long recordLog(float altitude) {
         mRecordTime = System.currentTimeMillis();
-        // チャート更新用にデータをActivityに送る
-        replyData(mRecordTime, altitude, mTotalAsc, mTotalDesc, mRunCount);
 
         long id = DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
         if (id <= 0) {
             Log.e(TAG, "DB error: fail to insert");
+            return -1;
         }
+
+        return mRecordTime;
     }
 
     private void replyData(long time, float altitude, float totalAsc, float totalDesc, int runCount) {
-        mReplyData[0] = time;
-        mReplyData[1] = (long)(altitude * 1000);        // ミリメートル単位の値にして送信する
-        mReplyData[2] = (long)(totalAsc * 1000);        // ミリメートル単位の値にして送信する
-        mReplyData[3] = (long)(totalDesc * 1000);       // ミリメートル単位の値にして送信する
-        mReplyData[4] = runCount;
-        mReplyHandler.replyMessage(mReplyData);
+        long[] replyData = new long[ 5 ];
+        replyData[0] = time;
+        replyData[1] = (long)(altitude * 1000);        // ミリメートル単位の値にして送信する
+        replyData[2] = (long)(totalAsc * 1000);        // ミリメートル単位の値にして送信する
+        replyData[3] = (long)(totalDesc * 1000);       // ミリメートル単位の値にして送信する
+        replyData[4] = runCount;
+        mReplyHandler.replyMessage(replyData);
     }
 
     private void getPreviousLog() {
