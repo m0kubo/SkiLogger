@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.insprout.skiapp", appContext.getPackageName());
+        assertEquals("com.insprout.okubo.skilog", appContext.getPackageName());
     }
 }

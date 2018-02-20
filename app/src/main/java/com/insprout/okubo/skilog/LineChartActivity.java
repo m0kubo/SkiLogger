@@ -343,19 +343,19 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             return;
         }
 
-        ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
+        ArrayList<ILineDataSet> dataSets = new ArrayList<>();
         switch(chartId) {
             case R.id.btn_altitude:
                 // 高度チャートの 軸表示設定
                 setupAxis(mChartAxis1);
-                // add the datasets
+                // add the dataSets
                 dataSets.add(newLineDataSet(mChartValues11, mChartLabel11, mColor, true));
                 break;
 
             case R.id.btn_accumulate:
                 // 積算チャートの 軸表示設定
                 setupAxis(mChartAxis2);
-                // add the datasets
+                // add the dataSets
                 dataSets.add(newLineDataSet(mChartValues21, mChartLabel21, mColorAsc, false));
                 dataSets.add(newLineDataSet(mChartValues22, mChartLabel22, mColorDesc, false));
                 break;
@@ -364,7 +364,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 return;
         }
 
-        // create a data object with the datasets
+        // create a data object with the dataSets
         LineData lineData = new LineData(dataSets);
         // set data
         mChart.setData(lineData);

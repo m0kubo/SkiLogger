@@ -42,7 +42,7 @@
                     android:id="@+id/tv_count_lift"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0"
+                    android:text="@string/default_run_count"
                     android:textColor="#000000"
                     android:textSize="34sp"/>
             </LinearLayout>

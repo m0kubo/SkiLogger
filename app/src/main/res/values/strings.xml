@@ -2,7 +2,7 @@
     <string name="app_name">Ski Logger</string>
 
     <string name="channel_altitude_service">高度記録サービス</string>
-    <string name="msg_svc_ongoing">実行中</string>
+    <!--<string name="msg_svc_ongoing">実行中</string>-->
     <string name="fmt_svc_ongoing">開始 (%s)</string>
 
     <string name="fmt_meter">%,3dm</string>
@@ -25,6 +25,7 @@
     <string name="btn_finish_app">アプリ終了</string>
 
     <string name="default_altitude"> --- m</string>
+    <string name="default_run_count">0</string>
 
     <string name="title_delete_logs">記録削除</string>
     <string name="fmt_delete_daily_logs">%sの一日分の記録を削除しますか？\n\n削除したデータは復活できません。</string>

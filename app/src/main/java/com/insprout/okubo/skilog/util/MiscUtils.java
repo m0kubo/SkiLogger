@@ -244,8 +244,8 @@ public class MiscUtils {
     }
 
     /**
-     * unixtimeで指定される時間の 0時0分の時刻を Date型で返す
-     * @param timeInMills unixtime
+     * unix timeで指定される時間の 0時0分の時刻を Date型で返す
+     * @param timeInMills unix time(ミリ秒単位)
      * @return 指定日の am0:00を示すDate型
      */
     public static Date getDate(long timeInMills) {

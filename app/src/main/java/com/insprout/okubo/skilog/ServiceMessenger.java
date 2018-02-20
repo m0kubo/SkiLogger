@@ -16,6 +16,7 @@ import java.util.EventListener;
 
 /**
  * Created by okubo on 2018/01/25.
+ * Serviceプロセスと Activityとの通信を行うクラス
  */
 
 public class ServiceMessenger implements ServiceConnection {
