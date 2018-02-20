@@ -222,6 +222,7 @@ public class MiscUtils {
      * @return 結果
      */
     public static boolean isSameDate(Date date1, Date date2) {
+        if (date1 == null || date2 == null) return false;
         int[] time1 = getDateValues(date1);
         int[] time2 = getDateValues(date2);
 

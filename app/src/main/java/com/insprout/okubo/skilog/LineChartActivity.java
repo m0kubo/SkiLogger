@@ -40,6 +40,7 @@ import java.util.List;
 
 public class LineChartActivity extends AppCompatActivity implements View.OnClickListener {
     private final static String TAG = "chart";
+    private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
     private final static int MAX_DATA_COUNT = 0;
 
     private ServiceMessenger mServiceMessenger;
@@ -138,11 +139,16 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             mDateIndex = -1;
 
         } else {
+            Date target = (Date)getIntent().getSerializableExtra(EXTRA_PARAM1);
+            mDateIndex = -1;
             // 取得したログの 日付情報のリストを作成する
-            for(SkiLogData log : data) {
+            for(int i = 0; i<data.size(); i++) {
+                SkiLogData log = data.get(i);
                 mDateList.add(log.getCreated());
+                if (MiscUtils.isSameDate(log.getCreated(), target)) mDateIndex = i;
             }
-            mDateIndex = mDateList.size() - 1;
+
+            if (mDateIndex < 0) mDateIndex = mDateList.size() - 1;
         }
         updateUi(mDateIndex);
 
@@ -531,7 +537,14 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
 
     public static void startActivity(Activity context) {
+        startActivity(context, null);
+    }
+
+    public static void startActivity(Activity context, Date targetDate) {
         Intent intent = new Intent(context, LineChartActivity.class);
+        if (targetDate != null) {
+            intent.putExtra(EXTRA_PARAM1, targetDate);
+        }
         context.startActivity(intent);
     }
 

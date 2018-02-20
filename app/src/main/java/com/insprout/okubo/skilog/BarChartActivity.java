@@ -8,6 +8,7 @@ import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,7 +24,9 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.formatter.IValueFormatter;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
@@ -47,8 +50,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private Date mDateFrom, mDateTo;
     private SimpleDateFormat mDateFormat;
 
+    private List<SkiLogData> mSkiLogs;
     private BarChart mChart;
-//    private String[] mXAxisLabels;                              //X軸に表示するLabelのリスト
     private List<String> mXAxisLabels;                              //X軸に表示するLabelのリスト
     private float mYAxisMax = 0f;
     private float mYAxisMin = 0f;
@@ -241,6 +244,22 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         mChart.setDrawValueAboveBar(true);
         mChart.getDescription().setEnabled(false);
         mChart.setClickable(true);
+        mChart.setHighlightPerTapEnabled(true);
+        mChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, Highlight h) {
+                int index = (int)(e.getX() + 0.5f);
+                if (mSkiLogs == null || mSkiLogs.size() <= index) return;
+
+                // 日別チャートを表示する
+                LineChartActivity.startActivity(BarChartActivity.this, mSkiLogs.get(index).getCreated());
+                finish();
+            }
+
+            @Override
+            public void onNothingSelected() {
+            }
+        });
 
         //凡例
 //        mChart.getLegend().setEnabled(false);
@@ -252,8 +271,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
     //棒グラフのデータを取得
     private List<IBarDataSet> getBarData() {
-        List<SkiLogData> logs = DbUtils.selectLogSummaries(this, mDateFrom, mDateTo);
-        if (logs == null || logs.isEmpty()) return null;
+        mSkiLogs = DbUtils.selectLogSummaries(this, mDateFrom, mDateTo);
+        if (mSkiLogs == null || mSkiLogs.isEmpty()) return null;
 
         //表示させるデータ
         List<BarEntry> entries = new ArrayList<>();
@@ -263,8 +282,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         mYAxisMax = 0.0f;
         mYAxisMin = 0.0f;
 
-        for (int i=0; i<logs.size(); i++) {
-            SkiLogData log = logs.get(i);
+        for (int i=0; i<mSkiLogs.size(); i++) {
+            SkiLogData log = mSkiLogs.get(i);
             mXAxisLabels.add(mDateFormat.format(log.getCreated()));
 
             float accumulate = -log.getDescTotal();
@@ -288,8 +307,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                 return getString(R.string.fmt_meter, (int)value);
             }
         });
-        //ハイライトさせない
-        dataSet.setHighlightEnabled(false);
+        // 棒グラフの tapを検出するためにハイライトを有効にする
+        dataSet.setHighlightEnabled(true);
 
         //Barの色をセット
         dataSet.setColor(SdkUtils.getColor(this, R.color.colorAccumulateDesc));
