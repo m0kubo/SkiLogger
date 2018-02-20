@@ -50,8 +50,11 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private BarChart mChart;
 //    private String[] mXAxisLabels;                              //X軸に表示するLabelのリスト
     private List<String> mXAxisLabels;                              //X軸に表示するLabelのリスト
-    private float mYAxisMax = 0f; //Float.NEGATIVE_INFINITY;
-    private float mYAxisMin = 0f; //Float.POSITIVE_INFINITY;
+    private float mYAxisMax = 0f;
+    private float mYAxisMin = 0f;
+    private float mChartTextSize;
+    private String mChartLabel;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +132,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         } else {
             mDateOldest = mThisSeasonFrom;
         }
+        mChartTextSize = getResources().getDimension(R.dimen.text_size_chart_axis);
+        mChartLabel = getString(R.string.label_graph_desc);
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -184,6 +189,9 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private void setupChart() {
         List<IBarDataSet> logs = getBarData();
         if (logs == null) return;
+
+        mChart.getXAxis().setTextSize(mChartTextSize);          // 縦軸のラベルの文字サイズ
+        mChart.getAxisLeft().setTextSize(mChartTextSize);       // 縦軸のラベルの文字サイズ
 
         BarData data = new BarData(logs);
         mChart.clear();
@@ -269,8 +277,9 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         mYAxisMin = (float)(Math.floor(mYAxisMin / boundary) * boundary);
 
         List<IBarDataSet> bars = new ArrayList<>();
-        BarDataSet dataSet = new BarDataSet(entries, "bar");
+        BarDataSet dataSet = new BarDataSet(entries, mChartLabel);
 
+        dataSet.setValueTextSize(mChartTextSize);
         //整数で表示
         dataSet.setValueFormatter(new IValueFormatter() {
             @Override

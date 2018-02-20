@@ -24,8 +24,10 @@ import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.util.SensorUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by okubo on 2018/01/25.
@@ -47,6 +49,7 @@ public class SkiLogService extends Service implements SensorEventListener {
 
     private Sensor mSensor = null;
     private Bitmap mLargeIcon;
+    private long[] mReplyData = new long[ 5 ];
 
 
     //////////////////////////
@@ -121,7 +124,8 @@ public class SkiLogService extends Service implements SensorEventListener {
     private void setForegroundMode(Context context) {
         String title = getString(R.string.channel_altitude_service);
 //        String message = getString(R.string.msg_svc_ongoing);
-        String message = "" + new Date(System.currentTimeMillis());
+        SimpleDateFormat df = new SimpleDateFormat("MM/dd hh:mm", Locale.getDefault());
+        String message = getString(R.string.fmt_svc_ongoing, df.format(new Date(System.currentTimeMillis())));
         Notification.Builder builder;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -362,13 +366,12 @@ public class SkiLogService extends Service implements SensorEventListener {
     }
 
     private void replyData(long time, float altitude, float totalAsc, float totalDesc, int runCount) {
-        long[] replyData = new long[ 5 ];
-        replyData[0] = time;
-        replyData[1] = (long)(altitude * 1000);        // ミリメートル単位の値にして送信する
-        replyData[2] = (long)(totalAsc * 1000);        // ミリメートル単位の値にして送信する
-        replyData[3] = (long)(totalDesc * 1000);       // ミリメートル単位の値にして送信する
-        replyData[4] = runCount;
-        mReplyHandler.replyMessage(replyData);
+        mReplyData[0] = time;
+        mReplyData[1] = (long)(altitude * 1000);        // ミリメートル単位の値にして送信する
+        mReplyData[2] = (long)(totalAsc * 1000);        // ミリメートル単位の値にして送信する
+        mReplyData[3] = (long)(totalDesc * 1000);       // ミリメートル単位の値にして送信する
+        mReplyData[4] = runCount;
+        mReplyHandler.replyMessage(mReplyData);
     }
 
     private void getPreviousLog() {

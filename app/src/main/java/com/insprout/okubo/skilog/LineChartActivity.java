@@ -58,6 +58,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private ArrayList<Entry> mChartValues22;
     private RectF mChartAxis1;
     private RectF mChartAxis2;
+    private String mChartLabel11;
+    private String mChartLabel21;
+    private String mChartLabel22;
 
 
     @Override
@@ -143,10 +146,13 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         }
         updateUi(mDateIndex);
 
-        // チャートの色を設定
+        // チャートの色/ラベルを設定
         mColor = SdkUtils.getColor(this, R.color.colorAltitude);
         mColorAsc = SdkUtils.getColor(this, R.color.colorAccumulateAsc);
         mColorDesc = SdkUtils.getColor(this, R.color.colorAccumulateDesc);
+        mChartLabel11 = getString(R.string.label_altitude);
+        mChartLabel21 = getString(R.string.label_graph_asc);
+        mChartLabel22 = getString(R.string.label_graph_desc);
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -182,14 +188,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int id) {
                 // チャートの種類が変更されたので、新規にチャートを書き直す
-                switch(id) {
-                    case R.id.btn_altitude:
-                        drawChartAltitude();
-                        break;
-                    case R.id.btn_accumulate:
-                        drawChartAccumulate();
-                        break;
-                }
+                drawNewChart(id);
             }
         });
 
@@ -203,8 +202,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChart.getAxisRight().setEnabled(false);
 
         float textSize = getResources().getDimension(R.dimen.text_size_chart_axis);
-        mChart.getXAxis().setTextSize(textSize);
-        mChart.getAxisLeft().setTextSize(textSize);
+        mChart.getXAxis().setTextSize(textSize);                // 縦軸のラベルの文字サイズ
+        mChart.getAxisLeft().setTextSize(textSize);             // 縦軸のラベルの文字サイズ
 
     }
 
@@ -236,7 +235,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         if (targetDate == null) return false;
 
         List<SkiLogData> data = DbUtils.select(this, targetDate);
-        if (targetDate == null || data == null || data.size() == 0) {
+        if (data == null || data.size() == 0) {
             return false;
         }
 
@@ -336,7 +335,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
 
-    private void drawChartAltitude() {
+    private void drawNewChart(int chartId) {
         mChart.clear();
 
         // 表示データを取得する
@@ -344,85 +343,67 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             return;
         }
 
-        // チャートの 軸表示設定
-        setupAxis(mChartAxis1);
-
         ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
-        // add the datasets
-        String label = getString(R.string.label_altitude);
-        dataSets.add(newLineDataSet(mChartValues11, label, mColor, true));
-        // create a data object with the datasets
-        LineData lineData = new LineData(dataSets);
-
-        // set data
-        mChart.setData(lineData);
-
-        //mChart.animateX(2500);
-        mChart.invalidate();
-    }
-
-    private void drawChartAccumulate() {
-        mChart.clear();
-
-        // 表示データを取得する
-        if (!setupChartValues(mDateIndex)) {
-            return;
-        }
-
-        // チャートの 軸表示設定
-        setupAxis(mChartAxis2);
-
-        ArrayList<ILineDataSet> dataSets = new ArrayList<ILineDataSet>();
-        // add the datasets
-        String label = getString(R.string.label_accumulate);
-        dataSets.add(newLineDataSet(mChartValues21, label, mColorAsc, false));
-        dataSets.add(newLineDataSet(mChartValues22, label, mColorDesc, false));
-        // create a data object with the datasets
-        LineData lineData = new LineData(dataSets);
-
-        // set data
-        mChart.setData(lineData);
-
-        //mChart.animateX(2500);
-        mChart.invalidate();
-    }
-
-    private void updateChart() {
-        int chartId = mRgChartType.getCheckedRadioButtonId();
-        switch (chartId) {
+        switch(chartId) {
             case R.id.btn_altitude:
-                updateChartAltitude();
+                // 高度チャートの 軸表示設定
+                setupAxis(mChartAxis1);
+                // add the datasets
+                dataSets.add(newLineDataSet(mChartValues11, mChartLabel11, mColor, true));
                 break;
 
             case R.id.btn_accumulate:
-                updateChartAccumulate();
+                // 積算チャートの 軸表示設定
+                setupAxis(mChartAxis2);
+                // add the datasets
+                dataSets.add(newLineDataSet(mChartValues21, mChartLabel21, mColorAsc, false));
+                dataSets.add(newLineDataSet(mChartValues22, mChartLabel22, mColorDesc, false));
                 break;
 
-            case -1:
-                // RadioButtonがどれも選択されていない場合
-                drawChartAltitude();
-                break;
+            default:
+                return;
         }
+
+        // create a data object with the datasets
+        LineData lineData = new LineData(dataSets);
+        // set data
+        mChart.setData(lineData);
+        //mChart.animateX(2500);
+        mChart.invalidate();
     }
 
-    private void updateChartAltitude() {
+
+    private void updateChart() {
         // 表示データを取得する
         if (!setupChartValues(mDateIndex)) {
+            // 表示データなし
             mChart.clear();
             return;
         }
 
+        int chartId = mRgChartType.getCheckedRadioButtonId();
         LineData lineData = mChart.getData();
         if (lineData == null) {
             // Chart.clear()などが行われるとLineDataは nullになっているので、その場合は新規にチャートを描く
-            drawChartAltitude();
+            drawNewChart(chartId);
             return;
         }
 
-        // チャートの 軸表示設定
-        setupAxis(mChartAxis1);
+        switch (chartId) {
+            case R.id.btn_altitude:
+                // チャートの 軸表示設定
+                setupAxis(mChartAxis1);
+                ((LineDataSet)lineData.getDataSetByIndex(0)).setValues(mChartValues11);
+                break;
 
-        ((LineDataSet)lineData.getDataSetByIndex(0)).setValues(mChartValues11);
+            case R.id.btn_accumulate:
+                // チャートの 軸表示設定
+                setupAxis(mChartAxis2);
+                ((LineDataSet)lineData.getDataSetByIndex(0)).setValues(mChartValues21);
+                ((LineDataSet)lineData.getDataSetByIndex(1)).setValues(mChartValues22);
+                break;
+        }
+
         mChart.getData().notifyDataChanged();
         mChart.notifyDataSetChanged();
 
@@ -430,31 +411,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChart.invalidate();
     }
 
-    private void updateChartAccumulate() {
-        // 表示データを取得する
-        if (!setupChartValues(mDateIndex)) {
-            mChart.clear();
-            return;
-        }
-
-        LineData lineData = mChart.getData();
-        if (lineData == null) {
-            // Chart.clear()などが行われるとLineDataは nullになっているので、その場合は新規にチャートを描く
-            drawChartAccumulate();
-            return;
-        }
-
-        // チャートの 軸表示設定
-        setupAxis(mChartAxis2);
-
-        ((LineDataSet)lineData.getDataSetByIndex(0)).setValues(mChartValues21);
-        ((LineDataSet)lineData.getDataSetByIndex(1)).setValues(mChartValues22);
-        mChart.getData().notifyDataChanged();
-        mChart.notifyDataSetChanged();
-
-        //mChart.animateX(2500);
-        mChart.invalidate();
-    }
 
     private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean lineFilled) {
         LineDataSet dataSet = new LineDataSet(yValues, label);

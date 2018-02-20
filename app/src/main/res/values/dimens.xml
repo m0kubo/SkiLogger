@@ -1,6 +1,6 @@
 <resources>
     <!-- ナビゲーション関連サイズ -->
-    <dimen name="text_size_chart_axis">5sp</dimen>
+    <dimen name="text_size_chart_axis">4sp</dimen>
 
     <dimen name="size_circle_medium_button">54dp</dimen>
     <dimen name="radius_circle_medium_button">26dp</dimen>

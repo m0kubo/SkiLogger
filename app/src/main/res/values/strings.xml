@@ -3,6 +3,7 @@
 
     <string name="channel_altitude_service">高度記録サービス</string>
     <string name="msg_svc_ongoing">実行中</string>
+    <string name="fmt_svc_ongoing">開始 (%s)</string>
 
     <string name="fmt_meter">%,3dm</string>
     <string name="fmt_time">"%d:%02d"</string>
