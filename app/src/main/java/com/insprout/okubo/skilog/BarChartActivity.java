@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -40,12 +41,15 @@ import java.util.Locale;
 public class BarChartActivity extends AppCompatActivity implements View.OnClickListener {
     private final static int START_MONTH_OF_SEASON = 9;         // 月の指定は 0～11。(0⇒1月  11⇒12月)
 
+    private ServiceMessenger mServiceMessenger;
     private Date mThisSeasonFrom;
     private Date mDateOldest;
     private Date mDateFrom, mDateTo;
+    private SimpleDateFormat mDateFormat;
 
     private BarChart mChart;
-    private String[] mXAxisLabels;                              //X軸に表示するLabelのリスト
+//    private String[] mXAxisLabels;                              //X軸に表示するLabelのリスト
+    private List<String> mXAxisLabels;                              //X軸に表示するLabelのリスト
     private float mYAxisMax = 0f; //Float.NEGATIVE_INFINITY;
     private float mYAxisMin = 0f; //Float.POSITIVE_INFINITY;
 
@@ -56,6 +60,19 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
         initVars();                                             // 変数などの初期化
         initView();                                             // View関連の初期化
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (SkiLogService.isRunning(this)) mServiceMessenger.bind();
+    }
+
+    @Override
+    public void onPause() {
+        if (SkiLogService.isRunning(this)) mServiceMessenger.unbind();
+        super.onPause();
     }
 
 
@@ -100,6 +117,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
     private void initVars() {
         mThisSeasonFrom = getStartDateOfSeason(new Date(System.currentTimeMillis()));
+        mDateFormat = new SimpleDateFormat("MM/dd", Locale.getDefault());
 
         // スキーシーズンの 開始日付と終了日付を設定する
         mDateFrom = new Date(mThisSeasonFrom.getTime());
@@ -112,6 +130,20 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             mDateOldest = mThisSeasonFrom;
         }
 
+        // Serviceプロセスとの 通信クラス作成
+        mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
+            @Override
+            public void onReceiveMessage(Message msg) {
+                switch (msg.what) {
+                    case ServiceMessenger.MSG_REPLY_LONG_ARRAY:
+                        long[] data = (long[]) msg.obj;
+                        if (data[0] <= 0) return;
+
+                        updateChart(data[0], -data[3] * 0.001f);
+                        break;
+                }
+            }
+        });
     }
 
     private void initView() {
@@ -173,31 +205,36 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         });
 
         //Y軸(右)
-        YAxis right = mChart.getAxisRight();
-        right.setDrawLabels(false);
-        right.setDrawGridLines(false);
-//        right.setDrawZeroLine(true);
-//        right.setDrawTopYLabelEntry(true);
+        YAxis yAxis = mChart.getAxisRight();
+        yAxis.setDrawLabels(false);
+        yAxis.setDrawGridLines(false);
+//        yAxis.setDrawZeroLine(true);
+//        yAxis.setDrawTopYLabelEntry(true);
 
         //X軸
         XAxis xAxis = mChart.getXAxis();
-
         xAxis.setValueFormatter(new IndexAxisValueFormatter(mXAxisLabels));
-        XAxis bottomAxis = mChart.getXAxis();
-        bottomAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-        bottomAxis.setDrawLabels(true);
-        bottomAxis.setDrawGridLines(false);
-        bottomAxis.setDrawAxisLine(true);
-        int dataCount = mXAxisLabels.length;
-        if (dataCount <= 6) bottomAxis.setLabelCount(dataCount);
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawLabels(true);
+        xAxis.setDrawGridLines(false);
+        xAxis.setDrawAxisLine(true);
+
+        int dataCount = mXAxisLabels.size();
+        if (dataCount <= 6) {
+            mChart.setVisibleXRangeMinimum(6.0f);               // 一度に表示する棒グラフの数 (少ないと棒の幅が広すぎるため設定)
+            xAxis.setLabelCount(dataCount);
+        } else {
+            mChart.setVisibleXRangeMaximum(7.5f);               // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
+            mChart.moveViewToX((float)dataCount - 0.5f);
+        }
 
         //グラフ上の表示
         mChart.setDrawValueAboveBar(true);
         mChart.getDescription().setEnabled(false);
-        mChart.setClickable(false);
+        mChart.setClickable(true);
 
         //凡例
-        mChart.getLegend().setEnabled(false);
+//        mChart.getLegend().setEnabled(false);
 
         mChart.setScaleEnabled(false);
         //アニメーション
@@ -208,32 +245,18 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private List<IBarDataSet> getBarData() {
         List<SkiLogData> logs = DbUtils.selectLogSummaries(this, mDateFrom, mDateTo);
         if (logs == null || logs.isEmpty()) return null;
-//        List<SkiLogData> logs0 = new ArrayList<>();
-//        logs0.addAll(logs);
-//        for (int i=0; i<10; i++) {
-//            //logs.addAll(logs0);
-//            for (int j=0; j<logs0.size(); j++) {
-//                SkiLogData log = logs0.get(j);
-//                SkiLogData log1 = new SkiLogData(log.getAltitude(), log.getAscTotal(), log.getDescTotal(), log.getCount());
-//                log1.setCreated(MiscUtils.addDays(log.getCreated(), -(i * 10 - j)));
-//                logs.add(log1);
-//            }
-//        }
 
         //表示させるデータ
-        ArrayList<BarEntry> entries = new ArrayList<>();
+        List<BarEntry> entries = new ArrayList<>();
 
         // 横軸(日付)/縦軸(高度)の表示を設定
-        SimpleDateFormat df = new SimpleDateFormat("MM/dd", Locale.getDefault());
-        mXAxisLabels = new String[ logs.size() ];
+        mXAxisLabels = new ArrayList<>();
         mYAxisMax = 0.0f;
         mYAxisMin = 0.0f;
 
-//        int index = logs.size();
-//        for (SkiLogData log : logs) {
         for (int i=0; i<logs.size(); i++) {
             SkiLogData log = logs.get(i);
-            mXAxisLabels[i] = df.format(log.getCreated());
+            mXAxisLabels.add(mDateFormat.format(log.getCreated()));
 
             float accumulate = -log.getDescTotal();
             entries.add(new BarEntry(i, accumulate));
@@ -253,7 +276,6 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public String getFormattedValue(float value, Entry entry, int dataSetIndex, ViewPortHandler viewPortHandler) {
                 return getString(R.string.fmt_meter, (int)value);
-//                return mXAxisLabels[ (int)entry.getX() ];
             }
         });
         //ハイライトさせない
@@ -261,10 +283,39 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
         //Barの色をセット
         dataSet.setColor(SdkUtils.getColor(this, R.color.colorAccumulateDesc));
-        //dataSet.setColors(new int[]{ R.color.colorAccumulateAsc, R.color.colorAccumulateDesc }, this);
         bars.add(dataSet);
 
         return bars;
+    }
+
+    private void updateChart(long time, float accumulate) {
+        if (mXAxisLabels == null) return;
+        int pos = mXAxisLabels.indexOf(mDateFormat.format(time));
+        if (pos < 0) return;
+
+        // 棒グラフの長さを更新
+        BarData barData = mChart.getBarData();
+        if (barData == null || barData.getDataSetCount() < 1) return;
+        IBarDataSet dataSet = barData.getDataSetByIndex(0);
+        BarEntry entry = dataSet.getEntryForIndex(pos);
+        entry.setY(accumulate);
+
+        // Y座標の表示範囲を更新
+        int boundary = 100;
+        if (accumulate > mYAxisMax) {
+            mYAxisMax = (float)(Math.ceil(accumulate / boundary) * boundary);
+            mChart.getAxisLeft().setAxisMaximum(mYAxisMax);
+        }
+        if (accumulate < mYAxisMin) {
+            mYAxisMin = (float)(Math.floor(accumulate / boundary) * boundary);
+            mChart.getAxisLeft().setAxisMinimum(mYAxisMin);
+        }
+
+        //更新を通知
+        barData.notifyDataChanged();
+        mChart.notifyDataSetChanged();
+
+        mChart.invalidate();
     }
 
 

@@ -198,7 +198,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         // Grid背景色
         mChart.setDrawGridBackground(true);
         // no description text
-        mChart.getDescription().setEnabled(true);
+        mChart.getDescription().setEnabled(false);
         // 右側の目盛り
         mChart.getAxisRight().setEnabled(false);
 
