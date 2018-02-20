@@ -231,6 +231,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         if (dataCount <= 6) {
             mChart.setVisibleXRangeMinimum(6.0f);               // 一度に表示する棒グラフの数 (少ないと棒の幅が広すぎるため設定)
             xAxis.setLabelCount(dataCount);
+            if (dataCount <= 1) xAxis.setAxisMinimum(-0.6f);    // データが一件の際、なぜかラベルが 2つ書かれる(0軸にも書かれる)ので、パッチ処理
         } else {
             mChart.setVisibleXRangeMaximum(7.5f);               // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
             mChart.moveViewToX((float)dataCount - 0.5f);
@@ -353,7 +354,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         // データ削除
         new AlertDialog.Builder(this)
                 .setTitle(R.string.title_delete_logs)
-                .setMessage(getString(R.string.fmt_msg_delete_logs, getTitleString()))
+                .setMessage(getString(R.string.fmt_delete_seasonal_logs, getTitleString()))
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override

@@ -27,7 +27,8 @@
     <string name="default_altitude"> --- m</string>
 
     <string name="title_delete_logs">記録削除</string>
-    <string name="fmt_msg_delete_logs">%sの記録を削除しますか？\n\n削除したデータは復活できません。</string>
+    <string name="fmt_delete_daily_logs">%sの一日分の記録を削除しますか？\n\n削除したデータは復活できません。</string>
+    <string name="fmt_delete_seasonal_logs">%sの全記録を削除しますか？\n\n削除したデータは復活できません。</string>
 
     <string name="title_missing_sensor">気圧センサーのない端末です</string>
     <string name="msg_missing_sensor">本アプリは気圧センサー機能を使用するため、残念ながらこの端末ではご利用いただけません。</string>

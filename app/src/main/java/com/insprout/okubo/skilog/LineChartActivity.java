@@ -491,7 +491,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         // データ削除
         new AlertDialog.Builder(this)
                 .setTitle(R.string.title_delete_logs)
-                .setMessage(getString(R.string.fmt_msg_delete_logs,  mDateFormat.format(targetDate)))
+                .setMessage(getString(R.string.fmt_delete_daily_logs,  mDateFormat.format(targetDate)))
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
