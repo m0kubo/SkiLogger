@@ -73,6 +73,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     public void onResume() {
         super.onResume();
         if (SkiLogService.isRunning(this)) mServiceMessenger.bind();
+        mChart.highlightValue(-1, 0, false);            // ハイライト(選択)を解除
     }
 
     @Override
@@ -340,6 +341,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             mChart.getAxisLeft().setAxisMinimum(mYAxisMin);
         }
 
+        mChart.highlightValue(null);
         //更新を通知
         barData.notifyDataChanged();
         mChart.notifyDataSetChanged();
@@ -363,7 +365,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             }
             // チャートの表示を更新する
             //setupChart();
-            mChart.clear();
+            mChart.clear();     //  年度グラフは、最古記録以降の年度は データ0件の年度も表示するので、削除しても期間は移動させない
             updateUi();
         }
     }
