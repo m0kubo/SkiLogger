@@ -136,7 +136,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         } else {
             mDateOldest = mThisSeasonFrom;
         }
-        mChartTextSize = getResources().getDimension(R.dimen.text_size_chart_axis);
+        mChartTextSize = SdkUtils.getSpDimension(this, R.dimen.text_size_chart_axis);
         mChartLabel = getString(R.string.label_graph_desc);
 
         // Serviceプロセスとの 通信クラス作成
@@ -212,7 +212,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
                 // 縦軸の valueは高度
-                return getString(R.string.fmt_meter, (int)(value + 0.5f));
+                return getString(R.string.fmt_meter, value);
             }
         });
 
@@ -268,6 +268,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         mChart.setScaleEnabled(false);
         //アニメーション
 //        mChart.animateY(1200, Easing.EasingOption.Linear);
+
+        mChart.getOnTouchListener().setLastHighlighted(null);
     }
 
     //棒グラフのデータを取得
@@ -305,7 +307,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         dataSet.setValueFormatter(new IValueFormatter() {
             @Override
             public String getFormattedValue(float value, Entry entry, int dataSetIndex, ViewPortHandler viewPortHandler) {
-                return getString(R.string.fmt_meter, (int)value);
+                return getString(R.string.fmt_meter, value);
             }
         });
         // 棒グラフの tapを検出するためにハイライトを有効にする

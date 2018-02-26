@@ -1,6 +1,8 @@
 package com.insprout.okubo.skilog.util;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.text.Spanned;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -40,7 +42,7 @@ public class UiUtils {
         }
     }
 
-    public static void setText(Activity activity, int id, String text) {
+    public static void setText(Activity activity, int id, CharSequence text) {
         View view = activity.findViewById(id);
         if (view instanceof TextView) {
             ((TextView)view).setText(text);
@@ -53,6 +55,28 @@ public class UiUtils {
             ((ImageButton)view).setImageResource(foregroundResId);
             ((ImageButton)view).setBackgroundResource(backgroundResId);
         }
+    }
+
+    /**
+     * ViewのBitmapを返す。Bitmapは不要になったら呼び出し側で recycle()を実行し
+     * メモリーリークしないようにすること。
+     * @param view Bitmapを取得するView
+     * @return viewのBitmap
+     */
+    public static Bitmap getBitmap(View view) {
+        if (view == null) return null;
+
+        Bitmap image = null;
+        view.setDrawingCacheEnabled(true);
+        // Viewのキャッシュを取得
+        Bitmap cache = view.getDrawingCache();
+        if (cache != null) {
+            // View#getDrawingCacheはシステムの持っている Bitmap の参照を返す。
+            // システム側から recycle されるので Bitmap#createBitmapで作り直す必要がある。
+            image = Bitmap.createBitmap(cache);
+        }
+        view.setDrawingCacheEnabled(false);
+        return image;
     }
 
 }

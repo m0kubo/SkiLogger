@@ -5,9 +5,12 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
+import android.text.Html;
+import android.text.Spanned;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +46,7 @@ public class SdkUtils {
         // リクエストコードが指定されている場合は、権限付与画面を呼び出す
         if (requestCode != -1) {
             // 許可のないパーミッションに対して 権限付与画面を呼び出す
-            String[] requestPermissions = new String[ deniedPermissions.size() ];
+            String[] requestPermissions = new String[deniedPermissions.size()];
             deniedPermissions.toArray(requestPermissions);
             activity.requestPermissions(requestPermissions, requestCode);
         }
@@ -54,7 +57,7 @@ public class SdkUtils {
      * 指定された パーミッションが付与されているか確認し、権限がない場合は指定されたrequestCodeで権限付与画面を呼び出す。
      * ただし、requestCodeが -1の場合は、権限付与画面は呼び出さない
      *
-     * @param context  コンテキスト
+     * @param context     コンテキスト
      * @param permissions 確認するパーミッション(複数)
      * @return true: すでに必要な権限は付与されている。false: 権限が不足している。
      */
@@ -64,7 +67,8 @@ public class SdkUtils {
 
     /**
      * 指定された RUNTIMEパーミッションの内、許可されていないものを返す。
-     * @param context  コンテキスト
+     *
+     * @param context     コンテキスト
      * @param permissions 確認するパーミッション(複数)
      * @return 許可されていないバーミッションのリスト。すべて許可されている場合はサイズ0のリストを返す。(nullを返すことはない)
      */
@@ -99,6 +103,7 @@ public class SdkUtils {
 
     /**
      * onRequestPermissionsResult()で返された結果から、権限がすべて与えられたかチェックする
+     *
      * @param grantResults チェックする権限
      * @return true: 必要な権限は全て付与されている。false: 権限が不足している。
      */
@@ -126,9 +131,9 @@ public class SdkUtils {
 
     /**
      * DOZEの無効化画面を呼び出す。（既に無効化設定されている場合は何もしない）
-     *
      * この機能を利用するには、AndroidManifest.xmlに
      * "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" パーミッションの利用許可が必要
+     *
      * @param context コンテキスト
      */
     public static void requestDisableDozeModeIfNeeded(Context context) {
@@ -157,7 +162,7 @@ public class SdkUtils {
 
     /**
      * 指定されたリソースIDから Color値を返す
-     * @param context コンテキスト
+     * @param context    コンテキスト
      * @param resourceId 取得するColorのリソースID
      * @return 取得されたColor値
      */
@@ -170,6 +175,34 @@ public class SdkUtils {
         } else {
             // Resources経由の カラー値取得は、API level 23以降は 非推奨
             return context.getResources().getColor(resourceId);
+        }
+    }
+
+    /**
+     * Dimensionでsp単位でサイズ指定を行った場合、画面のdensityの影響をうけてしまうので
+     * それを補正した値を返す
+     * @param context コンテキスト
+     * @param dimensionId dimensionリソースID
+     * @return 取得された値
+     */
+    public static float getSpDimension(Context context, int dimensionId) {
+        Resources res = context.getResources();
+        return res.getDimension(dimensionId) / res.getDisplayMetrics().density * res.getConfiguration().fontScale;
+    }
+
+    /**
+     * htmlの文字列から Spannedオブジェクトを返す
+     * @param htmlText htmlの文字列
+     * @return 生成されたSpannedオブジェクト
+     */
+    @SuppressWarnings("deprecation")
+    public static Spanned fromHtml(String htmlText) {
+        if (Build.VERSION.SDK_INT >= 24) {
+            // API level 24以降ではこちらのメソッドを使用する
+            return Html.fromHtml(htmlText, Html.FROM_HTML_MODE_LEGACY);
+        } else {
+            // API level 24以降では 非推奨
+            return Html.fromHtml(htmlText);
         }
     }
 

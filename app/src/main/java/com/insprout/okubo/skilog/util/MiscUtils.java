@@ -1,5 +1,10 @@
 package com.insprout.okubo.skilog.util;
 
+import android.graphics.Bitmap;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -259,5 +264,37 @@ public class MiscUtils {
         return cal.getTime();
     }
 
+    public static boolean saveBitmap(File file, Bitmap bitmap) {
+        if (bitmap == null) return false;
+
+        boolean success = false;
+        if (file != null) {
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(file, false);
+                // 画像のフォーマットと画質と出力先を指定して保存
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                fos.flush();
+
+                success = true;
+
+            } catch (Exception e) {
+                //e.printStackTrace();
+
+            } finally {
+                if (fos != null) {
+                    try {
+                        fos.close();
+                    } catch (IOException ie) {
+                        //fos = null;
+                    }
+                }
+            }
+        }
+        // 明示的にBitmapのメモリを開放しておく
+        bitmap.recycle();
+
+        return success;
+    }
 
 }

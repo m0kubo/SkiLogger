@@ -18,14 +18,14 @@
             android:id="@+id/btn_altitude"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_size_regular"
             android:text="@string/label_altitude"
             android:checked="true"/>
         <RadioButton
             android:id="@+id/btn_accumulate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_size_regular"
             android:text="@string/label_accumulate"/>
     </RadioGroup>
 

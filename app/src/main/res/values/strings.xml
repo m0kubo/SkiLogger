@@ -5,8 +5,11 @@
     <!--<string name="msg_svc_ongoing">実行中</string>-->
     <string name="fmt_svc_ongoing">開始 (%s)</string>
 
-    <string name="fmt_meter">%,3dm</string>
-    <string name="fmt_time">"%d:%02d"</string>
+    <string name="fmt_meter">%,3.0fm</string>
+    <string name="fmt_time">%d:%02d</string>
+    <string name="fmt_run_count">滑走本数：%d</string>
+    <string name="fmt_accumulate">&lt;font color=\"#%06x\"&gt;%,3.0fm&lt;/font&gt; /&lt;font color=\"#%06x\"&gt;%,3.0fm&lt;/font&gt;</string>
+    <string name="fmt_ski_log">RUN：%d / 下降 %,3.0fm</string>
     <string name="fmt_title_chart">表示日 %s</string>
     <string name="fmt_title_chart2">シーズン %d</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>

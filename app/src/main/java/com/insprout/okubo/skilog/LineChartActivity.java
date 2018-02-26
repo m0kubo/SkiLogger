@@ -63,6 +63,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private String mChartLabel21;
     private String mChartLabel22;
 
+    private float mAccumulateAsc = 0f;
+    private float mAccumulateDesc = 0f;
+    private int mRunCount = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,7 +179,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                         Date timeAm00 = MiscUtils.getDate(new Date(data[0]));
                         Log.d(TAG, "received data: date=" + timeAm00);
                         if (MiscUtils.isSameDate(timeAm00, targetDate)) {
-                            appendData((data[0] - timeAm00.getTime()) / (60 * 60 * 1000.0f), data[1] * 0.001f, data[2] * 0.001f, -data[3] * 0.001f);
+                            appendData((data[0] - timeAm00.getTime()) / (60 * 60 * 1000.0f), data[1] * 0.001f, data[2] * 0.001f, -data[3] * 0.001f, (int)data[4]);
                         }
                         break;
                 }
@@ -202,15 +206,21 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChart = findViewById(R.id.line_chart);
         // Grid背景色
         mChart.setDrawGridBackground(true);
-        // no description text
-        mChart.getDescription().setEnabled(false);
+
         // 右側の目盛り
         mChart.getAxisRight().setEnabled(false);
 
-        float textSize = getResources().getDimension(R.dimen.text_size_chart_axis);
+        float textSize = SdkUtils.getSpDimension(this, R.dimen.text_size_chart_axis);
         mChart.getXAxis().setTextSize(textSize);                // 縦軸のラベルの文字サイズ
         mChart.getAxisLeft().setTextSize(textSize);             // 縦軸のラベルの文字サイズ
 
+        // Description設定
+//        mChart.getDescription().setEnabled(false);
+        mChart.getDescription().setEnabled(true);
+        mChart.getDescription().setTextSize(SdkUtils.getSpDimension(this,R.dimen.text_size_regular));
+        mChart.getDescription().setXOffset(5);
+        mChart.getDescription().setYOffset(5);
+        mChart.getDescription().setText("");
     }
 
     private void updateUi(int dateIndex) {
@@ -235,6 +245,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChartValues11 = new ArrayList<>();
         mChartValues21 = new ArrayList<>();
         mChartValues22 = new ArrayList<>();
+        mAccumulateAsc = 0f;
+        mAccumulateDesc = 0f;
+        mRunCount = 0;
 
         // DBから 指定日のデータを取得する
         Date targetDate = getTargetDate(dateIndex);
@@ -252,6 +265,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         float maxY1 = 0.0f;
         float minY2 = 0.0f;
         float maxY2 = 0.0f;
+        SkiLogData lastData = data.get(data.size()-1);
+        mAccumulateAsc = lastData.getAscTotal();
+        mAccumulateDesc = -lastData.getDescTotal();
+        mRunCount = lastData.getCount();
 
         // チャート用の データクラスに格納する
         long timeAm0 = MiscUtils.getDate(targetDate).getTime();
@@ -286,10 +303,14 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         return true;
     }
 
-    private void appendData(float hours, float altitude, float ascent, float descent) {
+    // チャート表示中に、Serviceプロセスからデータが送られてきた際に そのデータを追加表示する
+    private void appendData(float hours, float altitude, float ascent, float descent, int runCount) {
         mChartValues11.add(new Entry(hours, altitude));
         mChartValues21.add(new Entry(hours, ascent));
         mChartValues22.add(new Entry(hours, descent));
+        mAccumulateAsc = ascent;
+        mAccumulateDesc = -descent;
+        mRunCount = runCount;
 
         // 必要があればチャートの表示目盛り更新
         float maxX = (float)Math.ceil(hours);
@@ -330,9 +351,11 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 mChart.getXAxis().setAxisMaximum(mChartAxis1.right);
                 mChart.getAxisLeft().setAxisMaximum(mChartAxis1.top);
                 mChart.getAxisLeft().setAxisMinimum(mChartAxis1.bottom);
+                // Descriptionは 滑走本数
                 break;
         }
 
+        setDescription();
         //更新を通知
         data.notifyDataChanged();
         mChart.notifyDataSetChanged();
@@ -370,6 +393,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 return;
         }
 
+        setDescription();
         // create a data object with the dataSets
         LineData lineData = new LineData(dataSets);
         // set data
@@ -410,6 +434,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 break;
         }
 
+        setDescription();
         mChart.getData().notifyDataChanged();
         mChart.notifyDataSetChanged();
 
@@ -470,9 +495,13 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
                 // Y軸の valueは高度を示す
-                return getString(R.string.fmt_meter, (int)value);
+                return getString(R.string.fmt_meter, value);
             }
         });
+    }
+
+    private void setDescription() {
+        mChart.getDescription().setText(getString(R.string.fmt_ski_log, mRunCount, mAccumulateDesc));
     }
 
     private void deleteLogs(Date targetDate) {

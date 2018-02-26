@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // ミリメートル単位の高度値を 表示用の文字列に変換する
     private String formattedAltitude(long altitude) {
-        return getString(R.string.fmt_meter, (altitude + 500) / 1000);
+        return getString(R.string.fmt_meter, altitude * 0.001f);
     }
 
     private void updateUi(boolean serviceRunning) {
