@@ -212,6 +212,10 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         mChart.clear();
         mChart.setData(data);
 
+        float textSize = SdkUtils.getSpDimension(this, R.dimen.text_size_regular);
+        mChart.getLegend().setTextColor(mColorForeground);
+        mChart.getLegend().setTextSize(textSize);
+
         //Y軸(左)
         YAxis left = mChart.getAxisLeft();
         left.setAxisMinimum(mYAxisMin);

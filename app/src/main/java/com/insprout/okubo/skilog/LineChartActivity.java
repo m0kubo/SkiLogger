@@ -220,20 +220,24 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         // 右側の目盛り
         mChart.getAxisRight().setEnabled(false);
 
-        float textSize = SdkUtils.getSpDimension(this, R.dimen.text_size_chart_axis);
+        float textSize;
+        textSize = SdkUtils.getSpDimension(this, R.dimen.text_size_chart_axis);
         mChart.getXAxis().setTextColor(mColorForeground);
         mChart.getXAxis().setTextSize(textSize);                // 縦軸のラベルの文字サイズ
         mChart.getAxisLeft().setTextColor(mColorForeground);
         mChart.getAxisLeft().setTextSize(textSize);             // 縦軸のラベルの文字サイズ
 
         // Description設定
-//        mChart.getDescription().setEnabled(false);
+        textSize = SdkUtils.getSpDimension(this, R.dimen.text_size_regular);
         mChart.getDescription().setEnabled(true);
         mChart.getDescription().setTextColor(mColorForeground);
-        mChart.getDescription().setTextSize(SdkUtils.getSpDimension(this,R.dimen.text_size_regular));
+        mChart.getDescription().setTextSize(textSize);
         mChart.getDescription().setXOffset(5);
         mChart.getDescription().setYOffset(5);
         mChart.getDescription().setText("");
+
+        mChart.getLegend().setTextColor(mColorForeground);
+        mChart.getLegend().setTextSize(textSize);
     }
 
     private void updateUi(int dateIndex) {
