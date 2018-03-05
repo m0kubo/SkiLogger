@@ -1,14 +1,14 @@
 package com.insprout.okubo.skilog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +30,8 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.setting.Settings;
+import com.insprout.okubo.skilog.util.DialogUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
@@ -41,7 +43,8 @@ import java.util.List;
 import java.util.Locale;
 
 
-public class BarChartActivity extends AppCompatActivity implements View.OnClickListener {
+public class BarChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
+    private final static int RC_DELETE_LOG = 1;
     private final static int START_MONTH_OF_SEASON = 9;         // 月の指定は 0～11。(0⇒1月  11⇒12月)
 
     private ServiceMessenger mServiceMessenger;
@@ -57,11 +60,13 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private float mYAxisMin = 0f;
     private float mChartTextSize;
     private String mChartLabel;
+    private int mColorForeground;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(Settings.getThemeStyle(this));
         setContentView(R.layout.activity_bar_chart);
 
         initVars();                                             // 変数などの初期化
@@ -123,6 +128,10 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
 
     private void initVars() {
+        TypedValue typedValue = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.colorForeground, typedValue, true);
+        mColorForeground = SdkUtils.getColor(this, typedValue.resourceId);
+
         mThisSeasonFrom = getStartDateOfSeason(new Date(System.currentTimeMillis()));
         mDateFormat = new SimpleDateFormat("MM/dd", Locale.getDefault());
 
@@ -194,7 +203,9 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         List<IBarDataSet> logs = getBarData();
         if (logs == null) return;
 
+        mChart.getXAxis().setTextColor(mColorForeground);
         mChart.getXAxis().setTextSize(mChartTextSize);          // 縦軸のラベルの文字サイズ
+        mChart.getAxisLeft().setTextColor(mColorForeground);
         mChart.getAxisLeft().setTextSize(mChartTextSize);       // 縦軸のラベルの文字サイズ
 
         BarData data = new BarData(logs);
@@ -301,6 +312,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
         List<IBarDataSet> bars = new ArrayList<>();
         BarDataSet dataSet = new BarDataSet(entries, mChartLabel);
+        dataSet.setValueTextColor(mColorForeground);
 
         dataSet.setValueTextSize(mChartTextSize);
         //整数で表示
@@ -375,19 +387,20 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private void confirmDeleteLogs() {
         if (mDateFrom == null || mDateTo == null) return;       // 念のためチェック
         // データ削除
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.title_delete_logs)
-                .setMessage(getString(R.string.fmt_delete_seasonal_logs, getTitleString()))
-                .setCancelable(false)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // アプリ終了
-                        deleteLogs();
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        String title = getString(R.string.title_delete_logs);
+        String message = getString(R.string.fmt_delete_seasonal_logs, getTitleString());
+        DialogUtils.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
+    }
+
+    @Override
+    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse) {
+        switch (requestCode) {
+            case RC_DELETE_LOG:
+                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                    deleteLogs();
+                }
+                break;
+        }
     }
 
 

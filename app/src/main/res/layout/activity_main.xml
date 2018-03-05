@@ -43,26 +43,57 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/default_run_count"
-                    android:textColor="#000000"
+                    android:textColor="?android:textColorSecondary"
                     android:textSize="34sp"/>
             </LinearLayout>
-            <TextView
-                android:id="@+id/tv_altitude"
-                android:minWidth="100dp"
-                android:drawableStart="@drawable/ic_altitude"
-                android:textColor="@color/colorAltitude"
-                android:textSize="48sp"
-                style="@style/AltitudeText" />
-            <TextView
-                android:id="@+id/tv_total_asc"
-                android:drawableStart="@drawable/ic_accumulate_asc"
-                android:textColor="@color/colorAccumulateAsc"
-                style="@style/AltitudeText" />
-            <TextView
-                android:id="@+id/tv_total_desc"
-                android:drawableStart="@drawable/ic_accumulate_desc"
-                android:textColor="@color/colorAccumulateDesc"
-                style="@style/AltitudeText"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:tint="@color/colorPrimary"
+                    android:src="@drawable/ic_altitude"/>
+                <TextView
+                    android:id="@+id/tv_altitude"
+                    android:minWidth="100dp"
+                    android:textColor="@color/colorAltitude"
+                    android:textSize="48sp"
+                    style="@style/AltitudeText" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <ImageView
+                    android:id="@+id/iv_accumulate_asc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:tint="?android:colorForeground"
+                    android:src="@drawable/ic_accumulate_asc"/>
+                <TextView
+                    android:id="@+id/tv_total_asc"
+                    android:textColor="?android:colorForeground"
+                    style="@style/AltitudeText" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:tint="@color/colorAccumulateDesc"
+                    android:src="@drawable/ic_accumulate_desc"/>
+                <TextView
+                    android:id="@+id/tv_total_desc"
+                    android:textColor="@color/colorAccumulateDesc"
+                    style="@style/AltitudeText"/>
+            </LinearLayout>
         </LinearLayout>
 
     </FrameLayout>

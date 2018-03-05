@@ -2,22 +2,30 @@ package com.insprout.okubo.skilog;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.insprout.okubo.skilog.database.DbUtils;
+import com.insprout.okubo.skilog.setting.Settings;
+import com.insprout.okubo.skilog.util.DialogUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.SensorUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
+    private final static int RC_CHANGE_THEME = 1;
+
     private ServiceMessenger mServiceMessenger;
 
     private Sensor mSensor = null;
@@ -27,10 +35,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvCount;
 
     private boolean mReadyData = false;
+    private int mThemeIndex;
+    private String[] mThemeArray;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(Settings.getThemeStyle(this));
         setContentView(R.layout.activity_main);
 
         initVars();                                             // 変数などの初期化
@@ -57,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void initVars() {
         SkiLogService.registerNotifyChannel(this);              // Android8.0対応 notificationチャンネルの登録
 
+        mThemeArray = getResources().getStringArray(R.array.app_themes);
         mReadyData = (DbUtils.count(this) >= 1);                  // 記録データが存在するかどうか
 
         // Serviceプロセスとの 通信クラス作成
@@ -64,11 +77,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onReceiveMessage(Message msg) {
                 switch (msg.what) {
-//                    case ServiceMessenger.MSG_REPLY_STRING:
-//                        // 文字列型データの受信
-//                        mTvAltitude.setText((String)msg.obj);
-//                        break;
-
                     case ServiceMessenger.MSG_REPLY_LONG_ARRAY:
                         long[] data = (long[]) msg.obj;
                         mTvAltitude.setText(formattedAltitude(data[1]));
@@ -164,6 +172,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         1000);
     }
 
+
+    // タイトルメニュー用 設定
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.menu_change_theme:
+                mThemeIndex = Settings.getThemeIndex(this);
+                DialogUtils.showSelectDialog(this, R.string.menu_theme, mThemeArray, mThemeIndex, RC_CHANGE_THEME);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse) {
+        switch(requestCode) {
+            case RC_CHANGE_THEME:
+                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                    if (objResponse instanceof ListView) {
+                        int index = ((ListView) objResponse).getCheckedItemPosition();
+                        if (index != mThemeIndex) {
+                            Settings.putThemeIndex(this, index);
+
+                            Intent intent = new Intent(this, MainActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
     @Override
     public void onClick(View view) {
         int id = view.getId();
@@ -188,5 +237,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
 
 }

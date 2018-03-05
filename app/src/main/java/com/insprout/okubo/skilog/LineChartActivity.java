@@ -2,7 +2,6 @@ package com.insprout.okubo.skilog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
@@ -11,6 +10,7 @@ import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +28,8 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.setting.Settings;
+import com.insprout.okubo.skilog.util.DialogUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
@@ -38,7 +40,9 @@ import java.util.Date;
 import java.util.List;
 
 
-public class LineChartActivity extends AppCompatActivity implements View.OnClickListener {
+public class LineChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
+    private final static int RC_DELETE_LOG = 1;
+
     private final static String TAG = "chart";
     private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
     private final static int MAX_DATA_COUNT = 0;
@@ -62,6 +66,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private String mChartLabel11;
     private String mChartLabel21;
     private String mChartLabel22;
+    private int mColorForeground;
 
     private float mAccumulateAsc = 0f;
     private float mAccumulateDesc = 0f;
@@ -71,6 +76,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTheme(Settings.getThemeStyle(this));
         setContentView(R.layout.activity_line_chart);
 
         initVars();                                             // 変数などの初期化
@@ -157,8 +163,12 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         updateUi(mDateIndex);
 
         // チャートの色/ラベルを設定
+        TypedValue typedValue = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.colorForeground, typedValue, true);
+        mColorForeground = SdkUtils.getColor(this, typedValue.resourceId);
+
         mColor = SdkUtils.getColor(this, R.color.colorAltitude);
-        mColorAsc = SdkUtils.getColor(this, R.color.colorAccumulateAsc);
+        mColorAsc = mColorForeground;
         mColorDesc = SdkUtils.getColor(this, R.color.colorAccumulateDesc);
         mChartLabel11 = getString(R.string.label_altitude);
         mChartLabel21 = getString(R.string.label_graph_asc);
@@ -205,18 +215,21 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         // チャートの表示設定
         mChart = findViewById(R.id.line_chart);
         // Grid背景色
-        mChart.setDrawGridBackground(true);
+        mChart.setDrawGridBackground(false);
 
         // 右側の目盛り
         mChart.getAxisRight().setEnabled(false);
 
         float textSize = SdkUtils.getSpDimension(this, R.dimen.text_size_chart_axis);
+        mChart.getXAxis().setTextColor(mColorForeground);
         mChart.getXAxis().setTextSize(textSize);                // 縦軸のラベルの文字サイズ
+        mChart.getAxisLeft().setTextColor(mColorForeground);
         mChart.getAxisLeft().setTextSize(textSize);             // 縦軸のラベルの文字サイズ
 
         // Description設定
 //        mChart.getDescription().setEnabled(false);
         mChart.getDescription().setEnabled(true);
+        mChart.getDescription().setTextColor(mColorForeground);
         mChart.getDescription().setTextSize(SdkUtils.getSpDimension(this,R.dimen.text_size_regular));
         mChart.getDescription().setXOffset(5);
         mChart.getDescription().setYOffset(5);
@@ -520,23 +533,24 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     private void confirmDeleteLogs() {
         if (mDateIndex < 0) return;
-
-        final Date targetDate = getTargetDate(mDateIndex);
+        Date targetDate = getTargetDate(mDateIndex);
         if (targetDate == null) return;
+
         // データ削除
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.title_delete_logs)
-                .setMessage(getString(R.string.fmt_delete_daily_logs,  mDateFormat.format(targetDate)))
-                .setCancelable(false)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // アプリ終了
-                        deleteLogs(targetDate);
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        String title = getString(R.string.title_delete_logs);
+        String message = getString(R.string.fmt_delete_daily_logs,  mDateFormat.format(targetDate));
+        DialogUtils.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
+    }
+
+    @Override
+    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse) {
+        switch (requestCode) {
+            case RC_DELETE_LOG:
+                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                    deleteLogs(getTargetDate(mDateIndex));
+                }
+                break;
+        }
     }
 
     @Override
@@ -576,5 +590,4 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         }
         context.startActivity(intent);
     }
-
 }
