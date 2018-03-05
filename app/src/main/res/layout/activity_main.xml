@@ -54,7 +54,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:tint="@color/colorPrimary"
+                    android:tint="@color/colorIcon"
                     android:src="@drawable/ic_altitude"/>
                 <TextView
                     android:id="@+id/tv_altitude"
@@ -72,7 +72,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:tint="?android:colorForeground"
+                    android:tint="@color/colorIcon"
                     android:src="@drawable/ic_accumulate_asc"/>
                 <TextView
                     android:id="@+id/tv_total_asc"
@@ -87,7 +87,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:tint="@color/colorAccumulateDesc"
+                    android:tint="@color/colorIcon"
                     android:src="@drawable/ic_accumulate_desc"/>
                 <TextView
                     android:id="@+id/tv_total_desc"
