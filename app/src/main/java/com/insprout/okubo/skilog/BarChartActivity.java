@@ -2,16 +2,15 @@ package com.insprout.okubo.skilog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ListView;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.AxisBase;
@@ -30,6 +29,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.database.TagData;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.DialogUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
@@ -45,6 +45,7 @@ import java.util.Locale;
 
 public class BarChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
     private final static int RC_DELETE_LOG = 1;
+    private final static int RC_SELECT_TAG = 2;
     private final static int START_MONTH_OF_SEASON = 9;         // 月の指定は 0～11。(0⇒1月  11⇒12月)
 
     private ServiceMessenger mServiceMessenger;
@@ -61,6 +62,10 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private float mChartTextSize;
     private String mChartLabel;
     private int mColorForeground;
+
+    private String mSearchTag = null;
+    private int mIndexTag = -1;
+    private List<TagData> mTags;
 
 
     @Override
@@ -126,12 +131,23 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         return true;
     }
 
-
     private void initVars() {
         TypedValue typedValue = new TypedValue();
         getTheme().resolveAttribute(android.R.attr.colorForeground, typedValue, true);
         mColorForeground = SdkUtils.getColor(this, typedValue.resourceId);
 
+        List<TagData> tags = DbUtils.selectTags(this);
+        if (tags == null || tags.isEmpty()) {
+            mTags = null;
+        } else {
+            mTags = new ArrayList<>();
+            for (TagData tagData : tags) {
+                String tag = tagData.getTag();
+                if (tag != null && !hasTag(tag)) {
+                    mTags.add(tagData);
+                }
+            }
+        }
         mThisSeasonFrom = getStartDateOfSeason(new Date(System.currentTimeMillis()));
         mDateFormat = new SimpleDateFormat("MM/dd", Locale.getDefault());
 
@@ -167,8 +183,9 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private void initView() {
         UiUtils.setSelected(this, R.id.btn_chart2, true);
 
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+//        // タイトルバーに backボタンを表示する
+//        ActionBar actionBar = getSupportActionBar();
+//        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
         mChart = findViewById(R.id.bar_chart);
         setupChart();
@@ -184,11 +201,22 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void updateUi() {
-        setTitle(getTitleString());
+        if (mSearchTag != null) {
+            // タグで絞り込み表示
+            setTitle(getString(R.string.fmt_title_tag, mSearchTag));
+            // 前データ、次データへのボタンの 有効無効
+            UiUtils.setEnabled(this, R.id.btn_negative, false);
+            UiUtils.setEnabled(this, R.id.btn_positive, false);
 
-        // 前データ、次データへのボタンの 有効無効
-        UiUtils.enableView(this, R.id.btn_negative, mDateOldest.before(mDateFrom));
-        UiUtils.enableView(this, R.id.btn_positive, mDateFrom.before(mThisSeasonFrom));
+        } else {
+            // シーズン表示
+            setTitle(getTitleString());
+            // 前データ、次データへのボタンの 有効無効
+            UiUtils.setEnabled(this, R.id.btn_negative, mDateOldest.before(mDateFrom));
+            UiUtils.setEnabled(this, R.id.btn_positive, mDateFrom.before(mThisSeasonFrom));
+
+        }
+        UiUtils.setEnabled(this, R.id.btn_tag, !(mTags == null || mTags.isEmpty()));
     }
 
     private Date getStartDateOfSeason(Date date) {
@@ -200,17 +228,26 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void setupChart() {
+        if (mSearchTag != null) {
+            // tagで絞る
+            mSkiLogs = DbUtils.selectLogSummaries(this, mSearchTag);
+        } else {
+            // 期間で絞る
+            mSkiLogs = DbUtils.selectLogSummaries(this, mDateFrom, mDateTo);
+        }
+        if (mSkiLogs == null || mSkiLogs.isEmpty()) return;
+
         List<IBarDataSet> logs = getBarData();
         if (logs == null) return;
+
+        BarData data = new BarData(logs);
+        mChart.clear();
+        mChart.setData(data);
 
         mChart.getXAxis().setTextColor(mColorForeground);
         mChart.getXAxis().setTextSize(mChartTextSize);          // 縦軸のラベルの文字サイズ
         mChart.getAxisLeft().setTextColor(mColorForeground);
         mChart.getAxisLeft().setTextSize(mChartTextSize);       // 縦軸のラベルの文字サイズ
-
-        BarData data = new BarData(logs);
-        mChart.clear();
-        mChart.setData(data);
 
         float textSize = SdkUtils.getSpDimension(this, R.dimen.text_size_regular);
         mChart.getLegend().setTextColor(mColorForeground);
@@ -289,7 +326,6 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
     //棒グラフのデータを取得
     private List<IBarDataSet> getBarData() {
-        mSkiLogs = DbUtils.selectLogSummaries(this, mDateFrom, mDateTo);
         if (mSkiLogs == null || mSkiLogs.isEmpty()) return null;
 
         //表示させるデータ
@@ -388,6 +424,31 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         }
     }
 
+    private boolean hasTag(String tag) {
+        if (tag == null) return false;
+
+        for (TagData tagData2 : mTags) {
+            String tag2 = tagData2.getTag();
+            if (tag.equals(tag2)) return true;
+        }
+        return false;
+    }
+
+    private void selectTag() {
+        // tag一覧
+        // tagがない場合 ボタン無効になっている筈だが念のためチェック
+        if (mTags == null || mTags.isEmpty()) {
+            return;
+        }
+        // 選択用リストを作成
+        String[] arrayTag = new String[ mTags.size() + 1 ];
+        for (int i=0; i<mTags.size(); i++) {
+            arrayTag[i] = mTags.get(i).getTag();
+        }
+        arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
+        DialogUtils.showSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
+    }
+
     private void confirmDeleteLogs() {
         if (mDateFrom == null || mDateTo == null) return;       // 念のためチェック
         // データ削除
@@ -402,6 +463,30 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             case RC_DELETE_LOG:
                 if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
                     deleteLogs();
+                }
+                break;
+
+            case RC_SELECT_TAG:
+                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                    if (objResponse instanceof ListView) {
+                        int pos = ((ListView)objResponse).getCheckedItemPosition();
+                        if (mTags != null && pos >= 0 && pos < mTags.size()) {
+                            mIndexTag = pos;
+                            mSearchTag = mTags.get(mIndexTag).getTag();
+                        } else {
+                            if (mIndexTag >= 0) {
+                                Intent intent = new Intent(this, BarChartActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                //finish();
+                                return;
+                            }
+                            mIndexTag = -1;
+                            mSearchTag = null;
+                        }
+                        setupChart();
+                        updateUi();
+                    }
                 }
                 break;
         }
@@ -431,6 +516,10 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                 UiUtils.setSelected(this, R.id.btn_chart2, false);
                 LineChartActivity.startActivity(this);
                 finish();
+                break;
+
+            case R.id.btn_tag:
+                selectTag();
                 break;
         }
     }

@@ -150,11 +150,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         UiUtils.setText(this, R.id.tv_status, (serviceRunning ? R.string.label_status_start : R.string.label_status_stop));
 
         // サービス起動・停止ボタンの 有効無効
-        UiUtils.enableView(this, R.id.btn_positive, (mSensor!=null && !serviceRunning));
-        UiUtils.enableView(this, R.id.btn_negative, (mSensor!=null && serviceRunning));
+        UiUtils.setEnabled(this, R.id.btn_positive, (mSensor!=null && !serviceRunning));
+        UiUtils.setEnabled(this, R.id.btn_negative, (mSensor!=null && serviceRunning));
 
-        UiUtils.enableView(this, R.id.btn_chart1, mReadyData);
-        UiUtils.enableView(this, R.id.btn_chart2, mReadyData);
+        UiUtils.setEnabled(this, R.id.btn_chart1, mReadyData);
+        UiUtils.setEnabled(this, R.id.btn_chart2, mReadyData);
         UiUtils.setSelected(this, R.id.btn_chart1, false);
         UiUtils.setSelected(this, R.id.btn_chart2, false);
     }

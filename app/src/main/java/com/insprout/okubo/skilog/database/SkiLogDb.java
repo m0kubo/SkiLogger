@@ -37,7 +37,6 @@ public class SkiLogDb {
     private static final String COL_1_3 = "desc_total";                         // TABLE_1の 第3カラム
     private static final String COL_1_4 = "count";                              // TABLE_1の 第4カラム
     private static final String COL_1_5 = "created";                            // TABLE_1の 第5カラム
-    private static final String SQLITE_COUNT_1 = "COUNT(" + COL_1_0 + ")";      // sqliteは COUNT(*)だと遅い
 
     private static final String TABLE_2 = "ski_tag";
     private static final String COL_2_0 = "_id";                                // TABLE_2の 第0カラム(PRIMARY KEY)
@@ -45,7 +44,6 @@ public class SkiLogDb {
     private static final String COL_2_2 = "tag";                                // TABLE_2の 第2カラム
     private static final String COL_2_3 = "created";                            // TABLE_2の 第3カラム
     private static final String COL_2_4 = "updated";                            // TABLE_2の 第4カラム
-//    private static final String SQLITE_COUNT_2 = "COUNT(" + COL_2_0 + ")";      // sqliteは COUNT(*)だと遅い
 
     /**
      * DB および テーブル作成用 ヘルパークラス
@@ -165,7 +163,7 @@ public class SkiLogDb {
     public long countFromTable(String tableName, String countColumn, String selection, String[] selectionArgs) {
         Cursor cursor = null;
         long count = 0;
-        String countCommand = "COUNT(" + countColumn + ")";      // sqliteは COUNT(*)だと遅い
+        String countCommand = String.format("COUNT(%s)", countColumn);          // sqliteは COUNT(*)だと遅い
 
         try{
             cursor = mDb.query( tableName,
@@ -191,6 +189,7 @@ public class SkiLogDb {
         return count;
     }
 
+
     ////////////////////////////////////////////////////////////////////////////////////////
     //
     // TABLE 1を操作する メソッド
@@ -207,11 +206,7 @@ public class SkiLogDb {
         if (data == null) return -1;
         try {
             // 挿入するデータはContentValuesに格納
-            ContentValues record = new ContentValues();
-            record.put(COL_1_1, data.getAltitude());
-            record.put(COL_1_2, data.getAscTotal());
-            record.put(COL_1_3,  data.getDescTotal());
-            record.put(COL_1_4, data.getCount());
+            ContentValues record = buildRecord(data);
             insertedId = mDb.insert(TABLE_1, null, record);
 
         } catch (SQLException e) {
@@ -234,11 +229,7 @@ public class SkiLogDb {
         String[] args = { data.getIdStr() };
         try {
             // 挿入するデータはContentValuesに格納
-            ContentValues record = new ContentValues();
-            record.put(COL_1_1, data.getAltitude());
-            record.put(COL_1_2, data.getAscTotal());
-            record.put(COL_1_3,  data.getDescTotal());
-            record.put(COL_1_4, data.getCount());
+            ContentValues record = buildRecord(data);
             count = mDb.update(TABLE_1, record, COL_1_0 + " = ?", args);
 
         } catch (SQLException e) {
@@ -246,6 +237,15 @@ public class SkiLogDb {
             Log.e(TAG, "DB error: " + e.toString());
         }
         return count;
+    }
+
+    private ContentValues buildRecord(SkiLogData data) {
+        ContentValues record = new ContentValues();
+        record.put(COL_1_1, data.getAltitude());
+        record.put(COL_1_2, data.getAscTotal());
+        record.put(COL_1_3,  data.getDescTotal());
+        record.put(COL_1_4, data.getCount());
+        return record;
     }
 
 
@@ -258,7 +258,7 @@ public class SkiLogDb {
         if (data == null) return false;
 
         String[] args = { data.getIdStr() };
-        return deleteFromTable1(COL_1_0 + " = ?", args );
+        return deleteFromTable(TABLE_1, COL_1_0 + " = ?", args );
     }
 
     /**
@@ -448,10 +448,7 @@ public class SkiLogDb {
         String utcDateTime = formatUtcDateTime(new Date(System.currentTimeMillis()));
         try {
             // 挿入するデータはContentValuesに格納
-            ContentValues record = new ContentValues();
-            record.put(COL_2_1, formatUtcDateTime(data.getDate()));
-            record.put(COL_2_2, data.getTag());
-            record.put(COL_2_4, utcDateTime);
+            ContentValues record = buildRecord(data);
             insertedId = mDb.insert(TABLE_2, null, record);
 
         } catch (SQLException e) {
@@ -470,14 +467,10 @@ public class SkiLogDb {
         long count = 0;
 
         if (data == null) return 0;
-        String utcDateTime = formatUtcDateTime(new Date(System.currentTimeMillis()));
         String[] args = { data.getIdStr() };
         try {
             // 挿入するデータはContentValuesに格納
-            ContentValues record = new ContentValues();
-            record.put(COL_2_1, formatUtcDateTime(data.getDate()));
-            record.put(COL_2_2, data.getTag());
-            record.put(COL_2_4, utcDateTime);
+            ContentValues record = buildRecord(data);
             count = mDb.update(TABLE_1, record, COL_1_0 + " = ?", args);
 
         } catch (SQLException e) {
@@ -485,6 +478,15 @@ public class SkiLogDb {
             Log.e(TAG, "DB error: " + e.toString());
         }
         return count;
+    }
+
+    private ContentValues buildRecord(TagData data) {
+        String utcDateTime = formatUtcDateTime(new Date(System.currentTimeMillis()));
+        ContentValues record = new ContentValues();
+        record.put(COL_2_1, formatUtcDateTime(data.getDate()));
+        record.put(COL_2_2, data.getTag());
+        record.put(COL_2_4, utcDateTime);
+        return record;
     }
 
     /**
@@ -499,8 +501,117 @@ public class SkiLogDb {
         return deleteFromTable(TABLE_2, COL_1_0 + " = ?", args );
     }
 
+    public List<TagData> selectFromTable2(String selection, String[] selectionArgs, int offset, int limit, String orderBy, String groupBy) {
+        Cursor cursor = null;
+        List<TagData> result = new ArrayList<>();
+
+        try{
+            cursor = mDb.query( TABLE_2,
+                    null,               // 全カラム取得
+                    selection,
+                    selectionArgs,
+                    groupBy,
+                    null,
+                    orderBy,
+                    (limit > 0 ? String.format("%s,%s", offset, limit) : null));
+
+            while( cursor.moveToNext() ) {
+                // 取得したデータを格納する
+                TagData data = new TagData();
+                data.setId(cursor.getLong(0));
+                data.setDate(toUtcDate(cursor.getString(1)));
+                data.setTag(cursor.getString(2));
+                data.setCreated(toUtcDate(cursor.getString(3)));
+                data.setUpdated(toUtcDate(cursor.getString(4)));
+                result.add(data);
+            }
+
+        } catch (SQLiteException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+
+        } finally {
+            // Cursorを忘れずにcloseする
+            if (cursor != null) cursor.close();
+        }
+        return result;
+    }
+
+//    public List<TagData> selectFromTable2(String groupByColumn) {
+//        Cursor cursor = null;
+//        List<TagData> result = new ArrayList<>();
+//
+//        try{
+//            cursor = mDb.query( TABLE_2,
+//                    null,               // 全カラム取得
+//                    null,
+//                    null,
+//                    groupByColumn,
+//                    null,
+//                    "updated DESC",
+//                    null);
+//
+//            while( cursor.moveToNext() ) {
+//                // 取得したデータを格納する
+//                TagData data = new TagData();
+//                data.setId(cursor.getLong(0));
+//                data.setDate(toUtcDate(cursor.getString(1)));
+//                data.setTag(cursor.getString(2));
+//                data.setCreated(toUtcDate(cursor.getString(3)));
+//                data.setUpdated(toUtcDate(cursor.getString(4)));
+//                result.add(data);
+//            }
+//
+//        } catch (SQLiteException e) {
+//            // SQLite error
+//            Log.e(TAG, "DB error: " + e.toString());
+//
+//        } finally {
+//            // Cursorを忘れずにcloseする
+//            if (cursor != null) cursor.close();
+//        }
+//        return result;
+//    }
+
     public long countFromTable2(String selection, String[] selectionArgs) {
         return countFromTable(TABLE_2, COL_2_0, selection, selectionArgs);
+    }
+
+    /**
+     * SQLを rawQueryで実行して その結果を SkiLogDataクラスの Listを返す
+     * ただし、SQLの結果列は、SkiLogDataクラスに格納できる形式であること
+     * (ski_logテーブルの デフォルトカラム列と 同様であること。SELECT * FROM ski_log ～ であれば問題なし)
+     * @param sql SQLコマンド
+     * @param selectionArgs SQLコマンドに渡すパラメータ列
+     * @return SQLの結果 (SkiLogDataクラスのList形式)
+     */
+    public List<TagData> listByRawQueryOnTable2(String sql, String[] selectionArgs) {
+        Cursor cursor = null;
+        List<TagData> result = new ArrayList<>();
+
+        try{
+            cursor = mDb.rawQuery(sql, selectionArgs);
+
+            while( cursor.moveToNext() ) {
+                // 取得したデータを格納する
+                TagData data = new TagData();
+                data.setId(cursor.getLong(0));
+                data.setDate(toUtcDate(cursor.getString(1)));
+                data.setTag(cursor.getString(2));
+                data.setCreated(toUtcDate(cursor.getString(3)));
+                data.setUpdated(toUtcDate(cursor.getString(4)));
+                result.add(data);
+            }
+
+        } catch (SQLiteException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+
+        } finally {
+            // Cursorを忘れずにcloseする
+            if (cursor != null) cursor.close();
+        }
+        return result;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////

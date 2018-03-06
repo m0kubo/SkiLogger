@@ -14,7 +14,7 @@ import android.widget.TextView;
 
 public class UiUtils {
 
-    public static void enableView(Activity activity, int id, boolean enabled) {
+    public static void setEnabled(Activity activity, int id, boolean enabled) {
         View view = activity.findViewById(id);
         if (view != null) {
             view.setEnabled(enabled);

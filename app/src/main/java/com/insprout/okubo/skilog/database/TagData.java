@@ -14,17 +14,13 @@ public class TagData {
     private String mTag;
     private Date mCreated;
     private Date mUpdated;
-    /*
-    private static final String TABLE_2 = "ski_tag";
-    private static final String COL_2_0 = "_id";                                // TABLE_2の 第0カラム(PRIMARY KEY)
-    private static final String COL_2_1 = "date";                               // TABLE_2の 第1カラム
-    private static final String COL_2_2 = "tag";                                // TABLE_2の 第2カラム
-    private static final String COL_2_3 = "created";                            // TABLE_2の 第3カラム
-    private static final String COL_2_4 = "updated";                            // TABLE_2の 第4カラム
-    private static final String SQLITE_COUNT_2 = "COUNT(" + COL_2_0 + ")";      // sqliteは COUNT(*)だと遅い
-    * */
 
     public TagData() {
+    }
+
+    public TagData(Date date, String tag) {
+        mDate = date;
+        mTag = tag;
     }
 
     public long getId() {

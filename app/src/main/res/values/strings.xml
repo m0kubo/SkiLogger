@@ -12,6 +12,7 @@
     <string name="fmt_ski_log">RUN：%d / 下降 %,3.0fm</string>
     <string name="fmt_title_chart">表示日 %s</string>
     <string name="fmt_title_chart2">シーズン %d</string>
+    <string name="fmt_title_tag">タグ：%s</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
 
     <string name="menu_theme">アプリ テーマ変更</string>
@@ -35,6 +36,9 @@
 
     <string name="default_altitude"> --- m</string>
     <string name="default_run_count">0</string>
+
+    <string name="title_select_tag">タグ付けされた日のみ表示</string>
+    <string name="menu_reset_tag">(絞りこみ解除)</string>
 
     <string name="title_delete_logs">記録削除</string>
     <string name="fmt_delete_daily_logs">%sの一日分の記録を削除しますか？\n\n削除したデータは復活できません。</string>

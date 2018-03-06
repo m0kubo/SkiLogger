@@ -7,7 +7,6 @@ import android.graphics.DashPathEffect;
 import android.graphics.RectF;
 import android.os.Bundle;
 import android.os.Message;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TypedValue;
@@ -200,8 +199,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private void initView() {
         UiUtils.setSelected(this, R.id.btn_chart1, true);
 
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+//        // タイトルバーに backボタンを表示する
+//        ActionBar actionBar = getSupportActionBar();
+//        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
         mRgChartType = findViewById(R.id.rg_chart_type);
         mRgChartType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -245,8 +245,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         setTitle(getString(R.string.fmt_title_chart, mDateFormat.format(date != null ? date : new Date(System.currentTimeMillis()))));
 
         // 前データ、次データへのボタンの 有効無効
-        UiUtils.enableView(this, R.id.btn_negative, dateIndex >= 1);
-        UiUtils.enableView(this, R.id.btn_positive, dateIndex < mDateList.size() - 1);
+        UiUtils.setEnabled(this, R.id.btn_negative, dateIndex >= 1);
+        UiUtils.setEnabled(this, R.id.btn_positive, dateIndex < mDateList.size() - 1);
     }
 
     private Date getTargetDate(int dateIndex) {
