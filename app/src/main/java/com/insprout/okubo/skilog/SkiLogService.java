@@ -356,7 +356,7 @@ public class SkiLogService extends Service implements SensorEventListener {
     private long recordLog(float altitude) {
         mRecordTime = System.currentTimeMillis();
 
-        long id = DbUtils.insert(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
+        long id = DbUtils.insertLog(this, new SkiLogData(altitude, mTotalAsc, mTotalDesc, mRunCount));
         if (id <= 0) {
             Log.e(TAG, "DB error: fail to insert");
             return -1;
@@ -376,7 +376,7 @@ public class SkiLogService extends Service implements SensorEventListener {
 
     private void getPreviousLog() {
         // 同日にすでに記録があった場合は、前回高度、積算、滑走回数を引き継ぐ
-        List<SkiLogData> data = DbUtils.select(this, new Date(System.currentTimeMillis()), 1, 0, "_id DESC");
+        List<SkiLogData> data = DbUtils.selectLogs(this, new Date(System.currentTimeMillis()), 1, 0, "_id DESC");
         if (data != null && data.size() >= 1) {
             SkiLogData log = data.get(0);
             mPrevAltitude = log.getAltitude();

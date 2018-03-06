@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SkiLogService.registerNotifyChannel(this);              // Android8.0対応 notificationチャンネルの登録
 
         mThemeArray = getResources().getStringArray(R.array.app_themes);
-        mReadyData = (DbUtils.count(this) >= 1);                  // 記録データが存在するかどうか
+        mReadyData = (DbUtils.countLogs(this) >= 1);                  // 記録データが存在するかどうか
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {

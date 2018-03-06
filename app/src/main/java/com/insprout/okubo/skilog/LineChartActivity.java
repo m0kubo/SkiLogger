@@ -270,7 +270,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         Date targetDate = getTargetDate(dateIndex);
         if (targetDate == null) return false;
 
-        List<SkiLogData> data = DbUtils.select(this, targetDate);
+        List<SkiLogData> data = DbUtils.selectLogs(this, targetDate);
         if (data == null || data.size() == 0) {
             return false;
         }

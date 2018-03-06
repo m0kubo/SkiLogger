@@ -39,12 +39,20 @@ public class SkiLogDb {
     private static final String COL_1_5 = "created";                            // TABLE_1の 第5カラム
     private static final String SQLITE_COUNT_1 = "COUNT(" + COL_1_0 + ")";      // sqliteは COUNT(*)だと遅い
 
+    private static final String TABLE_2 = "ski_tag";
+    private static final String COL_2_0 = "_id";                                // TABLE_2の 第0カラム(PRIMARY KEY)
+    private static final String COL_2_1 = "date";                               // TABLE_2の 第1カラム
+    private static final String COL_2_2 = "tag";                                // TABLE_2の 第2カラム
+    private static final String COL_2_3 = "created";                            // TABLE_2の 第3カラム
+    private static final String COL_2_4 = "updated";                            // TABLE_2の 第4カラム
+//    private static final String SQLITE_COUNT_2 = "COUNT(" + COL_2_0 + ")";      // sqliteは COUNT(*)だと遅い
+
     /**
      * DB および テーブル作成用 ヘルパークラス
      */
     private class DatabaseHelper extends SQLiteOpenHelper {
 
-        private static final int DATABASE_VERSION = 3;
+        private static final int DATABASE_VERSION = 4;
         private static final String DATABASE_NAME = "skilogger.db";
 
 
@@ -57,6 +65,8 @@ public class SkiLogDb {
         public void onCreate(SQLiteDatabase db) {
             // テーブルを作成する。DBファイルが存在しない場合に呼ばれる
             // DBファイルはあるけど、TABLEが存在しない場合には呼ばれないので注意
+
+            // TABLE_1作成
             db.execSQL(
                     "CREATE TABLE " + TABLE_1 + " ("
                             + COL_1_0 + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
@@ -65,10 +75,27 @@ public class SkiLogDb {
                             + COL_1_3 + " REAL NOT NULL DEFAULT 0, "
                             + COL_1_4 + " INTEGER NOT NULL DEFAULT 0, "
                             + COL_1_5 + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP )" );
+            // TABLE_2作成
+            createTable2(db);
         }
 
         @Override
-        public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            if (oldVersion <= 3) {
+                // DATABASE_VERSIONが 3以前からの アップグレードの場合は、TABLE_2が存在しないので作成する
+                createTable2(db);
+            }
+        }
+
+        private void createTable2(SQLiteDatabase db) {
+            // セカンダリーのテーブルを作成する。
+            db.execSQL(
+                    "CREATE TABLE " + TABLE_2 + " ("
+                            + COL_2_0 + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                            + COL_2_1 + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                            + COL_2_2 + " TEXT, "
+                            + COL_2_3 + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                            + COL_2_4 + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP )");
         }
 
     }
@@ -98,6 +125,76 @@ public class SkiLogDb {
         if (mDb != null) mDb.endTransaction();
     }
 
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // 共通操作の メソッド
+    //
+
+
+    /**
+     * 指定のテーブルからレコードを削除する
+     * @param tableName 操作するテーブル
+     * @param selection where句
+     * @param selectionArgs where句にあたえる引数
+     * @return 結果 boolean
+     */
+    private boolean deleteFromTable(String tableName, String selection, String[] selectionArgs) {
+        try {
+            int count = mDb.delete(tableName, selection, selectionArgs);
+            if (count == 0) return false;
+
+        } catch (SQLException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+            return false;
+        }
+        return true;
+    }
+
+
+    /**
+     * 指定のテーブルの 該当するレコードの数を返す
+     * @param tableName 操作するテーブル
+     * @param countColumn COUNTに使用するカラム名 (SQLiteは COUNT(*)だと遅いので Primary keyなどを指定する)
+     * @param selection where句
+     * @param selectionArgs where句にあたえる引数
+     * @return 結果件数
+     */
+    public long countFromTable(String tableName, String countColumn, String selection, String[] selectionArgs) {
+        Cursor cursor = null;
+        long count = 0;
+        String countCommand = "COUNT(" + countColumn + ")";      // sqliteは COUNT(*)だと遅い
+
+        try{
+            cursor = mDb.query( tableName,
+                    new String[] { countCommand },
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    null);
+
+            if (cursor.moveToFirst()) {
+                count =cursor.getInt(0);
+            }
+
+        } catch (SQLiteException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+
+        } finally {
+            // Cursorを忘れずにcloseする
+            if (cursor != null) cursor.close();
+        }
+        return count;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // TABLE 1を操作する メソッド
+    //
 
     /**
      * ログdataを データベースに insertする
@@ -164,17 +261,14 @@ public class SkiLogDb {
         return deleteFromTable1(COL_1_0 + " = ?", args );
     }
 
+    /**
+     * TABLE_1から レコードを削除する
+     * @param selection where句
+     * @param selectionArgs where句にあたえる引数
+     * @return 結果 boolean
+     */
     public boolean deleteFromTable1(String selection, String[] selectionArgs) {
-        try {
-            int count = mDb.delete(TABLE_1, selection, selectionArgs);
-            if (count == 0) return false;
-
-        } catch (SQLException e) {
-            // SQLite error
-            Log.e(TAG, "DB error: " + e.toString());
-            return false;
-        }
-        return true;
+        return deleteFromTable(TABLE_1, selection, selectionArgs);
     }
 
     /** ファイルデータを検索 */
@@ -332,38 +426,82 @@ public class SkiLogDb {
         return result;
     }
 
-    public long countFromTable1() {
-        return countFromTable1(null, null );
+    public long countFromTable1(String selection, String[] selectionArgs) {
+        return countFromTable(TABLE_1, COL_1_0, selection, selectionArgs);
     }
 
-    public long countFromTable1(String selection, String[] selectionArgs) {
-        Cursor cursor = null;
-        long count = 0;
 
-        try{
-            cursor = mDb.query( TABLE_1,
-                    new String[] { SQLITE_COUNT_1 },
-                    selection,
-                    selectionArgs,
-                    null,
-                    null,
-                    null);
+    ////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // TABLE 2を操作する メソッド
+    //
 
-            if (cursor.moveToFirst()) {
-                count =cursor.getInt(0);
-            }
+    /**
+     * ログdataを データベースに insertする
+     * @param data DBに登録する内容
+     * @return insertされたレコードのID。エラーの場合は -1
+     */
+    public long insertIntoTable2(TagData data){
+        long insertedId = -1;
 
-        } catch (SQLiteException e) {
+        if (data == null) return -1;
+        String utcDateTime = formatUtcDateTime(new Date(System.currentTimeMillis()));
+        try {
+            // 挿入するデータはContentValuesに格納
+            ContentValues record = new ContentValues();
+            record.put(COL_2_1, formatUtcDateTime(data.getDate()));
+            record.put(COL_2_2, data.getTag());
+            record.put(COL_2_4, utcDateTime);
+            insertedId = mDb.insert(TABLE_2, null, record);
+
+        } catch (SQLException e) {
             // SQLite error
             Log.e(TAG, "DB error: " + e.toString());
+        }
+        return insertedId;
+    }
 
-        } finally {
-            // Cursorを忘れずにcloseする
-            if (cursor != null) cursor.close();
+    /**
+     * 指定のログdataの recordを updateする
+     * @param data 更新する内容
+     * @return 変更した行数。成功の場合は 1が返る
+     */
+    public long updateOnTable2(TagData data){
+        long count = 0;
+
+        if (data == null) return 0;
+        String utcDateTime = formatUtcDateTime(new Date(System.currentTimeMillis()));
+        String[] args = { data.getIdStr() };
+        try {
+            // 挿入するデータはContentValuesに格納
+            ContentValues record = new ContentValues();
+            record.put(COL_2_1, formatUtcDateTime(data.getDate()));
+            record.put(COL_2_2, data.getTag());
+            record.put(COL_2_4, utcDateTime);
+            count = mDb.update(TABLE_1, record, COL_1_0 + " = ?", args);
+
+        } catch (SQLException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
         }
         return count;
     }
 
+    /**
+     * レコードを 1件削除する
+     * @param data 削除するデータ。idのみ参照
+     * @return 結果 boolean
+     */
+    public boolean deleteFromTable2(TagData data) {
+        if (data == null) return false;
+
+        String[] args = { data.getIdStr() };
+        return deleteFromTable(TABLE_2, COL_1_0 + " = ?", args );
+    }
+
+    public long countFromTable2(String selection, String[] selectionArgs) {
+        return countFromTable(TABLE_2, COL_2_0, selection, selectionArgs);
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //

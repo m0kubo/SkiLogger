@@ -19,13 +19,13 @@ public class DbUtils {
      * @param context コンテキスト
      * @return 件数
      */
-    public static long count(Context context) {
+    public static long countLogs(Context context) {
         long res = 0;
 
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.countFromTable1();
+            res = fbkDatabase.countFromTable1(null, null);
 
         } catch(Exception ex) {
             return res;
@@ -42,7 +42,7 @@ public class DbUtils {
      * @param data insertするLogデータ
      * @return 挿入された行の id。エラーの場合は0
      */
-    public static long insert(Context context, SkiLogData data) {
+    public static long insertLog(Context context, SkiLogData data) {
         long id = 0;
 
         SkiLogDb database = null;
@@ -62,7 +62,7 @@ public class DbUtils {
      * @param data updateするLogデータ
      * @return updateされた行の行数。成功の場合は1。エラーの場合は0
      */
-    public static long update(Context context, SkiLogData data) {
+    public static long updateLog(Context context, SkiLogData data) {
         long id = 0;
 
         SkiLogDb database = null;
@@ -132,11 +132,11 @@ public class DbUtils {
         return res;
     }
 
-    public static List<SkiLogData> select(Context context, Date date) {
-        return select(context, date, 0, 0, null);
+    public static List<SkiLogData> selectLogs(Context context, Date date) {
+        return selectLogs(context, date, 0, 0, null);
     }
 
-    public static List<SkiLogData> select(Context context, Date date, int offset, int limit, String orderBy) {
+    public static List<SkiLogData> selectLogs(Context context, Date date, int offset, int limit, String orderBy) {
         List<SkiLogData> res = new ArrayList<>();
         if (date == null) return res;
 
