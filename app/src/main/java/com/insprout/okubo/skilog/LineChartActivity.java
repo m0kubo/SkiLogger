@@ -27,7 +27,9 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.database.TagData;
 import com.insprout.okubo.skilog.setting.Settings;
+import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.DialogUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
@@ -40,7 +42,9 @@ import java.util.List;
 
 
 public class LineChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
-    private final static int RC_DELETE_LOG = 1;
+    private final static int RC_DELETE_LOG = 100;
+    private final static int RC_SELECT_ADD_TAG = 200;
+    private final static int RC_LIST_TAG = 201;
 
     private final static String TAG = "chart";
     private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
@@ -71,6 +75,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private float mAccumulateDesc = 0f;
     private int mRunCount = 0;
 
+    private List<TagData> mTags;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,46 +86,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         initVars();                                             // 変数などの初期化
         initView();                                             // View関連の初期化
-    }
-
-    // タイトルメニュー用 設定
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.titlebar, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-
-            case R.id.menu_delete_logs:
-                confirmDeleteLogs();
-                return true;
-
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        // 削除メニューの状態を設定
-        Date targetDate = getTargetDate(mDateIndex);
-        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
-        if (targetDate != null) {
-            deleteMenu.setEnabled(true);
-            deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, mDateFormat.format(targetDate)));
-
-        } else {
-            deleteMenu.setEnabled(false);
-            deleteMenu.setTitle(R.string.menu_delete_logs);
-        }
-        return true;
     }
 
 
@@ -140,6 +106,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
 
     private void initVars() {
+
         mDateFormat = DateFormat.getDateInstance(DateFormat.SHORT);
 
         mDateList = new ArrayList<>();
@@ -160,6 +127,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             if (mDateIndex < 0) mDateIndex = mDateList.size() - 1;
         }
         updateUi(mDateIndex);
+        getTagList(mDateIndex);
 
         // チャートの色/ラベルを設定
         TypedValue typedValue = new TypedValue();
@@ -256,6 +224,11 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         } else {
             return null;
         }
+    }
+
+    private void getTagList(int dateIndex) {
+        // タグリスト取得
+        mTags = DbUtils.selectTags(this, getTargetDate(dateIndex));
     }
 
     private boolean setupChartValues(int dateIndex) {
@@ -521,6 +494,89 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChart.getDescription().setText(getString(R.string.fmt_ski_log, mRunCount, mAccumulateDesc));
     }
 
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch(id) {
+            case R.id.btn_negative:
+                if (mDateIndex > 0) mDateIndex--;
+                updateUi(mDateIndex);
+                getTagList(mDateIndex);
+                updateChart();
+                break;
+
+            case R.id.btn_positive:
+                if (mDateIndex < mDateList.size() - 1) mDateIndex++;
+                updateUi(mDateIndex);
+                getTagList(mDateIndex);
+                updateChart();
+                break;
+
+            case R.id.btn_chart2:
+                UiUtils.setSelected(this, R.id.btn_chart1, false);
+                UiUtils.setSelected(this, R.id.btn_chart2, true);
+                BarChartActivity.startActivity(this);
+                finish();
+                break;
+        }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////
+    //
+    // Optionメニュー関連
+    //
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.line_chart, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // タグ一覧メニューの 有効/無効
+        MenuItem tagsMenu = menu.findItem(R.id.menu_list_tags);
+        tagsMenu.setEnabled(mTags != null && !mTags.isEmpty());
+
+        // 削除メニューの状態を設定
+        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
+        Date targetDate = getTargetDate(mDateIndex);
+        if (targetDate != null) {
+            deleteMenu.setEnabled(true);
+            deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, mDateFormat.format(targetDate)));
+
+        } else {
+            deleteMenu.setEnabled(false);
+            deleteMenu.setTitle(R.string.menu_delete_logs);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+
+            case R.id.menu_delete_logs:
+                confirmDeleteLogs();
+                return true;
+
+            case R.id.menu_list_tags:
+                listTags();
+                return true;
+
+            case R.id.menu_add_tags:
+                selectAddTagType();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     private void deleteLogs(Date targetDate) {
         boolean res = DbUtils.deleteLogs(this, targetDate);
         if (res) {
@@ -531,6 +587,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             }
             // チャートの表示を更新する
             updateUi(mDateIndex);
+            // deleteTags(mTags);// TODO
             updateChart();
         }
     }
@@ -546,6 +603,20 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         DialogUtils.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
     }
 
+    private void selectAddTagType() {
+        String[] submenu = getResources().getStringArray(R.array.menu_add_tag);
+        DialogUtils.showItemListDialog(this, 0, submenu, android.R.string.cancel, RC_SELECT_ADD_TAG);
+    }
+
+    private void listTags() {
+        if (mTags == null || mTags.isEmpty()) return;
+
+        // 選択用リストを作成
+        String[] arrayTag = MiscUtils.toStringArray(mTags);
+        DialogUtils.showItemSelectDialog(this, R.string.title_list_tags, arrayTag, -1, R.string.btn_delete, R.string.btn_close, RC_LIST_TAG);
+    }
+
+
     @Override
     public void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse) {
         switch (requestCode) {
@@ -554,34 +625,22 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                     deleteLogs(getTargetDate(mDateIndex));
                 }
                 break;
-        }
-    }
 
-    @Override
-    public void onClick(View view) {
-        int id = view.getId();
-        switch(id) {
-            case R.id.btn_negative:
-                if (mDateIndex > 0) mDateIndex--;
-                updateUi(mDateIndex);
-                updateChart();
+            case RC_SELECT_ADD_TAG:
+                // TODO
                 break;
 
-            case R.id.btn_positive:
-                if (mDateIndex < mDateList.size() - 1) mDateIndex++;
-                updateUi(mDateIndex);
-                updateChart();
-                break;
-
-            case R.id.btn_chart2:
-                UiUtils.setSelected(this, R.id.btn_chart1, false);
-                UiUtils.setSelected(this, R.id.btn_chart2, true);
-                BarChartActivity.startActivity(this);
-                finish();
+            case RC_LIST_TAG:
+                // TODO
                 break;
         }
     }
 
+
+    ////////////////////////////////////////////////////////////////////
+    //
+    // Activity起動 staticメソッド
+    //
 
     public static void startActivity(Activity context) {
         startActivity(context, null);

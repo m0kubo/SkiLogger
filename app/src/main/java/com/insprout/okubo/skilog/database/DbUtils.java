@@ -338,12 +338,23 @@ public class DbUtils {
      * @return データ(複数件)
      */
     public static List<TagData> selectTags(Context context) {
+        return selectTags(context, null);
+    }
+
+    public static List<TagData> selectTags(Context context, Date targetDate) {
         List<TagData> res = new ArrayList<>();
+        String selection = null;
+        String[] selectionArgs = null;
+
+        if (targetDate != null) {
+            selection = "date(date, ?) = ?";
+            selectionArgs = new String[] { SkiLogDb.utcModifier(), SkiLogDb.formatDate(targetDate) };
+        }
 
         SkiLogDb fbkDatabase = null;
         try {
             fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.selectFromTable2(null, null, 0, 0, "updated DESC", null);
+            res = fbkDatabase.selectFromTable2(selection, selectionArgs, 0, 0, "updated DESC", null);
 
         } catch(Exception ex) {
             return res;

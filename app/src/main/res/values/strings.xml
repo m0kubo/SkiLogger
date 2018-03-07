@@ -17,10 +17,17 @@
 
     <string name="menu_theme">アプリ テーマ変更</string>
     <string name="menu_delete_logs">記録削除</string>
+    <string name="menu_list_tags">タグ一覧/削除</string>
+    <string name="menu_add_tags">タグ追加</string>
 
     <string-array name="app_themes">
         <item>テーマ：Light</item>
         <item>テーマ：Dark</item>
+    </string-array>
+    <string-array name="menu_add_tag">
+        <item>直接入力する</item>
+        <item>履歴から選択</item>
+        <item>近隣の施設名から選択</item>
     </string-array>
 
     <string name="label_accumulate">積算高度</string>
@@ -32,7 +39,11 @@
     <string name="label_status_start">状態：START</string>
     <string name="label_status_starting">状態：Starting&#8230;</string>
 
+    <string name="btn_close">閉じる</string>
+    <string name="btn_delete">削除</string>
     <string name="btn_finish_app">アプリ終了</string>
+
+    <string name="title_list_tags">この日につけられたタグ</string>
 
     <string name="default_altitude"> --- m</string>
     <string name="default_run_count">0</string>

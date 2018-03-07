@@ -31,6 +31,7 @@ import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.database.TagData;
 import com.insprout.okubo.skilog.setting.Settings;
+import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.DialogUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
@@ -136,18 +137,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         getTheme().resolveAttribute(android.R.attr.colorForeground, typedValue, true);
         mColorForeground = SdkUtils.getColor(this, typedValue.resourceId);
 
-        List<TagData> tags = DbUtils.selectTags(this);
-        if (tags == null || tags.isEmpty()) {
-            mTags = null;
-        } else {
-            mTags = new ArrayList<>();
-            for (TagData tagData : tags) {
-                String tag = tagData.getTag();
-                if (tag != null && !hasTag(tag)) {
-                    mTags.add(tagData);
-                }
-            }
-        }
+        mTags = AppUtils.getTags(this);
         mThisSeasonFrom = getStartDateOfSeason(new Date(System.currentTimeMillis()));
         mDateFormat = new SimpleDateFormat("MM/dd", Locale.getDefault());
 
@@ -424,16 +414,6 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         }
     }
 
-    private boolean hasTag(String tag) {
-        if (tag == null) return false;
-
-        for (TagData tagData2 : mTags) {
-            String tag2 = tagData2.getTag();
-            if (tag.equals(tag2)) return true;
-        }
-        return false;
-    }
-
     private void selectTag() {
         // tag一覧
         // tagがない場合 ボタン無効になっている筈だが念のためチェック
@@ -446,7 +426,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             arrayTag[i] = mTags.get(i).getTag();
         }
         arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
-        DialogUtils.showSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
+        DialogUtils.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
     }
 
     private void confirmDeleteLogs() {

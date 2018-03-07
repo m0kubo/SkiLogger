@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(item.getItemId()) {
             case R.id.menu_change_theme:
                 mThemeIndex = Settings.getThemeIndex(this);
-                DialogUtils.showSelectDialog(this, R.string.menu_theme, mThemeArray, mThemeIndex, RC_CHANGE_THEME);
+                DialogUtils.showItemSelectDialog(this, R.string.menu_theme, mThemeArray, mThemeIndex, RC_CHANGE_THEME);
                 return true;
         }
         return super.onOptionsItemSelected(item);

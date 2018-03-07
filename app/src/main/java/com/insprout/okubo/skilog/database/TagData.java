@@ -67,4 +67,9 @@ public class TagData {
         mUpdated = updated;
     }
 
+    @Override
+    public String toString() {
+        return getTag();
+    }
+
 }

@@ -40,6 +40,10 @@ public class DialogUtils {
     private static int STYLE_PROGRESS_DIALOG = 1;
 
     public static final int RC_NO_LISTENER = -1;
+
+    public static final int LIST_TYPE_NO_CHECKBOX = -2;
+    public static final int LIST_TYPE_NOT_SELECTED = -1;
+
     public static final int EVENT_BUTTON_POSITIVE = DialogInterface.BUTTON_POSITIVE;
     public static final int EVENT_BUTTON_NEGATIVE = DialogInterface.BUTTON_NEGATIVE;
     public static final int EVENT_BUTTON_NEUTRAL = DialogInterface.BUTTON_NEUTRAL;
@@ -118,6 +122,14 @@ public class DialogUtils {
         return showButtonsDialog(activity, title, message, labelOk, labelCancel, null, requestCode);
     }
 
+    /**
+     *
+     * @param activity 呼び出すActivity
+     * @param title ダイアログのタイトル文字列 (表示しない場合は nullを指定する)
+     * @param message メッセージ文字列 (表示しない場合は nullを指定する)
+     * @param requestCode Dialogの イベントリスナーに返されるリクエストコード
+     * @return 生成されたDialogFragmentオブジェクト
+     */
     public static DialogFragment showOkCancelDialog(Activity activity, String title, String message, int requestCode) {
         String labelOk = getString(activity, android.R.string.ok);
         String labelCancel = getString(activity, android.R.string.cancel);
@@ -131,7 +143,7 @@ public class DialogUtils {
     //
 
     /**
-     * Item選択(単一選択)リストを持つダイアログを表示する
+     * Itemリストを持つダイアログを表示する
      * @param activity 呼び出すActivity
      * @param title ダイアログのタイトル文字列 (表示しない場合は nullを指定する)
      * @param list 選択(単一選択)リスト
@@ -141,14 +153,43 @@ public class DialogUtils {
      * @param requestCode Dialogの イベントリスナーに返されるリクエストコード
      * @return 生成されたDialogFragmentオブジェクト
      */
-    public static DialogFragment showSelectDialog(final Activity activity, String title, String[] list, int selected, String labelOk, String labelCancel, int requestCode) {
+    public static DialogFragment showItemsDialog(final Activity activity, String title, String[] list, int selected, String labelOk, String labelCancel, int requestCode) {
         DialogFragment dialog = BaseDialogFragment.newInstance(requestCode, title, list, selected, labelOk, labelCancel);
         dialog.show(activity.getFragmentManager(), TAG_PREFIX + Integer.toHexString(requestCode));
         return dialog;
     }
 
+
     /**
-     * Item選択(単一選択)リストを持つダイアログを表示する
+     * CheckBoxなしItemリストを持つダイアログを表示する
+     * @param activity 呼び出すActivity
+     * @param title ダイアログのタイトル文字列 (表示しない場合は nullを指定する)
+     * @param list 選択(単一選択)リスト
+     * @param requestCode Dialogの イベントリスナーに返されるリクエストコード
+     * @return 生成されたDialogFragmentオブジェクト
+     */
+    public static DialogFragment showItemListDialog(final Activity activity, String title, String[] list, String labelCancel, int requestCode) {
+        return showItemsDialog(activity, title, list, LIST_TYPE_NO_CHECKBOX, null, labelCancel, requestCode);
+    }
+
+    /**
+     * CheckBoxなしItemリストを持つダイアログを表示する
+     * @param activity 呼び出すActivity
+     * @param titleId ダイアログのタイトルのリソースID (表示しない場合は 0を指定する)
+     * @param list 選択(単一選択)リスト
+     * @param cancelTextId キャンセルボタンのラベルのリソースID (ボタンを表示しない場合は 0を指定する)
+     * @param requestCode Dialogの イベントリスナーに返されるリクエストコード
+     * @return 生成されたDialogFragmentオブジェクト
+     */
+    public static DialogFragment showItemListDialog(final Activity activity, int titleId, String[] list, int cancelTextId, int requestCode) {
+        String title = getString(activity, titleId);
+        String labelCancel = getString(activity, cancelTextId);
+        return showItemListDialog(activity, title, list, labelCancel, requestCode);
+    }
+
+
+    /**
+     * CheckBox付きItem選択(単一選択)リストを持つダイアログを表示する
      * @param activity 呼び出すActivity
      * @param titleId ダイアログのタイトルのリソースID (表示しない場合は 0を指定する)
      * @param list 選択(単一選択)リスト
@@ -158,15 +199,15 @@ public class DialogUtils {
      * @param requestCode Dialogの イベントリスナーに返されるリクエストコード
      * @return 生成されたDialogFragmentオブジェクト
      */
-    public static DialogFragment showSelectDialog(final Activity activity, int titleId, String[] list, int selected, int okTextId, int cancelTextId, int requestCode) {
+    public static DialogFragment showItemSelectDialog(final Activity activity, int titleId, String[] list, int selected, int okTextId, int cancelTextId, int requestCode) {
         String title = getString(activity, titleId);
         String labelOk = getString(activity, okTextId);
         String labelCancel = getString(activity, cancelTextId);
-        return showSelectDialog(activity, title, list, selected, labelOk, labelCancel, requestCode);
+        return showItemsDialog(activity, title, list, selected, labelOk, labelCancel, requestCode);
     }
 
     /**
-     * Item選択(単一選択)リストを持つダイアログを表示する
+     * CheckBox付きItem選択(単一選択)リストを持つダイアログを表示する
      * @param activity 呼び出すActivity
      * @param titleId ダイアログのタイトルのリソースID (表示しない場合は 0を指定する)
      * @param list 選択(単一選択)リスト
@@ -174,11 +215,8 @@ public class DialogUtils {
      * @param requestCode Dialogの イベントリスナーに返されるリクエストコード
      * @return 生成されたDialogFragmentオブジェクト
      */
-    public static DialogFragment showSelectDialog(final Activity activity, int titleId, String[] list, int selected, int requestCode) {
-        String title = getString(activity, titleId);
-        String labelOk = getString(activity, android.R.string.ok);
-        String labelCancel = getString(activity, android.R.string.cancel);
-        return showSelectDialog(activity, title, list, selected, labelOk, labelCancel, requestCode);
+    public static DialogFragment showItemSelectDialog(final Activity activity, int titleId, String[] list, int selected, int requestCode) {
+        return showItemSelectDialog(activity, titleId, list, selected, ID_STRING_DEFAULT_OK, ID_STRING_DEFAULT_CANCEL, requestCode);
     }
 
 
@@ -285,6 +323,7 @@ public class DialogUtils {
     //
 
     public static class BaseDialogFragment extends DialogFragment implements DialogInterface.OnClickListener, DialogInterface.OnCancelListener {
+        private final static int LAYOUT_ID_DEFAULT = -1;
         private final static float DIP_PADDING_PROGRESS = 15.0f;
 
         private AlertDialog mAlertDialog = null;
@@ -402,8 +441,8 @@ public class DialogUtils {
             String buttonNeutral = getArguments().getString(KEY_DIALOG_NEUTRAL_BUTTON_TEXT);
 
             mChoiceList = getArguments().getStringArray(KEY_CHOICE_ARRAY);
-            int selected = getArguments().getInt(KEY_CHOICE_SELECTED, 0);
-            int layoutId = getArguments().getInt(KEY_DIALOG_LAYOUT, -1);
+            int selected = getArguments().getInt(KEY_CHOICE_SELECTED, LIST_TYPE_NOT_SELECTED);
+            int layoutId = getArguments().getInt(KEY_DIALOG_LAYOUT, LAYOUT_ID_DEFAULT);
             LayoutInflater inflater;
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -413,14 +452,21 @@ public class DialogUtils {
                 // messageは ProgressDialog(風の)Viewで表示するので、AlertDialogオリジナルの setMessage()を明示的にスキップする。
                 message = null;
 
-            } else if (layoutId != -1 && (inflater = (LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)) != null) {
+            } else if (layoutId != LAYOUT_ID_DEFAULT
+                    && (inflater = (LayoutInflater)getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE)) != null) {
                 // カスタムViewを設定
                 mCustomView = inflater.inflate(layoutId, null);
                 builder.setView(mCustomView);
 
             } else if (mChoiceList != null) {
                 // 選択リストを設定
-                builder.setSingleChoiceItems(mChoiceList, selected, this);
+                if (selected == LIST_TYPE_NO_CHECKBOX) {
+                    // checkboxなしListViewを表示
+                    builder.setItems(mChoiceList, this);
+                } else {
+                    // checkboxつきListViewを表示
+                    builder.setSingleChoiceItems(mChoiceList, selected, this);
+                }
                 // setMessage()を実行すると setSingleChoiceItems()が無視されるので、
                 // setSingleChoiceItems()を行った場合は、setMessage()を明示的にスキップする様にする。
                 message = null;

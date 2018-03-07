@@ -2,11 +2,14 @@ package com.insprout.okubo.skilog.util;
 
 import android.graphics.Bitmap;
 
+import com.insprout.okubo.skilog.database.TagData;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by okubo on 2018/02/01.
@@ -262,6 +265,23 @@ public class MiscUtils {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
+    }
+
+    /**
+     * 与えられたListオブジェクトから String型の配列を返す。
+     * List<String>以外の型にも対応している。要素の toString()メソッドを呼び出すので、
+     * 要素が独自クラスの場合は適切に toString()メソッドをOverrideしておくこと。
+     * @param list String型の配列に変換する Listオブジェクト
+     * @return String型の配列
+     */
+    public static String[] toStringArray(List<?> list) {
+        if (list == null) return null;
+
+        String[] array = new String[ list.size() ];
+        for (int i=0; i<list.size(); i++) {
+            array[i] = list.get(i).toString();
+        }
+        return array;
     }
 
     public static boolean saveBitmap(File file, Bitmap bitmap) {
