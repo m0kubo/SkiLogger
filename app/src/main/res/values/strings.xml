@@ -26,7 +26,7 @@
     </string-array>
     <string-array name="menu_add_tag">
         <item>直接入力する</item>
-        <item>履歴から選択</item>
+        <item>既存のタグから選択</item>
         <item>近隣の施設名から選択</item>
     </string-array>
 
@@ -39,17 +39,24 @@
     <string name="label_status_start">状態：START</string>
     <string name="label_status_starting">状態：Starting&#8230;</string>
 
+    <string name="btn_ok">OK</string>
+    <string name="btn_cancel">キャンセル</string>
     <string name="btn_close">閉じる</string>
     <string name="btn_delete">削除</string>
     <string name="btn_finish_app">アプリ終了</string>
 
-    <string name="title_list_tags">この日につけられたタグ</string>
+    <string name="fmt_title_list_tags">%sにつけられたタグ</string>
+    <string name="msg_delete_tags">タグを削除します</string>
+    <string name="fmt_msg_deleted_tags">%sのタグから「%s」を削除しました</string>
 
     <string name="default_altitude"> --- m</string>
     <string name="default_run_count">0</string>
 
+    <string name="title_input_tag">タグ設定</string>
+    <string name="hint_tag">設定するタグを入力してください</string>
     <string name="title_select_tag">タグ付けされた日のみ表示</string>
     <string name="menu_reset_tag">(絞りこみ解除)</string>
+    <string name="msg_no_more_tags">選択可能なタグがありません</string>
 
     <string name="title_delete_logs">記録削除</string>
     <string name="fmt_delete_daily_logs">%sの一日分の記録を削除しますか？\n\n削除したデータは復活できません。</string>

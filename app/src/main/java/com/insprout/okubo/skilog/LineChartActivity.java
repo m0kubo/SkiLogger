@@ -2,6 +2,9 @@ package com.insprout.okubo.skilog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DialogFragment;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
@@ -13,7 +16,11 @@ import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.AxisBase;
@@ -35,7 +42,6 @@ import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -45,6 +51,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private final static int RC_DELETE_LOG = 100;
     private final static int RC_SELECT_ADD_TAG = 200;
     private final static int RC_LIST_TAG = 201;
+    private final static int RC_INPUT_TAG = 300;
+    private final static int RC_SELECT_TAG = 301;
+    private final static int RC_LOCATION_TAG = 302;
+    private final static int RC_DELETE_TAG = 400;
 
     private final static String TAG = "chart";
     private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
@@ -53,7 +63,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private ServiceMessenger mServiceMessenger;
     private int mDateIndex = -1;
     private List<Date> mDateList;
-    private DateFormat mDateFormat;
     private RadioGroup mRgChartType;
 
     private int mColor;
@@ -76,6 +85,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private int mRunCount = 0;
 
     private List<TagData> mTags;
+    private List<TagData> mTagsCandidate;
+    private TagData mTargetTag = null;
 
 
     @Override
@@ -107,8 +118,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     private void initVars() {
 
-        mDateFormat = DateFormat.getDateInstance(DateFormat.SHORT);
-
         mDateList = new ArrayList<>();
         List<SkiLogData>data = DbUtils.selectLogSummaries(this, 0, MAX_DATA_COUNT);
         if (data == null || data.isEmpty()) {
@@ -127,7 +136,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             if (mDateIndex < 0) mDateIndex = mDateList.size() - 1;
         }
         updateUi(mDateIndex);
-        getTagList(mDateIndex);
 
         // チャートの色/ラベルを設定
         TypedValue typedValue = new TypedValue();
@@ -210,7 +218,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     private void updateUi(int dateIndex) {
         Date date = getTargetDate(dateIndex);
-        setTitle(getString(R.string.fmt_title_chart, mDateFormat.format(date != null ? date : new Date(System.currentTimeMillis()))));
+        setTitle(getString(R.string.fmt_title_chart, AppUtils.toDateString(date != null ? date : new Date(System.currentTimeMillis()))));
 
         // 前データ、次データへのボタンの 有効無効
         UiUtils.setEnabled(this, R.id.btn_negative, dateIndex >= 1);
@@ -501,14 +509,12 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             case R.id.btn_negative:
                 if (mDateIndex > 0) mDateIndex--;
                 updateUi(mDateIndex);
-                getTagList(mDateIndex);
                 updateChart();
                 break;
 
             case R.id.btn_positive:
                 if (mDateIndex < mDateList.size() - 1) mDateIndex++;
                 updateUi(mDateIndex);
-                getTagList(mDateIndex);
                 updateChart();
                 break;
 
@@ -535,20 +541,29 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        // タグ一覧メニューの 有効/無効
-        MenuItem tagsMenu = menu.findItem(R.id.menu_list_tags);
-        tagsMenu.setEnabled(mTags != null && !mTags.isEmpty());
-
-        // 削除メニューの状態を設定
-        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
         Date targetDate = getTargetDate(mDateIndex);
+
+        MenuItem tagsMenu = menu.findItem(R.id.menu_list_tags);
+        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
+
+        // 日付に依存するメニューの 有効/無効状態を設定
         if (targetDate != null) {
+            // 削除メニュー
             deleteMenu.setEnabled(true);
-            deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, mDateFormat.format(targetDate)));
+            deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, AppUtils.toDateString(targetDate)));
+
+            // 付与されているタグ一覧メニュー
+            mTags = DbUtils.selectTags(this, targetDate);
+            tagsMenu.setEnabled(mTags != null && !mTags.isEmpty());
 
         } else {
+            // 削除メニュー
             deleteMenu.setEnabled(false);
             deleteMenu.setTitle(R.string.menu_delete_logs);
+
+            // 付与されているタグ一覧メニュー
+            mTags = null;
+            tagsMenu.setEnabled(false);
         }
 
         return true;
@@ -599,13 +614,13 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         // データ削除
         String title = getString(R.string.title_delete_logs);
-        String message = getString(R.string.fmt_delete_daily_logs,  mDateFormat.format(targetDate));
+        String message = getString(R.string.fmt_delete_daily_logs,  AppUtils.toDateString(targetDate));
         DialogUtils.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
     }
 
     private void selectAddTagType() {
         String[] submenu = getResources().getStringArray(R.array.menu_add_tag);
-        DialogUtils.showItemListDialog(this, 0, submenu, android.R.string.cancel, RC_SELECT_ADD_TAG);
+        DialogUtils.showItemListDialog(this, 0, submenu, R.string.btn_cancel, RC_SELECT_ADD_TAG);
     }
 
     private void listTags() {
@@ -613,7 +628,22 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         // 選択用リストを作成
         String[] arrayTag = MiscUtils.toStringArray(mTags);
-        DialogUtils.showItemSelectDialog(this, R.string.title_list_tags, arrayTag, -1, R.string.btn_delete, R.string.btn_close, RC_LIST_TAG);
+        String title = getString(R.string.fmt_title_list_tags, AppUtils.toDateString(getTargetDate(mDateIndex)));
+        DialogFragment dialog = DialogUtils.showItemSelectDialog(this, title, arrayTag, -1, getString(R.string.btn_delete), getString(R.string.btn_close), RC_LIST_TAG);
+    }
+
+    private void inputTag() {
+        DialogUtils.showCustomDialog(this, R.string.title_input_tag, 0, R.layout.dlg_edittext, R.string.btn_ok, R.string.btn_cancel, RC_INPUT_TAG);
+    }
+
+    private void selectTagFromHistory() {
+        mTagsCandidate = AppUtils.getTags(this, mTags);
+        if (mTagsCandidate == null || mTagsCandidate.isEmpty()) {
+            Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
+
+        } else {
+            DialogUtils.showItemSelectDialog(this, R.string.title_input_tag, MiscUtils.toStringArray(mTagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_SELECT_TAG);
+        }
     }
 
 
@@ -628,10 +658,122 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
             case RC_SELECT_ADD_TAG:
                 // TODO
+                switch(which) {
+                    case 0:
+                        inputTag();
+                        break;
+                    case 1:
+                        selectTagFromHistory();
+                        break;
+                    case 2:
+                        break;
+                }
                 break;
 
             case RC_LIST_TAG:
-                // TODO
+                // タグ一覧ダイアログのコールバック
+                if (objResponse instanceof ListView) {      // 念のためチェック
+                    int pos = ((ListView) objResponse).getCheckedItemPosition();
+
+                    switch (which) {
+                        case DialogUtils.EVENT_DIALOG_SHOWN:
+                            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(pos >= 0);
+                            break;
+
+                        case DialogUtils.EVENT_BUTTON_POSITIVE:
+                            // 削除ボタンが押された
+                            if (pos >= 0 && pos < mTags.size()) {
+                                mTargetTag = mTags.get(pos);
+                                // 確認ダイアログを表示する
+                                DialogUtils.showOkCancelDialog(this, getString(R.string.msg_delete_tags), mTargetTag.getTag(), RC_DELETE_TAG);
+                            }
+                            break;
+
+                        default:
+                            if (pos >= 0) {
+                                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+                            }
+                            break;
+                    }
+                }
+                break;
+
+            case RC_DELETE_TAG:
+                // タグ削除
+                switch(which) {
+                    case DialogUtils.EVENT_BUTTON_POSITIVE:
+                        // 対象のタグデータをDBから削除する
+                        if (mTargetTag != null) {
+                            boolean result = DbUtils.deleteTag(this, mTargetTag);
+                            if (result) {
+                                String msg = getString(R.string.fmt_msg_deleted_tags,  AppUtils.toDateString(mTargetTag.getDate()), mTargetTag.getTag());
+                                Toast.makeText(this, msg ,Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        mTargetTag = null;
+                        break;
+
+                    case DialogUtils.EVENT_BUTTON_NEGATIVE:
+                        // タグ削除キャンセル
+                        mTargetTag = null;
+                        break;
+                }
+                break;
+
+            case RC_INPUT_TAG:
+                // タグ直接入力
+                if (objResponse instanceof View) {
+                    EditText editText = ((View) objResponse).findViewById(R.id._et_dlg);
+
+                    switch (which) {
+                        case DialogUtils.EVENT_DIALOG_SHOWN:
+                            // キーボードを自動で開く
+                            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                            if (inputMethodManager != null) inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+                            break;
+
+                        case DialogUtils.EVENT_BUTTON_POSITIVE:
+                            // 入力されたタグを登録
+                            if (editText != null) {
+                                Date targetDate = getTargetDate(mDateIndex);
+                                String tag = editText.getText().toString();
+                                if (!tag.isEmpty() && targetDate != null) {
+                                    DbUtils.insertTag(this, new TagData(targetDate, tag));
+                                }
+                            }
+                            break;
+                    }
+                }
+                break;
+
+            case RC_SELECT_TAG:
+                // 履歴から選択
+                if (objResponse instanceof ListView) {      // 念のためチェック
+                    int pos = ((ListView) objResponse).getCheckedItemPosition();
+
+                    switch (which) {
+                        case DialogUtils.EVENT_DIALOG_SHOWN:
+                            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(pos >= 0);
+                            break;
+
+                        case DialogUtils.EVENT_BUTTON_POSITIVE:
+                            // 入力されたタグを登録
+                            if (pos >= 0 && pos < mTagsCandidate.size()) {
+                                Date targetDate = getTargetDate(mDateIndex);
+                                String tag = mTagsCandidate.get(pos).getTag();
+                                if (!tag.isEmpty() && targetDate != null) {
+                                    DbUtils.insertTag(this, new TagData(targetDate, tag));
+                                }
+                            }
+                            break;
+
+                        default:
+                            if (pos >= 0) {
+                                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+                            }
+                            break;
+                    }
+                }
                 break;
         }
     }

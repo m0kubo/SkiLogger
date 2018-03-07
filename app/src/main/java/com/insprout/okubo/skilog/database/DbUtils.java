@@ -313,6 +313,26 @@ public class DbUtils {
     /**
      * tag用 Tableに新規行を挿入する
      * @param context コンテキスト
+     * @param data 削除するLogデータ
+     * @return 結果
+     */
+    public static boolean deleteTag(Context context, TagData data) {
+        boolean result;
+
+        SkiLogDb database = null;
+        try {
+            database = new SkiLogDb(context);
+            result = database.deleteFromTable2(data);
+
+        } finally {
+            if (database != null) database.close();
+        }
+        return result;
+    }
+
+    /**
+     * tag用 Tableに新規行を挿入する
+     * @param context コンテキスト
      * @param data insertするLogデータ
      * @return 挿入された行の id。エラーの場合は0
      */
