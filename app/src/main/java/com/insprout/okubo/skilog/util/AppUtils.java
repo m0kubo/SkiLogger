@@ -23,20 +23,17 @@ public class AppUtils {
     }
 
     public static List<TagData> getTags(Context context) {
-        return getTags(context, null);
+        return DbUtils.selectDistinctTags(context);
     }
 
     public static List<TagData> getTags(Context context, List<TagData> exclude) {
         List<TagData> tags = new ArrayList<>();
-        List<TagData> tagsAll = DbUtils.selectTags(context);
+        List<TagData> tagsAll = DbUtils.selectDistinctTags(context);
 
-        if (tagsAll == null || tagsAll.isEmpty()) {
-            return tags;
-
-        } else {
+        if (tagsAll != null && !tagsAll.isEmpty()) {
             for (TagData tagData : tagsAll) {
                 String tag = tagData.getTag();
-                if (tag != null && !containsTag(tagData, tags) && !containsTag(tagData, exclude)) tags.add(tagData);
+                if (tag != null && !containsTag(tagData, exclude)) tags.add(tagData);
             }
         }
         return tags;
@@ -44,11 +41,11 @@ public class AppUtils {
 
     private static boolean containsTag(TagData tag, List<TagData> tags) {
         if (tag == null || tags == null) return false;
-        String text = tag.getTag();
-        if (text == null) return false;
+        String tagText = tag.getTag();
+        if (tagText == null) return false;
 
         for (TagData tagData : tags) {
-            if (text.equals(tagData.getTag())) {
+            if (tagText.equals(tagData.getTag())) {
                 return true;
             }
         }

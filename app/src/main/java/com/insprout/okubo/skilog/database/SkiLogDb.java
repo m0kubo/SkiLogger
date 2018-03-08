@@ -283,10 +283,6 @@ public class SkiLogDb {
     }
 
 
-//    public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int offset, int limit, String orderBy) {
-//        return selectFromTable1(selection, selectionArgs, offset, limit, orderBy, null);
-//    }
-
     public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int offset, int limit, String orderBy, String groupBy) {
         Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
@@ -542,41 +538,6 @@ public class SkiLogDb {
         return result;
     }
 
-//    public List<TagData> selectFromTable2(String groupByColumn) {
-//        Cursor cursor = null;
-//        List<TagData> result = new ArrayList<>();
-//
-//        try{
-//            cursor = mDb.query( TABLE_2,
-//                    null,               // 全カラム取得
-//                    null,
-//                    null,
-//                    groupByColumn,
-//                    null,
-//                    "updated DESC",
-//                    null);
-//
-//            while( cursor.moveToNext() ) {
-//                // 取得したデータを格納する
-//                TagData data = new TagData();
-//                data.setId(cursor.getLong(0));
-//                data.setDate(toUtcDate(cursor.getString(1)));
-//                data.setTag(cursor.getString(2));
-//                data.setCreated(toUtcDate(cursor.getString(3)));
-//                data.setUpdated(toUtcDate(cursor.getString(4)));
-//                result.add(data);
-//            }
-//
-//        } catch (SQLiteException e) {
-//            // SQLite error
-//            Log.e(TAG, "DB error: " + e.toString());
-//
-//        } finally {
-//            // Cursorを忘れずにcloseする
-//            if (cursor != null) cursor.close();
-//        }
-//        return result;
-//    }
 
     public long countFromTable2(String selection, String[] selectionArgs) {
         return countFromTable(TABLE_2, COL_2_0, selection, selectionArgs);

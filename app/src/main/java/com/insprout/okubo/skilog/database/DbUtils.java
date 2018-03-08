@@ -265,23 +265,6 @@ public class DbUtils {
         return res;
     }
 
-    public static List<TagData> listByRawQueryOnTable2(Context context, String sql, String[] sqlArgs) {
-        List<TagData> res = new ArrayList<>();
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.listByRawQueryOnTable2(sql, sqlArgs);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
-        }
-        return res;
-    }
-
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -401,15 +384,11 @@ public class DbUtils {
 
 
     /**
-     * 日別記録のサマリー情報を取得する。1日1サマリー、複数日分の記録を返す。
-     * orderは 更新時刻の新しい順
+     * 指定された日付の タグデータを取得する。
      * @param context コンテキスト
+     * @param targetDate 取得するタグの日付
      * @return データ(複数件)
      */
-    public static List<TagData> selectTags(Context context) {
-        return selectTags(context, null);
-    }
-
     public static List<TagData> selectTags(Context context, Date targetDate) {
         List<TagData> res = new ArrayList<>();
         String selection = null;
@@ -434,5 +413,50 @@ public class DbUtils {
         return res;
     }
 
+    /**
+     * 重複しないタグのデータを取得する。
+     * 結果は、付与された日時の新しい順で返される
+     * @param context コンテキスト
+     * @return データ(複数件)
+     */
+    public static List<TagData> selectDistinctTags(Context context) {
+        // 新しい順でソートさせたいので、DISTINCTを使用しない。
+        // _idは自動採番なので、値の大きいものが 新しいと見做す
+
+        List<TagData> res = new ArrayList<>();
+
+        SkiLogDb fbkDatabase = null;
+        try {
+            fbkDatabase = new SkiLogDb(context);
+            res = DbUtils.listByRawQueryOnTable2(
+                    context,
+                    "SELECT * FROM ski_tag WHERE _id IN (SELECT MAX(_id) FROM ski_tag GROUP BY tag) ORDER BY _id DESC",
+                    null);
+
+        } catch(Exception ex) {
+            return res;
+
+        } finally {
+            if (fbkDatabase != null) fbkDatabase.close();
+        }
+        return res;
+    }
+
+    public static List<TagData> listByRawQueryOnTable2(Context context, String sql, String[] sqlArgs) {
+        List<TagData> res = new ArrayList<>();
+
+        SkiLogDb fbkDatabase = null;
+        try {
+            fbkDatabase = new SkiLogDb(context);
+            res = fbkDatabase.listByRawQueryOnTable2(sql, sqlArgs);
+
+        } catch(Exception ex) {
+            return res;
+
+        } finally {
+            if (fbkDatabase != null) fbkDatabase.close();
+        }
+        return res;
+    }
 
 }
