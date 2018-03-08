@@ -194,12 +194,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     @Override
-    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse) {
+    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch(requestCode) {
             case RC_CHANGE_THEME:
                 if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
-                    if (objResponse instanceof ListView) {
-                        int index = ((ListView) objResponse).getCheckedItemPosition();
+                    if (view instanceof ListView) {
+                        int index = ((ListView) view).getCheckedItemPosition();
                         if (index != mThemeIndex) {
                             Settings.putThemeIndex(this, index);
 

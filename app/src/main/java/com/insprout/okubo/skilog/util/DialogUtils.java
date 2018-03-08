@@ -69,7 +69,7 @@ public class DialogUtils {
          * - 選択リスト(Single Choice)が指定されている場合、選択リストの ListViewオブジェクト
          * - カスタムViewが 設定されている場合、その Viewオブジェクト
          */
-        void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse);
+        void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view);
     }
 
 
@@ -480,6 +480,7 @@ public class DialogUtils {
             if (buttonNeutral != null) builder.setNeutralButton(buttonNeutral, this);
             mAlertDialog = builder.create();
 
+            mAlertDialog.setCancelable(buttonCancel != null);   // キャンセルボタンがない場合は、Backキーによるキャンセルも無効
             mAlertDialog.setCanceledOnTouchOutside(false);
             // Dialogが createされた事をListenerに通知する。(主にカスタムViewの初期化処理のため)
             callbackToListener(EVENT_DIALOG_CREATED);
@@ -507,16 +508,16 @@ public class DialogUtils {
         private void callbackToListener(int which) {
             if (mListener == null) return;
 
-            Object objCallback = null;
+            View viewCallback = null;
             // Dialogの形態によって、callbackで返す オブジェクトを切り替える
             if (mCustomView != null) {
                 // カスタムlayoutが指定されている場合は、そのViewを返す
-                objCallback = mCustomView;
+                viewCallback = mCustomView;
 
             } else if (mChoiceList != null) {
-                objCallback = mAlertDialog.getListView();
+                viewCallback = mAlertDialog.getListView();
             }
-            mListener.onDialogEvent(mRequestCode, mAlertDialog, which, objCallback);
+            mListener.onDialogEvent(mRequestCode, mAlertDialog, which, viewCallback);
         }
 
         @Override

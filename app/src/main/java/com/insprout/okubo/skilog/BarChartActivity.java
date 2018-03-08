@@ -442,7 +442,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     @Override
-    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse) {
+    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch (requestCode) {
             case RC_DELETE_LOG:
                 if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
@@ -452,8 +452,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
             case RC_SELECT_TAG:
                 if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
-                    if (objResponse instanceof ListView) {
-                        int pos = ((ListView)objResponse).getCheckedItemPosition();
+                    if (view instanceof ListView) {
+                        int pos = ((ListView)view).getCheckedItemPosition();
                         if (mTags != null && pos >= 0 && pos < mTags.size()) {
                             mIndexTag = pos;
                             mSearchTag = mTags.get(mIndexTag).getTag();

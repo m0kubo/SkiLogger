@@ -8,8 +8,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TypedValue;
@@ -35,25 +37,32 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.database.TagData;
+import com.insprout.okubo.skilog.model.ResponsePlaceData;
+import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.DialogUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
+import com.insprout.okubo.skilog.webapi.RequestUrlTask;
+import com.insprout.okubo.skilog.webapi.WebApiUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 
 public class LineChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
+    private final static int RP_LOCATION = 100;
+
     private final static int RC_DELETE_LOG = 100;
-    private final static int RC_SELECT_ADD_TAG = 200;
-    private final static int RC_LIST_TAG = 201;
-    private final static int RC_INPUT_TAG = 300;
-    private final static int RC_SELECT_TAG = 301;
-    private final static int RC_LOCATION_TAG = 302;
+    private final static int RC_LIST_TAG = 200;
+    private final static int RC_ADD_TAG = 201;
+    private final static int RC_ADD_TAG_INPUT = 300;
+    private final static int RC_ADD_TAG_SELECTION = 301;
+    private final static int RC_ADD_TAG_LOCATION = 302;
     private final static int RC_DELETE_TAG = 400;
 
     private final static String TAG = "chart";
@@ -85,7 +94,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private int mRunCount = 0;
 
     private List<TagData> mTags;
-    private List<TagData> mTagsCandidate;
     private TagData mTargetTag = null;
 
 
@@ -585,7 +593,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 return true;
 
             case R.id.menu_add_tags:
-                selectAddTagType();
+                showAddTagDialog();
                 return true;
         }
 
@@ -621,9 +629,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         }
     }
 
-    private void selectAddTagType() {
+    private void showAddTagDialog() {
         String[] submenu = getResources().getStringArray(R.array.menu_add_tag);
-        DialogUtils.showItemListDialog(this, 0, submenu, R.string.btn_cancel, RC_SELECT_ADD_TAG);
+        DialogUtils.showItemListDialog(this, 0, submenu, R.string.btn_cancel, RC_ADD_TAG);
     }
 
     private void listTags() {
@@ -636,22 +644,72 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void inputTag() {
-        DialogUtils.showCustomDialog(this, R.string.title_input_tag, 0, R.layout.dlg_edittext, R.string.btn_ok, R.string.btn_cancel, RC_INPUT_TAG);
+        DialogUtils.showCustomDialog(this, R.string.title_input_tag, 0, R.layout.dlg_edittext, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_INPUT);
     }
 
     private void selectTagFromHistory() {
-        mTagsCandidate = AppUtils.getTags(this, mTags);
-        if (mTagsCandidate == null || mTagsCandidate.isEmpty()) {
+        List<TagData> tagsCandidate = AppUtils.getTags(this, mTags);
+        if (tagsCandidate == null || tagsCandidate.isEmpty()) {
             Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
 
         } else {
-            DialogUtils.showItemSelectDialog(this, R.string.title_input_tag, MiscUtils.toStringArray(mTagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_SELECT_TAG);
+            DialogUtils.showItemSelectDialog(this, R.string.title_input_tag, MiscUtils.toStringArray(tagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
         }
     }
 
 
+    private void measureLocation() {
+        if (!LocationProvider.isEnabled(this)) {
+            Toast.makeText(LineChartActivity.this, R.string.msg_gps_not_available, Toast.LENGTH_SHORT).show();
+            // タグ追加のダイアログを再表示しておく
+            showAddTagDialog();
+            return;
+        }
+
+        if (!SdkUtils.requestRuntimePermissions(this, Const.PERMISSIONS_LOCATION, RP_LOCATION)) {
+            // 権限がない場合、続きは onRequestPermissionsResult()から継続
+            return;
+        }
+
+        final DialogFragment dialog = DialogUtils.showProgressDialog(this, 0, R.string.msg_getting_tags);
+        new LocationProvider(this, new LocationProvider.OnLocatedListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                if (location == null) {
+                    dialog.dismiss();
+                    Toast.makeText(LineChartActivity.this, R.string.msg_fail_to_google_place_api, Toast.LENGTH_SHORT).show();
+
+                } else {
+                    WebApiUtils.googlePlaceApi(getString(R.string.google_maps_key), location, new RequestUrlTask.OnResponseListener() {
+                        @Override
+                        public void onResponse(String responseBody) {
+                            dialog.dismiss();
+                            if (responseBody == null) return;
+                            ResponsePlaceData places = ResponsePlaceData.fromJson(responseBody);
+                            if (places == null || places.getPlaces() == null) {
+                                // api取得失敗
+                                Toast.makeText(LineChartActivity.this, R.string.msg_fail_to_google_place_api, Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            if (places.getPlaces().isEmpty()) {
+                                // 0件
+                                Toast.makeText(LineChartActivity.this, R.string.msg_no_place_tags, Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            DialogUtils.showItemSelectDialog(LineChartActivity.this, R.string.title_input_tag, MiscUtils.toStringArray(places.getPlaces(), 10), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+                        }
+                    }).execute();
+
+                }
+            }
+        }
+        ).requestMeasure();
+    }
+
+
     @Override
-    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, Object objResponse) {
+    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch (requestCode) {
             case RC_DELETE_LOG:
                 if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
@@ -659,7 +717,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 }
                 break;
 
-            case RC_SELECT_ADD_TAG:
+            case RC_ADD_TAG:
                 switch(which) {
                     case 0:
                         inputTag();
@@ -668,15 +726,15 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                         selectTagFromHistory();
                         break;
                     case 2:
-                        // TODO
+                        measureLocation();
                         break;
                 }
                 break;
 
             case RC_LIST_TAG:
                 // タグ一覧ダイアログのコールバック
-                if (objResponse instanceof ListView) {      // 念のためチェック
-                    int pos = ((ListView) objResponse).getCheckedItemPosition();
+                if (view instanceof ListView) {      // 念のためチェック
+                    int pos = ((ListView)view).getCheckedItemPosition();
 
                     switch (which) {
                         case DialogUtils.EVENT_DIALOG_SHOWN:
@@ -723,36 +781,33 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 }
                 break;
 
-            case RC_INPUT_TAG:
+            case RC_ADD_TAG_INPUT:
                 // タグ直接入力
-                if (objResponse instanceof View) {
-                    EditText editText = ((View) objResponse).findViewById(R.id._et_dlg);
+                EditText editText = ((View)view).findViewById(R.id._et_dlg);
+                switch (which) {
+                    case DialogUtils.EVENT_DIALOG_SHOWN:
+                        // キーボードを自動で開く
+                        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        if (inputMethodManager != null) inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
+                        break;
 
-                    switch (which) {
-                        case DialogUtils.EVENT_DIALOG_SHOWN:
-                            // キーボードを自動で開く
-                            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            if (inputMethodManager != null) inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
-                            break;
-
-                        case DialogUtils.EVENT_BUTTON_POSITIVE:
-                            // 入力されたタグを登録
-                            if (editText != null) {
-                                Date targetDate = getTargetDate(mDateIndex);
-                                String tag = editText.getText().toString();
-                                if (!tag.isEmpty() && targetDate != null) {
-                                    DbUtils.insertTag(this, new TagData(targetDate, tag));
-                                }
+                    case DialogUtils.EVENT_BUTTON_POSITIVE:
+                        // 入力されたタグを登録
+                        if (editText != null) {
+                            Date targetDate = getTargetDate(mDateIndex);
+                            String tag = editText.getText().toString();
+                            if (!tag.isEmpty() && targetDate != null) {
+                                DbUtils.insertTag(this, new TagData(targetDate, tag));
                             }
-                            break;
-                    }
+                        }
+                        break;
                 }
                 break;
 
-            case RC_SELECT_TAG:
+            case RC_ADD_TAG_SELECTION:
                 // 履歴から選択
-                if (objResponse instanceof ListView) {      // 念のためチェック
-                    int pos = ((ListView) objResponse).getCheckedItemPosition();
+                if (view instanceof ListView) {      // 念のためチェック
+                    int pos = ((ListView) view).getCheckedItemPosition();
 
                     switch (which) {
                         case DialogUtils.EVENT_DIALOG_SHOWN:
@@ -761,12 +816,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
                         case DialogUtils.EVENT_BUTTON_POSITIVE:
                             // 入力されたタグを登録
-                            if (pos >= 0 && pos < mTagsCandidate.size()) {
-                                Date targetDate = getTargetDate(mDateIndex);
-                                String tag = mTagsCandidate.get(pos).getTag();
-                                if (!tag.isEmpty() && targetDate != null) {
-                                    DbUtils.insertTag(this, new TagData(targetDate, tag));
-                                }
+                            Date targetDate = getTargetDate(mDateIndex);
+                            String tag = ((ListView) view).getAdapter().getItem(pos).toString();
+                            if (!tag.isEmpty() && targetDate != null) {
+                                DbUtils.insertTag(this, new TagData(targetDate, tag));
                             }
                             break;
 
@@ -778,9 +831,29 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                     }
                 }
                 break;
+
+            case RC_ADD_TAG_LOCATION:
+                break;
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case RP_LOCATION:
+                // PERMISSIONが すべて付与されたか確認する
+                if (!SdkUtils.isGranted(grantResults)) {
+                    // 必要な PERMISSIONは付与されなかった
+                    // タグ追加方法選択に戻す
+                    showAddTagDialog();
+                    return;
+                }
+
+                measureLocation();
+                return;
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
 
     ////////////////////////////////////////////////////////////////////
     //

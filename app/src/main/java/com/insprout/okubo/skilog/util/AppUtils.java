@@ -4,6 +4,8 @@ import android.content.Context;
 
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.TagData;
+import com.insprout.okubo.skilog.model.PlaceData;
+import com.insprout.okubo.skilog.model.ResponsePlaceData;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -52,4 +54,13 @@ public class AppUtils {
         return false;
     }
 
+    public static String[] toArray(ResponsePlaceData data) {
+        if (data == null) return null;
+        if (!data.isStatusOk()) return null;
+
+        List<PlaceData> places = data.getPlaces();
+        if (places.size() == 0) return null;
+
+        return MiscUtils.toStringArray(places);
+    }
 }

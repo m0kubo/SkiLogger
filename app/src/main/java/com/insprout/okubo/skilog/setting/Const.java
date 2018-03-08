@@ -1,5 +1,8 @@
 package com.insprout.okubo.skilog.setting;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+
 import com.insprout.okubo.skilog.R;
 
 /**
@@ -14,4 +17,9 @@ public class Const {
     public final static int THEME_LIGHT = R.style.AppTheme;
     public final static int THEME_DARK = R.style.AppThemeDark;
 
+    @SuppressLint("InlinedApi")
+    public final static String[] PERMISSIONS_LOCATION = {
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+    };
 }

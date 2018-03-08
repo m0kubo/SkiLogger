@@ -275,10 +275,24 @@ public class MiscUtils {
      * @return String型の配列
      */
     public static String[] toStringArray(List<?> list) {
+        return toStringArray(list, -1);
+    }
+
+    /**
+     * 与えられたListオブジェクトから String型の配列を返す。
+     * List<String>以外の型にも対応している。要素の toString()メソッドを呼び出すので、
+     * 要素が独自クラスの場合は適切に toString()メソッドをOverrideしておくこと。
+     * @param list String型の配列に変換する Listオブジェクト
+     * @param limit 生成するString配列数の上限 (1以上を指定する。0以下の場合は無視される)
+     * @return String型の配列
+     */
+    public static String[] toStringArray(List<?> list, int limit) {
         if (list == null) return null;
 
-        String[] array = new String[ list.size() ];
-        for (int i=0; i<list.size(); i++) {
+        int arraySize = list.size();
+        if (limit >= 1 && limit < arraySize ) arraySize = limit;
+        String[] array = new String[ arraySize ];
+        for (int i=0; i<arraySize; i++) {
             array[i] = list.get(i).toString();
         }
         return array;

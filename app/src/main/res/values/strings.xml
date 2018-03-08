@@ -57,6 +57,10 @@
     <string name="title_select_tag">タグ付けされた日のみ表示</string>
     <string name="menu_reset_tag">(絞りこみ解除)</string>
     <string name="msg_no_more_tags">選択可能なタグがありません</string>
+    <string name="msg_getting_tags">施設情報を取得しています&#8230;</string>
+    <string name="msg_no_place_tags">近隣の施設情報はみつかりませんでした</string>
+    <string name="msg_fail_to_google_place_api">情報が取得できませんでした。通信環境の良い場所で再度お試しください</string>
+    <string name="msg_gps_not_available">位置情報の設定が無効です</string>
 
     <string name="title_delete_logs">記録削除</string>
     <string name="fmt_delete_daily_logs">%sの一日分の記録を削除しますか？\n\n削除したデータは復活できません。</string>
