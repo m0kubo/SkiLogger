@@ -478,9 +478,9 @@ public class DialogUtils {
             if (buttonOk != null) builder.setPositiveButton(buttonOk, this);
             if (buttonCancel != null) builder.setNegativeButton(buttonCancel, this);
             if (buttonNeutral != null) builder.setNeutralButton(buttonNeutral, this);
+            this.setCancelable(buttonCancel != null);        // キャンセルボタンがない場合は、Backキーによるキャンセルも無効
             mAlertDialog = builder.create();
 
-            mAlertDialog.setCancelable(buttonCancel != null);   // キャンセルボタンがない場合は、Backキーによるキャンセルも無効
             mAlertDialog.setCanceledOnTouchOutside(false);
             // Dialogが createされた事をListenerに通知する。(主にカスタムViewの初期化処理のため)
             callbackToListener(EVENT_DIALOG_CREATED);
