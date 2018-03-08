@@ -111,7 +111,7 @@ public class DbUtils {
     }
 
     /**
-     * 指定された日付の ログデータを削除する。
+     * 指定された期間の ログデータを削除する。
      * @param context コンテキスト
      * @param fromDate 指定日時以降のデータを取得する (指定時刻ジャストのデータを含む)
      * @param toDate 指定日時未満のデータを取得する (指定時刻ジャストのデータは含まない)
@@ -311,9 +311,9 @@ public class DbUtils {
     }
 
     /**
-     * tag用 Tableに新規行を挿入する
+     * tag用 Tableから指定行を削除する
      * @param context コンテキスト
-     * @param data 削除するLogデータ
+     * @param data 削除するtagデータ
      * @return 結果
      */
     public static boolean deleteTag(Context context, TagData data) {
@@ -323,6 +323,55 @@ public class DbUtils {
         try {
             database = new SkiLogDb(context);
             result = database.deleteFromTable2(data);
+
+        } finally {
+            if (database != null) database.close();
+        }
+        return result;
+    }
+
+    /**
+     * 指定された日付の タグデータを削除する。
+     * @param context コンテキスト
+     * @param targetDate 削除するタグの日付
+     * @return 結果
+     */
+    public static boolean deleteTags(Context context, Date targetDate) {
+        if (targetDate == null) return false;
+
+        boolean result;
+        String selection = "date(date, ?) = ?";
+        String[] selectionArgs = new String[] { SkiLogDb.utcModifier(), SkiLogDb.formatDate(targetDate) };
+
+        SkiLogDb database = null;
+        try {
+            database = new SkiLogDb(context);
+            result = database.deleteFromTable2(selection, selectionArgs);
+
+        } finally {
+            if (database != null) database.close();
+        }
+        return result;
+    }
+
+    /**
+     * 指定された期間の タグデータを削除する。
+     * @param context コンテキスト
+     * @param fromDate 指定日時以降のデータを取得する (指定時刻ジャストのデータを含む)
+     * @param toDate 指定日時未満のデータを取得する (指定時刻ジャストのデータは含まない)
+     * @return 結果
+     */
+    public static boolean deleteTags(Context context, Date fromDate, Date toDate) {
+        if (fromDate == null || toDate == null || !fromDate.before(toDate)) return false;
+
+        boolean result;
+        String selection = "created >= ? AND created < ?";
+        String[] selectionArgs = new String[] { SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) };
+
+        SkiLogDb database = null;
+        try {
+            database = new SkiLogDb(context);
+            result = database.deleteFromTable2(selection, selectionArgs);
 
         } finally {
             if (database != null) database.close();

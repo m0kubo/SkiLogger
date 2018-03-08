@@ -396,8 +396,12 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
     private void deleteLogs() {
         if (mDateFrom == null || mDateTo == null) return;       // 念のためチェック
+        // 該当期間のログ情報をDBから削除する
         boolean res = DbUtils.deleteLogs(this, mDateFrom, mDateTo);
         if (res) {
+            // 紐づいたタグ情報もDBから削除する
+            DbUtils.deleteTags(this, mDateFrom, mDateTo);
+
             if (!mDateOldest.before(mDateFrom)) {
                 // データの 参照期間を更新しておく
                 List<SkiLogData> logs = DbUtils.selectLogSummaries(this, 0, 1);    // 最古の1件を取得する

@@ -592,21 +592,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         return super.onOptionsItemSelected(item);
     }
 
-    private void deleteLogs(Date targetDate) {
-        boolean res = DbUtils.deleteLogs(this, targetDate);
-        if (res) {
-            // 対象日付を削除する。
-            mDateList.remove(mDateIndex);
-            if (mDateIndex >= mDateList.size()) {
-                mDateIndex--;
-            }
-            // チャートの表示を更新する
-            updateUi(mDateIndex);
-            // deleteTags(mTags);// TODO
-            updateChart();
-        }
-    }
-
     private void confirmDeleteLogs() {
         if (mDateIndex < 0) return;
         Date targetDate = getTargetDate(mDateIndex);
@@ -616,6 +601,24 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         String title = getString(R.string.title_delete_logs);
         String message = getString(R.string.fmt_delete_daily_logs,  AppUtils.toDateString(targetDate));
         DialogUtils.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
+    }
+
+    private void deleteLogs(Date targetDate) {
+        // 指定日のログをDBから削除する
+        boolean res = DbUtils.deleteLogs(this, targetDate);
+        if (res) {
+            // 紐づいたタグ情報もDBから削除する
+            DbUtils.deleteTags(this, targetDate);
+
+            // 対象日付を削除する。
+            mDateList.remove(mDateIndex);
+            if (mDateIndex >= mDateList.size()) {
+                mDateIndex--;
+            }
+            // チャートの表示を更新する
+            updateUi(mDateIndex);
+            updateChart();
+        }
     }
 
     private void selectAddTagType() {
@@ -657,7 +660,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                 break;
 
             case RC_SELECT_ADD_TAG:
-                // TODO
                 switch(which) {
                     case 0:
                         inputTag();
@@ -666,6 +668,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                         selectTagFromHistory();
                         break;
                     case 2:
+                        // TODO
                         break;
                 }
                 break;

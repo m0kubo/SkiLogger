@@ -501,6 +501,11 @@ public class SkiLogDb {
         return deleteFromTable(TABLE_2, COL_1_0 + " = ?", args );
     }
 
+    public boolean deleteFromTable2(String selection, String[] selectionArgs) {
+        return deleteFromTable(TABLE_2, selection, selectionArgs );
+    }
+
+
     public List<TagData> selectFromTable2(String selection, String[] selectionArgs, int offset, int limit, String orderBy, String groupBy) {
         Cursor cursor = null;
         List<TagData> result = new ArrayList<>();
