@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.Menu;
@@ -173,9 +174,9 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private void initView() {
         UiUtils.setSelected(this, R.id.btn_chart2, true);
 
-//        // タイトルバーに backボタンを表示する
-//        ActionBar actionBar = getSupportActionBar();
-//        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+        // タイトルバーに backボタンを表示する
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
         mChart = findViewById(R.id.bar_chart);
         setupChart();

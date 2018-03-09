@@ -22,4 +22,7 @@ public class Const {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
     };
+
+    public final static int MAX_TAG_CANDIDATE_BY_LOCATION = 8;
+
 }

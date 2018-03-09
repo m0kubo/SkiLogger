@@ -12,6 +12,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.TypedValue;
@@ -51,7 +52,6 @@ import com.insprout.okubo.skilog.webapi.WebApiUtils;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 
 public class LineChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
@@ -183,9 +183,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private void initView() {
         UiUtils.setSelected(this, R.id.btn_chart1, true);
 
-//        // タイトルバーに backボタンを表示する
-//        ActionBar actionBar = getSupportActionBar();
-//        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+        // タイトルバーに backボタンを表示する
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
         mRgChartType = findViewById(R.id.rg_chart_type);
         mRgChartType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -697,7 +697,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                                 return;
                             }
 
-                            DialogUtils.showItemSelectDialog(LineChartActivity.this, R.string.title_input_tag, MiscUtils.toStringArray(places.getPlaces(), 10), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+                            DialogUtils.showItemSelectDialog(LineChartActivity.this, R.string.title_input_tag, MiscUtils.toStringArray(places.getPlaces(), Const.MAX_TAG_CANDIDATE_BY_LOCATION), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
                         }
                     }).execute();
 

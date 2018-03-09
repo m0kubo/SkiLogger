@@ -44,7 +44,7 @@ public class LocationProvider implements LocationListener {
 
             Criteria criteria = new Criteria();
             criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-            criteria.setPowerRequirement(Criteria.POWER_LOW);
+//            criteria.setPowerRequirement(Criteria.POWER_LOW);
 
             String provider = mLocationManager.getBestProvider(criteria, true);
             if (provider != null) {
