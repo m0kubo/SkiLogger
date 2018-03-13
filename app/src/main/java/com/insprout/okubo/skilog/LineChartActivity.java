@@ -194,6 +194,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mRgChartType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int id) {
+                // ポイント地点の情報をクリア
+                UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, null);
                 // チャートの種類が変更されたので、新規にチャートを書き直す
                 drawNewChart(id);
             }
@@ -229,6 +231,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         mChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
+                // ポイント地点の情報を表示
                 String msg = getString(R.string.fmt_chart_value, getXAxisLabel(e.getX()), getYAxisLabel(e.getY()));
                 UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, msg);
             }
