@@ -40,7 +40,6 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.database.TagData;
-import com.insprout.okubo.skilog.model.PlaceData;
 import com.insprout.okubo.skilog.model.ResponsePlaceData;
 import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
@@ -195,7 +194,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int id) {
                 // ポイント地点の情報をクリア
-                UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, null);
+                displayValues(id, null);
                 // チャートの種類が変更されたので、新規にチャートを書き直す
                 drawNewChart(id);
             }
@@ -232,14 +231,30 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             @Override
             public void onValueSelected(Entry e, Highlight h) {
                 // ポイント地点の情報を表示
-                String msg = getString(R.string.fmt_chart_value, getXAxisLabel(e.getX()), getYAxisLabel(e.getY()));
-                UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, msg);
+                displayValues(mRgChartType.getCheckedRadioButtonId(), e);
             }
 
             @Override
             public void onNothingSelected() {
             }
         });
+    }
+
+    private void displayValues(int chartId, Entry entry) {
+        String msg = null;
+
+        if (entry != null) {
+            switch (chartId) {
+                case R.id.btn_altitude:
+                    msg = getString(R.string.fmt_value_altitude, getXAxisLabel(entry.getX()), getYAxisLabel(entry.getY()));
+                    break;
+
+                case R.id.btn_accumulate:
+                    msg = getString(R.string.fmt_value_accumulate, getXAxisLabel(entry.getX()), getYAxisLabel(entry.getY()));
+                    break;
+            }
+        }
+        UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, msg);
     }
 
     private void updateUi(int dateIndex) {
@@ -386,7 +401,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         mChart.invalidate();
     }
-
 
     private void drawNewChart(int chartId) {
         mChart.clear();
