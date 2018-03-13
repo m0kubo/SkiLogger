@@ -7,13 +7,25 @@
 
     <RadioGroup
         android:id="@+id/rg_chart_type"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="3dp"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:layout_gravity="end"
         android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_chart_value"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:textColor="?android:colorForeground"
+            android:textSize="@dimen/text_size_regular"
+            style="AltitudeText"
+            />
+
         <RadioButton
             android:id="@+id/btn_altitude"
             android:layout_width="wrap_content"

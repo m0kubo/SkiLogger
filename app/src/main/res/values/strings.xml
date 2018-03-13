@@ -7,6 +7,7 @@
 
     <string name="fmt_meter">%,3.0fm</string>
     <string name="fmt_time">%d:%02d</string>
+    <string name="fmt_chart_value">標高 %2$s ＠%1$s</string>
     <string name="fmt_run_count">滑走本数：%d</string>
     <string name="fmt_accumulate">&lt;font color=\"#%06x\"&gt;%,3.0fm&lt;/font&gt; /&lt;font color=\"#%06x\"&gt;%,3.0fm&lt;/font&gt;</string>
     <string name="fmt_ski_log">RUN：%d / 下降 %,3.0fm</string>

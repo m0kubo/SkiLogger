@@ -34,7 +34,9 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IAxisValueFormatter;
+import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.database.TagData;
@@ -222,6 +224,18 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         mChart.getLegend().setTextColor(mColorForeground);
         mChart.getLegend().setTextSize(textSize);
+
+        mChart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(Entry e, Highlight h) {
+                String msg = getString(R.string.fmt_chart_value, getXAxisLabel(e.getX()), getYAxisLabel(e.getY()));
+                UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, msg);
+            }
+
+            @Override
+            public void onNothingSelected() {
+            }
+        });
     }
 
     private void updateUi(int dateIndex) {
@@ -483,10 +497,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         xAxis.setValueFormatter(new IAxisValueFormatter() {
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
-                // X軸の valueは 0時(am0:00)からの経過時間を示す。1.5で 1時間30分
-                int hour = (int)value;
-                int minutes = (int)((value - hour) * 60);
-                return getString(R.string.fmt_time, hour, minutes);
+                return getXAxisLabel(value);
             }
         });
 
@@ -501,10 +512,23 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             @Override
             public String getFormattedValue(float value, AxisBase axis) {
                 // Y軸の valueは高度を示す
-                return getString(R.string.fmt_meter, value);
+                return getYAxisLabel(value);
             }
         });
     }
+
+    private String getXAxisLabel(float value) {
+        // X軸の valueは 0時(am0:00)からの経過時間を示す。1.5で 1時間30分
+        int hour = (int)value;
+        int minutes = (int)((value - hour) * 60);
+        return getString(R.string.fmt_time, hour, minutes);
+    }
+
+    private String getYAxisLabel(float value) {
+        // Y軸の valueは高度を示す
+        return getString(R.string.fmt_meter, value);
+    }
+
 
     private void setDescription() {
         mChart.getDescription().setText(getString(R.string.fmt_ski_log, mRunCount, mAccumulateDesc));
