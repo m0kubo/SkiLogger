@@ -54,13 +54,39 @@ public class AppUtils {
         return false;
     }
 
-    public static String[] toArray(ResponsePlaceData data) {
+    public static String[] toStringArray(List<?> list) {
+        return toStringArray(list, -1);
+    }
+
+    public static String[] toStringArray(List<?> list, int limit) {
+        if (list == null) return null;
+
+        int arraySize = list.size();
+        if (limit >= 1 && limit < arraySize ) arraySize = limit;
+        String[] array = new String[ arraySize ];
+        for (int i=0; i<arraySize; i++) {
+            Object item = list.get(i);
+            if (item instanceof PlaceData) {
+                array[i] = ((PlaceData)item).getName();
+
+            } else if (item instanceof TagData) {
+                array[i] = ((TagData)item).getTag();
+
+            } else {
+                array[i] = item.toString();
+            }
+        }
+        return array;
+    }
+
+    public static String[] toStringArray(ResponsePlaceData data) {
         if (data == null) return null;
         if (!data.isStatusOk()) return null;
 
         List<PlaceData> places = data.getPlaces();
         if (places.size() == 0) return null;
 
-        return MiscUtils.toStringArray(places);
+        return toStringArray(places);
     }
+
 }

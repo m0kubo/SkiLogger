@@ -32,8 +32,12 @@ public class PlaceData {
     @SerializedName("vicinity")
     private String mVicinity;
 
+    public String getName() {
+        return mName;
+    }
+
     @Override
     public String toString() {
-        return mName;
+        return getName();
     }
 }

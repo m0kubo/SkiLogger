@@ -40,6 +40,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.database.TagData;
+import com.insprout.okubo.skilog.model.PlaceData;
 import com.insprout.okubo.skilog.model.ResponsePlaceData;
 import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
@@ -662,7 +663,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         if (mTags == null || mTags.isEmpty()) return;
 
         // 選択用リストを作成
-        String[] arrayTag = MiscUtils.toStringArray(mTags);
+        String[] arrayTag = AppUtils.toStringArray(mTags);
         String title = getString(R.string.fmt_title_list_tags, AppUtils.toDateString(getTargetDate(mDateIndex)));
         DialogFragment dialog = DialogUtils.showItemSelectDialog(this, title, arrayTag, -1, getString(R.string.btn_delete), getString(R.string.btn_close), RC_LIST_TAG);
     }
@@ -677,7 +678,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
 
         } else {
-            DialogUtils.showItemSelectDialog(this, R.string.title_input_tag, MiscUtils.toStringArray(tagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+            DialogUtils.showItemSelectDialog(this, R.string.title_input_tag, AppUtils.toStringArray(tagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
         }
     }
 
@@ -721,7 +722,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                                 return;
                             }
 
-                            DialogUtils.showItemSelectDialog(LineChartActivity.this, R.string.title_input_tag, MiscUtils.toStringArray(places.getPlaces(), Const.MAX_TAG_CANDIDATE_BY_LOCATION), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+                            DialogUtils.showItemSelectDialog(LineChartActivity.this, R.string.title_input_tag, AppUtils.toStringArray(places.getPlaces(), Const.MAX_TAG_CANDIDATE_BY_LOCATION), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
                         }
                     }).execute();
 
