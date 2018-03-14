@@ -25,6 +25,10 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ChartPagerActivity"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
             android:name=".LineChartActivity"
             android:screenOrientation="portrait">
         </activity>

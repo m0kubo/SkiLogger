@@ -228,7 +228,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.btn_chart1:
                 UiUtils.setSelected(this, R.id.btn_chart1, true);
-                LineChartActivity.startActivity(this);
+//                LineChartActivity.startActivity(this);
+                ChartPagerActivity.startActivity(this);
                 break;
 
             case R.id.btn_chart2:

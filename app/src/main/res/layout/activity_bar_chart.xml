@@ -5,6 +5,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/tv_chart_value"
+        style="@style/SubjectText"
+        />
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
