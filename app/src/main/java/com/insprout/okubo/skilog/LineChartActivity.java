@@ -95,7 +95,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private float mAccumulateDesc = 0f;
     private int mRunCount = 0;
 
-    private List<TagData> mTags;
+    private List<TagData> mAllTags;
     private TagData mTargetTag = null;
 
 
@@ -277,7 +277,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     private void getTagList(int dateIndex) {
         // タグリスト取得
-        mTags = DbUtils.selectTags(this, getTargetDate(dateIndex));
+        mAllTags = DbUtils.selectTags(this, getTargetDate(dateIndex));
     }
 
     private boolean setupChartValues(int dateIndex) {
@@ -603,8 +603,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, AppUtils.toDateString(targetDate)));
 
             // 付与されているタグ一覧メニュー
-            mTags = DbUtils.selectTags(this, targetDate);
-            tagsMenu.setEnabled(mTags != null && !mTags.isEmpty());
+            mAllTags = DbUtils.selectTags(this, targetDate);
+            tagsMenu.setEnabled(mAllTags != null && !mAllTags.isEmpty());
 
         } else {
             // 削除メニュー
@@ -612,7 +612,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             deleteMenu.setTitle(R.string.menu_delete_logs);
 
             // 付与されているタグ一覧メニュー
-            mTags = null;
+            mAllTags = null;
             tagsMenu.setEnabled(false);
         }
 
@@ -677,10 +677,10 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void listTags() {
-        if (mTags == null || mTags.isEmpty()) return;
+        if (mAllTags == null || mAllTags.isEmpty()) return;
 
         // 選択用リストを作成
-        String[] arrayTag = AppUtils.toStringArray(mTags);
+        String[] arrayTag = AppUtils.toStringArray(mAllTags);
         String title = getString(R.string.fmt_title_list_tags, AppUtils.toDateString(getTargetDate(mDateIndex)));
         DialogFragment dialog = DialogUtils.showItemSelectDialog(this, title, arrayTag, -1, getString(R.string.btn_delete), getString(R.string.btn_close), RC_LIST_TAG);
     }
@@ -690,7 +690,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void selectTagFromHistory() {
-        List<TagData> tagsCandidate = AppUtils.getTags(this, mTags);
+        List<TagData> tagsCandidate = AppUtils.getTags(this, mAllTags);
         if (tagsCandidate == null || tagsCandidate.isEmpty()) {
             Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
 
@@ -785,8 +785,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
                         case DialogUtils.EVENT_BUTTON_POSITIVE:
                             // 削除ボタンが押された
-                            if (pos >= 0 && pos < mTags.size()) {
-                                mTargetTag = mTags.get(pos);
+                            if (pos >= 0 && pos < mAllTags.size()) {
+                                mTargetTag = mAllTags.get(pos);
                                 // 確認ダイアログを表示する
                                 DialogUtils.showOkCancelDialog(this, getString(R.string.msg_delete_tags), mTargetTag.getTag(), RC_DELETE_TAG);
                             }

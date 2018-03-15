@@ -82,7 +82,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void initVars() {
-        mTags = AppUtils.getTags(this);     // 絞り込み用のタグリスト取得
+        mTags = AppUtils.getTags(this);                         // 絞り込み用のタグリスト取得
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {

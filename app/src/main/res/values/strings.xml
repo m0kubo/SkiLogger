@@ -18,6 +18,8 @@
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
 
     <string name="menu_theme">アプリ テーマ変更</string>
+    <string name="menu_not_targeted">(対象日が選択されていません)</string>
+    <string name="menu_targeted_fmt">対象日：%s</string>
     <string name="menu_delete_logs">記録削除</string>
     <string name="menu_list_tags">タグ一覧/削除</string>
     <string name="menu_add_tags">タグ追加</string>

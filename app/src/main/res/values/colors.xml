@@ -9,4 +9,7 @@
     <color name="colorAccumulateDesc">#dc143c</color>
 
     <color name="colorIcon">#808080</color>
+
+    <color name="orange">#ff8c00</color>
+    <color name="orange_dark">#c06900</color>
 </resources>

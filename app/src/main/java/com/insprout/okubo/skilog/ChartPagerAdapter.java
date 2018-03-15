@@ -15,6 +15,8 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.chart.SummaryChart;
 
+import java.util.Date;
+
 
 /**
  * Created by okubo on 2018/03/13.
@@ -27,11 +29,20 @@ public class ChartPagerAdapter extends PagerAdapter {
     private LayoutInflater mInflater;
 
     private SummaryChart mChart1;
+    private ImageButton mBtnNext1 = null;
+    private ImageButton mBtnPrev1 = null;
+    private ImageButton mBtnTag1 = null;
+    private View.OnClickListener mTagButtonListener;
 
 
     public ChartPagerAdapter(Context context) {
+        this(context, null);
+    }
+
+    public ChartPagerAdapter(Context context, View.OnClickListener listener) {
         mContext = context;
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mTagButtonListener = listener;
     }
 
 
@@ -48,12 +59,27 @@ public class ChartPagerAdapter extends PagerAdapter {
             default:
                 layout = this.mInflater.inflate(R.layout.cell_bar_chart, container, false);
 
-                final ImageButton btnChart1 = layout.findViewById(R.id.btn_chart1);
-                final ImageButton btnChart2 = layout.findViewById(R.id.btn_chart2);
-                final TextView tvChartValue = layout.findViewById(R.id.tv_chart_value);
-        //        btnChart1.setVisibility(View.GONE);
-                btnChart2.setVisibility(View.GONE);
+                mBtnNext1 = layout.findViewById(R.id.btn_next);
+                mBtnNext1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mChart1.goNextPage();
+                        enableButtons(0);
+                    }
+                });
+                mBtnPrev1 = layout.findViewById(R.id.btn_prev);
+                mBtnPrev1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mChart1.goPreviousPage();
+                        enableButtons(0);
+                    }
+                });
+                mBtnTag1 = layout.findViewById(R.id.btn_tag);
+                mBtnTag1.setVisibility(View.VISIBLE);
+                mBtnTag1.setOnClickListener(mTagButtonListener);
 
+                final TextView tvChartValue = layout.findViewById(R.id.tv_chart_value);
                 BarChart barChart = layout.findViewById(R.id.chart);
                 mChart1 = new SummaryChart(mContext, barChart, new OnChartValueSelectedListener() {
                     @Override
@@ -76,10 +102,10 @@ public class ChartPagerAdapter extends PagerAdapter {
                         tvChartValue.setText(text);
                     }
                 });
-                mChart1.drawChart();
-
                 break;
         }
+
+        drawChart(position);
 
         container.addView(layout);
         return layout;
@@ -101,6 +127,71 @@ public class ChartPagerAdapter extends PagerAdapter {
     @Override
     public boolean isViewFromObject(View view, Object object) {
         return view.equals(object);
+    }
+
+
+    public void drawChart(int position) {
+        switch (position) {
+            case 0:
+                if (mChart1 != null) {
+                    mChart1.drawChart();
+                }
+                break;
+
+            case 1:
+                break;
+        }
+
+        enableButtons(position);
+    }
+
+    private void enableButtons(int position) {
+        switch (position) {
+            case 0:
+                mBtnNext1.setEnabled(mChart1 != null && mChart1.hasNextPage());
+                mBtnPrev1.setEnabled(mChart1 != null && mChart1.hasPreviousPage());
+                break;
+
+            case 1:
+                break;
+        }
+    }
+
+
+    public void setFilter(String filteringTag) {
+        mChart1.setFilter(filteringTag);
+    }
+
+    public String getSubject(int position) {
+        switch (position) {
+            case 0:
+                if (mChart1 != null) return mChart1.getSubject();
+                break;
+
+            case 1:
+                break;
+        }
+        return null;
+    }
+
+    public Date getSelectedDate(int position) {
+        switch (position) {
+            case 0:
+                if (mChart1 != null) return mChart1.getSelectedDate();
+                break;
+
+            case 1:
+                break;
+        }
+        return null;
+    }
+
+    public void setButtonEnabled(int index, boolean enabled) {
+        switch(index) {
+            case 0:
+                if (mBtnTag1 != null) mBtnTag1.setEnabled(enabled);
+                break;
+        }
     }
 
 }
