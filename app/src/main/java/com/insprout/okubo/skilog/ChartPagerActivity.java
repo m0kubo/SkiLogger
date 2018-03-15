@@ -85,17 +85,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
             public void onReceiveMessage(Message msg) {
                 switch (msg.what) {
                     case ServiceMessenger.MSG_REPLY_LONG_ARRAY:
-//                        Date targetDate = getTargetDate(mDateIndex);
-//                        if (targetDate == null) return;
-//
+                        Date targetDate = mChartPagerAdapter.getSelectedDate(mViewPager.getCurrentItem());
+                        if (targetDate == null) return;
+
                         long[] data = (long[]) msg.obj;
                         if (data[0] <= 0) return;
-//
-//                        Date timeAm00 = MiscUtils.getDate(new Date(data[0]));
-//                        Log.d(TAG, "received data: date=" + timeAm00);
-//                        if (MiscUtils.isSameDate(timeAm00, targetDate)) {
-//                            appendData((data[0] - timeAm00.getTime()) / (60 * 60 * 1000.0f), data[1] * 0.001f, data[2] * 0.001f, -data[3] * 0.001f, (int)data[4]);
-//                        }
+
+                        mChartPagerAdapter.appendChartValue(data[0], data[1] * 0.001f, data[2] * 0.001f, -data[3] * 0.001f, (int)data[4]);
                         break;
                 }
             }
@@ -263,7 +259,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
         }
         menu.findItem(R.id.menu_delete_logs).setEnabled(mTargetDate != null);
         menu.findItem(R.id.menu_list_tags).setEnabled(mTagsOnTarget != null && !mTagsOnTarget.isEmpty());
-        menu.findItem(R.id.menu_add_tags).setEnabled(mTargetDate != null && mAllTags != null && !mAllTags.isEmpty());
+        menu.findItem(R.id.menu_add_tags).setEnabled(mTargetDate != null);
         return true;
     }
 

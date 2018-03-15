@@ -194,4 +194,10 @@ public class ChartPagerAdapter extends PagerAdapter {
         }
     }
 
+    public void appendChartValue(long time, float altitude, float accumulateAsc, float accumulateDesc, int runCount) {
+        if (mChart1 != null) {
+            mChart1.appendChartValue(time, altitude, accumulateAsc, accumulateDesc, runCount);
+        }
+    }
+
 }

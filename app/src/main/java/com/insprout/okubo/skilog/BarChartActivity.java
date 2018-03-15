@@ -93,7 +93,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                         long[] data = (long[]) msg.obj;
                         if (data[0] <= 0) return;
 
-                        mSummaryChart.appendChartValue(data[0], -data[3] * 0.001f);
+                        mSummaryChart.appendChartValue(data[0], data[1] * 0.001f, data[2] * 0.001f, data[3] * 0.001f, (int)data[4]);
                         break;
                 }
             }

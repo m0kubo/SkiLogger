@@ -24,11 +24,11 @@
         <ImageButton
             android:id="@+id/btn_prev"
             android:src="@mipmap/ic_skip_previous_white_36dp"
-            style="@style/ActionButton" />
+            style="@style/CellButton" />
         <ImageButton
             android:id="@+id/btn_next"
             android:src="@mipmap/ic_skip_next_white_36dp"
-            style="@style/ActionButton" />
+            style="@style/CellButton" />
 
     </LinearLayout>
 </merge>

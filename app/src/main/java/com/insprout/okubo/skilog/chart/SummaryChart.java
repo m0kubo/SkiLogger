@@ -87,6 +87,18 @@ public class SummaryChart {
         mChartLabel = mContext.getString(R.string.label_graph_desc);
     }
 
+
+    public Date getSelectedDate() {
+        Highlight[] items = mChart.getHighlighted();
+        if (items == null || items.length == 0) return null;
+
+        int index = (int)(items[ items.length-1 ].getX());
+        if (index >= 0 && index < mSkiLogs.size()) {
+            return mSkiLogs.get(index).getCreated();
+        }
+        return null;
+    }
+
     public void setFilter(String filteringTag) {
         mSearchTag = filteringTag;
     }
@@ -132,17 +144,6 @@ public class SummaryChart {
         return null;
     }
 
-    public Date getSelectedDate() {
-        Highlight[] items = mChart.getHighlighted();
-        if (items == null || items.length == 0) return null;
-
-        int index = (int)(items[ items.length-1 ].getX());
-        if (index >= 0 && index < mSkiLogs.size()) {
-            return mSkiLogs.get(index).getCreated();
-        }
-        return null;
-    }
-
     public String getYAxisLabel(float value) {
         // 縦軸の valueは高度
         return mContext.getString(R.string.fmt_meter, value);
@@ -150,6 +151,10 @@ public class SummaryChart {
 
     public void clearChart() {
         mChart.clear();
+    }
+
+    public void updateChart() {
+        drawChart();
     }
 
     public void drawChart() {
@@ -286,11 +291,12 @@ public class SummaryChart {
         return bars;
     }
 
-    public void appendChartValue(long time, float accumulate) {
+    public void appendChartValue(long time, float altitude, float accumulateAsc, float accumulateDesc, int runCount) {
         if (mXAxisLabels == null) return;
         int pos = mXAxisLabels.indexOf(mDateFormat.format(time));
         if (pos < 0) return;
 
+        float accumulate = Math.abs(accumulateDesc);        // 下降積算データは負の値なので、絶対値に直す
         // 棒グラフの長さを更新
         BarData barData = mChart.getBarData();
         if (barData == null || barData.getDataSetCount() < 1) return;
