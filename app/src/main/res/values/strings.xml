@@ -58,7 +58,7 @@
 
     <string name="title_input_tag">タグ設定</string>
     <string name="hint_tag">設定するタグを入力してください</string>
-    <string name="title_select_tag">タグ付けされた日のみ表示</string>
+    <string name="title_select_tag">タグで絞りこみ</string>
     <string name="menu_reset_tag">(絞りこみ解除)</string>
     <string name="msg_no_more_tags">選択可能なタグがありません</string>
     <string name="msg_getting_tags">施設情報を取得しています&#8230;</string>
