@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -48,14 +49,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
     private final static int RC_ADD_TAG_SELECTION = 301;
     private final static int RC_DELETE_TAG = 400;
 
-    private final static String TAG = "chart";
     private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
-    private final static int MAX_DATA_COUNT = 0;
 
     private ServiceMessenger mServiceMessenger;
 
     ///////////////////////////
     private ViewPager mViewPager;
+    private int mDefaultPage = 0;
     private ChartPagerAdapter mChartPagerAdapter;
     private RadioGroup mRadioGroup;
 
@@ -78,6 +78,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
 
 
     private void initVars() {
+        mDefaultPage = getIntent().getIntExtra(EXTRA_PARAM1, 0);
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -91,7 +92,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                         long[] data = (long[]) msg.obj;
                         if (data[0] <= 0) return;
 
-                        mChartPagerAdapter.appendChartValue(data[0], data[1] * 0.001f, data[2] * 0.001f, -data[3] * 0.001f, (int)data[4]);
+                        mChartPagerAdapter.appendChartValue(
+                                mViewPager.getCurrentItem(),
+                                data[0],
+                                data[1] * 0.001f,
+                                data[2] * 0.001f,
+                                data[3] * 0.001f,
+                                (int)data[4]);
                         break;
                 }
             }
@@ -100,10 +107,20 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
 
     private void initView() {
         mViewPager = findViewById(R.id.vp_chart);
-        mChartPagerAdapter = new ChartPagerAdapter(this, new View.OnClickListener() {
+        mChartPagerAdapter = new ChartPagerAdapter(this, new ChartPagerAdapter.OnChartEventListener() {
             @Override
-            public void onClick(View view) {
-                selectFilteringTag();
+            public void onChartEvent(int position, int eventType, Object obj) {
+                switch (eventType) {
+                    case ChartPagerAdapter.TYPE_VIEW_CLICKED:
+                        if (obj instanceof View) {
+                            if (((View)obj).getId() == R.id.btn_tag) selectFilteringTag();
+                        }
+                        break;
+
+                    case ChartPagerAdapter.TYPE_TITLE_UPDATED:
+                        if (obj instanceof String) setTitle((String)obj);
+                        break;
+                }
             }
         });
 
@@ -144,6 +161,11 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
             }
         });
 
+        // 初期ページ選択
+        if (mDefaultPage >= 1 && mDefaultPage < mChartPagerAdapter.getCount()) {
+            mViewPager.setCurrentItem(mDefaultPage);
+        }
+
         // 絞り込み用のタグリスト取得
         setupFilteringTag();
     }
@@ -165,7 +187,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
     private void updateUi(int pageIndex) {
         setTitle(mChartPagerAdapter.getSubject(pageIndex));
         setIndicator(pageIndex);
-        mChartPagerAdapter.setButtonEnabled(0, (mAllTags != null && !mAllTags.isEmpty()));
+        mChartPagerAdapter.setViewEnabled(0, R.id.btn_tag, (mAllTags != null && !mAllTags.isEmpty()));
     }
 
 
@@ -185,36 +207,9 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
     }
 
 
-
-//
-//    public void onClick(View view) {
-//        int id = view.getId();
-//        switch(id) {
-////            case R.id.btn_negative:
-////                if (mDateIndex > 0) mDateIndex--;
-////                updateUi(mDateIndex);
-////                updateChart();
-////                break;
-////
-////            case R.id.btn_positive:
-////                if (mDateIndex < mDateList.size() - 1) mDateIndex++;
-////                updateUi(mDateIndex);
-////                updateChart();
-////                break;
-////
-////            case R.id.btn_chart2:
-////                UiUtils.setSelected(this, R.id.btn_chart1, false);
-////                UiUtils.setSelected(this, R.id.btn_chart2, true);
-////                BarChartActivity.startActivity(this);
-////                finish();
-////                break;
-//        }
-//    }
-
-
     private void setupFilteringTag() {
         mAllTags = AppUtils.getTags(this);
-        mChartPagerAdapter.setButtonEnabled(0, (mAllTags != null && !mAllTags.isEmpty()));
+        mChartPagerAdapter.setViewEnabled(0, R.id.btn_tag, (mAllTags != null && !mAllTags.isEmpty()));
     }
 
     private void selectFilteringTag() {
@@ -231,6 +226,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
         arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
         DialogUtils.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
     }
+
 
     ////////////////////////////////////////////////////////////////////
     //
@@ -560,13 +556,15 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+
     ////////////////////////////////////////////////////////////////////
     //
     // Activity起動 staticメソッド
     //
 
-    public static void startActivity(Activity context) {
+    public static void startActivity(Activity context, int page) {
         Intent intent = new Intent(context, ChartPagerActivity.class);
+        intent.putExtra(EXTRA_PARAM1, page);
         context.startActivity(intent);
     }
 }

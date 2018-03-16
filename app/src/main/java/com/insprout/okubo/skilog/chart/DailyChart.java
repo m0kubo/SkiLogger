@@ -201,6 +201,13 @@ public class DailyChart {
 
     public void clearChart() {
         mChart.clear();
+        nothingSelected();
+    }
+
+    private void nothingSelected() {
+        if (mValueSelectedListener != null) {
+            mValueSelectedListener.onNothingSelected();
+        }
     }
 
     public void drawChart() {
@@ -342,7 +349,7 @@ public class DailyChart {
     }
 
     private void drawNewChart(int chartId) {
-        mChart.clear();
+        clearChart();
 
         // 表示データを取得する
         if (!setupChartValues()) {
@@ -380,11 +387,13 @@ public class DailyChart {
     }
 
 
+    // 同じチャートタイプで、違う期間のチャートを描画する
+    // (LineDataSetを再利用して、別のチャートを描画する)
     public void updateChart() {
         // 表示データを取得する
         if (!setupChartValues()) {
             // 表示データなし
-            mChart.clear();
+            clearChart();
             return;
         }
 
@@ -416,6 +425,9 @@ public class DailyChart {
 
         //mChart.animateX(2500);
         mChart.invalidate();
+
+        // 別のチャートを描画したので、selectionは未選択状態にする
+        nothingSelected();
     }
 
 

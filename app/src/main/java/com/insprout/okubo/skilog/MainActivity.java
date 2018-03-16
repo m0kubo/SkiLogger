@@ -229,12 +229,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_chart1:
                 UiUtils.setSelected(this, R.id.btn_chart1, true);
 //                LineChartActivity.startActivity(this);
-                ChartPagerActivity.startActivity(this);
+                ChartPagerActivity.startActivity(this, 1);
                 break;
 
             case R.id.btn_chart2:
                 UiUtils.setSelected(this, R.id.btn_chart2, true);
-                BarChartActivity.startActivity(this);
+//                BarChartActivity.startActivity(this);
+                ChartPagerActivity.startActivity(this, 0);
                 break;
         }
     }

@@ -7,15 +7,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
+import com.insprout.okubo.skilog.chart.DailyChart;
 import com.insprout.okubo.skilog.chart.SummaryChart;
 
 import java.util.Date;
+import java.util.EventListener;
 
 
 /**
@@ -29,17 +33,24 @@ public class ChartPagerAdapter extends PagerAdapter {
     private LayoutInflater mInflater;
 
     private SummaryChart mChart1;
-    private ImageButton mBtnNext1 = null;
-    private ImageButton mBtnPrev1 = null;
-    private ImageButton mBtnTag1 = null;
-    private View.OnClickListener mTagButtonListener;
+    private TextView mTvValue1;
+    private ImageButton mBtnNext1;
+    private ImageButton mBtnPrev1;
+    private ImageButton mBtnOption1;
+    private OnChartEventListener mTagButtonListener;
+
+    private DailyChart mChart2;
+    private TextView mTvValue2;
+    private ImageButton mBtnNext2;
+    private ImageButton mBtnPrev2;
+    private RadioGroup mRadioGroup2;
 
 
     public ChartPagerAdapter(Context context) {
         this(context, null);
     }
 
-    public ChartPagerAdapter(Context context, View.OnClickListener listener) {
+    public ChartPagerAdapter(Context context, OnChartEventListener listener) {
         mContext = context;
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mTagButtonListener = listener;
@@ -53,34 +64,70 @@ public class ChartPagerAdapter extends PagerAdapter {
         switch (position) {
             case 1:
                 layout = this.mInflater.inflate(R.layout.cell_line_chart, container, false);
+
+                mTvValue2 = layout.findViewById(R.id.tv_chart_value);
+                LineChart lineChart = layout.findViewById(R.id.line_chart);
+                mChart2 = new DailyChart(mContext, lineChart, new OnChartValueSelectedListener() {
+                    @Override
+                    public void onValueSelected(Entry entry, Highlight h) {
+                        displayValue(entry);
+                    }
+
+                    @Override
+                    public void onNothingSelected() {
+                        displayValue(null);
+                    }
+
+                    private void displayValue(Entry entry) {
+                        String text = null;
+                        if (entry != null) {
+                            text = mContext.getString(R.string.fmt_value_accumulate,
+                                    mChart2.getXAxisLabel(entry.getX()),
+                                    mChart2.getYAxisLabel(entry.getY()));
+                        }
+                        mTvValue2.setText(text);
+                    }
+                });
+
+                mBtnNext2 = layout.findViewById(R.id.btn_next);
+                mBtnNext2.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mChart2.goNextPage();
+                        updateUi(1);
+                    }
+                });
+                mBtnPrev2 = layout.findViewById(R.id.btn_prev);
+                mBtnPrev2.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mChart2.goPreviousPage();
+                        updateUi(1);
+                    }
+                });
+
+                mRadioGroup2 = layout.findViewById(R.id.rg_chart_type);
+                mRadioGroup2.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(RadioGroup radioGroup, int id) {
+                        switch (id) {
+                            case R.id.btn_altitude:
+                                mChart2.setChartType(0);
+                                break;
+                            case R.id.btn_accumulate:
+                                mChart2.setChartType(1);
+                                break;
+                        }
+                    }
+                });
                 break;
 
             case 0:
             default:
                 layout = this.mInflater.inflate(R.layout.cell_bar_chart, container, false);
 
-                mBtnNext1 = layout.findViewById(R.id.btn_next);
-                mBtnNext1.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mChart1.goNextPage();
-                        enableButtons(0);
-                    }
-                });
-                mBtnPrev1 = layout.findViewById(R.id.btn_prev);
-                mBtnPrev1.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mChart1.goPreviousPage();
-                        enableButtons(0);
-                    }
-                });
-                mBtnTag1 = layout.findViewById(R.id.btn_tag);
-                mBtnTag1.setVisibility(View.VISIBLE);
-                mBtnTag1.setOnClickListener(mTagButtonListener);
-
-                final TextView tvChartValue = layout.findViewById(R.id.tv_chart_value);
-                BarChart barChart = layout.findViewById(R.id.chart);
+                mTvValue1 = layout.findViewById(R.id.tv_chart_value);
+                BarChart barChart = layout.findViewById(R.id.bar_chart);
                 mChart1 = new SummaryChart(mContext, barChart, new OnChartValueSelectedListener() {
                     @Override
                     public void onValueSelected(Entry entry, Highlight h) {
@@ -99,7 +146,34 @@ public class ChartPagerAdapter extends PagerAdapter {
                                     mChart1.getXAxisLabelFull(entry.getX()),
                                     mChart1.getYAxisLabel(entry.getY()));
                         }
-                        tvChartValue.setText(text);
+                        mTvValue1.setText(text);
+                    }
+                });
+
+                mBtnNext1 = layout.findViewById(R.id.btn_next);
+                mBtnNext1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mChart1.goNextPage();
+                        updateUi(0);
+                    }
+                });
+                mBtnPrev1 = layout.findViewById(R.id.btn_prev);
+                mBtnPrev1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mChart1.goPreviousPage();
+                        updateUi(0);
+                    }
+                });
+                mBtnOption1 = layout.findViewById(R.id.btn_tag);
+                mBtnOption1.setVisibility(View.VISIBLE);
+                mBtnOption1.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        if (mTagButtonListener != null) {
+                            mTagButtonListener.onChartEvent(0, TYPE_VIEW_CLICKED, mBtnOption1);
+                        }
                     }
                 });
                 break;
@@ -139,21 +213,30 @@ public class ChartPagerAdapter extends PagerAdapter {
                 break;
 
             case 1:
+                if (mChart2 != null) {
+                    mChart2.drawChart();
+                }
                 break;
         }
 
-        enableButtons(position);
+        updateUi(position);
     }
 
-    private void enableButtons(int position) {
+    private void updateUi(int position) {
         switch (position) {
             case 0:
-                mBtnNext1.setEnabled(mChart1 != null && mChart1.hasNextPage());
-                mBtnPrev1.setEnabled(mChart1 != null && mChart1.hasPreviousPage());
+                if (mBtnNext1 != null) mBtnNext1.setEnabled(mChart1 != null && mChart1.hasNextPage());
+                if (mBtnPrev1 != null) mBtnPrev1.setEnabled(mChart1 != null && mChart1.hasPreviousPage());
                 break;
 
             case 1:
+                if (mBtnNext2 != null) mBtnNext2.setEnabled(mChart2 != null && mChart2.hasNextPage());
+                if (mBtnPrev2 != null) mBtnPrev2.setEnabled(mChart2 != null && mChart2.hasPreviousPage());
                 break;
+        }
+
+        if (mTagButtonListener != null) {
+            mTagButtonListener.onChartEvent(position, TYPE_TITLE_UPDATED, getSubject(position));
         }
     }
 
@@ -169,6 +252,7 @@ public class ChartPagerAdapter extends PagerAdapter {
                 break;
 
             case 1:
+                if (mChart2 != null) return mChart2.getSubject();
                 break;
         }
         return null;
@@ -181,23 +265,51 @@ public class ChartPagerAdapter extends PagerAdapter {
                 break;
 
             case 1:
+                if (mChart2 != null) return mChart2.getSelectedDate();
                 break;
         }
         return null;
     }
 
-    public void setButtonEnabled(int index, boolean enabled) {
-        switch(index) {
+    public void setViewEnabled(int position, int id, boolean enabled) {
+        switch(position) {
             case 0:
-                if (mBtnTag1 != null) mBtnTag1.setEnabled(enabled);
+                switch(id) {
+                    case R.id.btn_tag :
+                        if (mBtnOption1 != null) mBtnOption1.setEnabled(enabled);
+                        break;
+                }
                 break;
         }
     }
 
-    public void appendChartValue(long time, float altitude, float accumulateAsc, float accumulateDesc, int runCount) {
-        if (mChart1 != null) {
-            mChart1.appendChartValue(time, altitude, accumulateAsc, accumulateDesc, runCount);
+    public void appendChartValue(int position, long time, float altitude, float ascent, float descent, int runCount) {
+        switch(position) {
+            case 0:
+                if (mChart1 != null) {
+                    mChart1.appendChartValue(time, altitude, ascent, descent, runCount);
+                }
+                break;
+
+            case 1:
+                if (mChart2 != null) {
+                    mChart2.appendChartValue(time, altitude, ascent, descent, runCount);
+                }
+                break;
         }
+    }
+
+
+    //////////////////////////////////////////////////////////////////////////////////
+    //
+    // Interface
+    //
+
+    public final static int TYPE_VIEW_CLICKED = 100;
+    public final static int TYPE_TITLE_UPDATED = 200;
+
+    public interface OnChartEventListener extends EventListener {
+        void onChartEvent(int position, int eventType, Object obj);
     }
 
 }

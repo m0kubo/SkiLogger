@@ -151,6 +151,10 @@ public class SummaryChart {
 
     public void clearChart() {
         mChart.clear();
+
+        if (mValueSelectedListener != null) {
+            mValueSelectedListener.onNothingSelected();
+        }
     }
 
     public void updateChart() {
@@ -171,7 +175,7 @@ public class SummaryChart {
         if (logs == null) return;
 
         BarData data = new BarData(logs);
-        mChart.clear();
+        clearChart();
         mChart.setData(data);
 
         mChart.getXAxis().setTextColor(mColorForeground);
