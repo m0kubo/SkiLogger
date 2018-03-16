@@ -296,16 +296,16 @@ public class SummaryChart {
     }
 
     public void appendChartValue(long time, float altitude, float accumulateAsc, float accumulateDesc, int runCount) {
-        if (mXAxisLabels == null) return;
-        int pos = mXAxisLabels.indexOf(mDateFormat.format(time));
-        if (pos < 0) return;
+        // 追加されたデータが どの棒グラフのものかを判別
+        int index = indexOfLogs(new Date(time));
+        if (index < 0) return;
 
         float accumulate = Math.abs(accumulateDesc);        // 下降積算データは負の値なので、絶対値に直す
         // 棒グラフの長さを更新
         BarData barData = mChart.getBarData();
         if (barData == null || barData.getDataSetCount() < 1) return;
         IBarDataSet dataSet = barData.getDataSetByIndex(0);
-        BarEntry entry = dataSet.getEntryForIndex(pos);
+        BarEntry entry = dataSet.getEntryForIndex(index);
         entry.setY(accumulate);
 
         // Y座標の表示範囲を更新
@@ -325,6 +325,14 @@ public class SummaryChart {
         mChart.notifyDataSetChanged();
 
         mChart.invalidate();
+    }
+
+    private int indexOfLogs(Date date) {
+        if (date == null || mSkiLogs == null || mSkiLogs.size() == 0) return -1;
+        for (int i=0; i<mSkiLogs.size(); i++) {
+            if (MiscUtils.isSameDate(date, mSkiLogs.get(i).getCreated())) return i;
+        }
+        return -1;
     }
 
     // タイトル表記を返す。
