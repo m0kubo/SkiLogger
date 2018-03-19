@@ -283,19 +283,12 @@ public class ChartPagerAdapter extends PagerAdapter {
         }
     }
 
-    public void appendChartValue(int position, long time, float altitude, float ascent, float descent, int runCount) {
-        switch(position) {
-            case 0:
-                if (mChart1 != null) {
-                    mChart1.appendChartValue(time, altitude, ascent, descent, runCount);
-                }
-                break;
-
-            case 1:
-                if (mChart2 != null) {
-                    mChart2.appendChartValue(time, altitude, ascent, descent, runCount);
-                }
-                break;
+    public void appendChartValue(long time, float altitude, float ascent, float descent, int runCount) {
+        if (mChart1 != null) {
+            mChart1.appendChartValue(time, altitude, ascent, descent, runCount);
+        }
+        if (mChart2 != null) {
+            mChart2.appendChartValue(time, altitude, ascent, descent, runCount);
         }
     }
 

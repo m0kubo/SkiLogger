@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -93,7 +94,6 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                         if (data[0] <= 0) return;
 
                         mChartPagerAdapter.appendChartValue(
-                                mViewPager.getCurrentItem(),
                                 data[0],
                                 data[1] * 0.001f,
                                 data[2] * 0.001f,
@@ -106,6 +106,10 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
     }
 
     private void initView() {
+        // タイトルバーに backボタンを表示する
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+
         mViewPager = findViewById(R.id.vp_chart);
         mChartPagerAdapter = new ChartPagerAdapter(this, new ChartPagerAdapter.OnChartEventListener() {
             @Override
