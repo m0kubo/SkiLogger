@@ -298,13 +298,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             // 紐づいたタグ情報もDBから削除する
             DbUtils.deleteTags(this, targetDate);
 
-            // 対象日付を削除する。
-//            mDateList.remove(mDateIndex);
-//            if (mDateIndex >= mDateList.size()) {
-//                mDateIndex--;
-//            }
-            // チャートの表示を更新する
-            mDailyChart.setSelectedDate(targetDate);
+            // 指定日付を 選択可能日から削除する。
+            mDailyChart.delete(targetDate);
             mDailyChart.updateChart();
             updateUi();
         }

@@ -161,6 +161,16 @@ public class DailyChart {
         mDateIndex = 0;
     }
 
+    public void delete(Date date) {
+        if (date == null || mDateList == null) return;
+
+        for (int i=mDateList.size()-1; i>=0; i--) {
+            if (MiscUtils.isSameDate(date, mDateList.get(i))) mDateList.remove(i);
+        }
+
+        if (mDateIndex >= mDateList.size()) mDateIndex = mDateList.size() - 1;
+    }
+
 //    public void setFilter(String filteringTag) {
 //    }
 
@@ -196,7 +206,7 @@ public class DailyChart {
 
     public String getYAxisLabel(float value) {
         // 縦軸の valueは高度
-        return mContext.getString(R.string.fmt_meter, value);
+        return AppUtils.getFormattedMeter(mContext, value);
     }
 
     public void clearChart() {

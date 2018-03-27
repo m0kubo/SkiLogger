@@ -18,7 +18,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -301,10 +300,11 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
         // 指定日のログをDBから削除する
         boolean res = DbUtils.deleteLogs(this, mTargetDate);
         if (res) {
-            // 紐づいたタグ情報もDBから削除する
+            // 指定された日に紐づいたタグ情報もDBから削除する
             DbUtils.deleteTags(this, mTargetDate);
 
             // チャートの表示を更新する
+            mChartPagerAdapter.delete(mTargetDate);
             mChartPagerAdapter.drawChart(mViewPager.getCurrentItem());
             updateUi();
         }
@@ -471,7 +471,12 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                                 String msg = getString(R.string.fmt_msg_deleted_tags,  AppUtils.toDateString(mTargetTag.getDate()), mTargetTag.getTag());
                                 Toast.makeText(this, msg ,Toast.LENGTH_SHORT).show();
 
-                                // 絞り込み用のタグリスト再取得
+                                // 削除されたタグが絞り込み表示に指定されていた場合は、チャートを再描画する
+                                if (mTargetTag.getTag().equals(mChartPagerAdapter.getFiler())) {
+                                    mChartPagerAdapter.drawChart(mViewPager.getCurrentItem());
+                                    updateUi();
+                                }
+                                // 絞り込み用のタグリスト再取得して、View(タグボタンの有効/無効)更新
                                 setupFilteringTag();
                             }
                         }

@@ -204,6 +204,13 @@ public class ChartPagerAdapter extends PagerAdapter {
     }
 
 
+    public void delete(Date date) {
+        if (mChart2 != null) {
+            mChart2.delete(date);
+        }
+    }
+
+
     public void drawChart(int position) {
         switch (position) {
             case 0:
@@ -243,6 +250,10 @@ public class ChartPagerAdapter extends PagerAdapter {
 
     public void setFilter(String filteringTag) {
         mChart1.setFilter(filteringTag);
+    }
+
+    public String getFiler() {
+        return mChart1.getFilter();
     }
 
     public String getSubject(int position) {
