@@ -22,6 +22,7 @@ import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.insprout.okubo.skilog.R;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
 
@@ -103,6 +104,10 @@ public class SummaryChart {
         mSearchTag = filteringTag;
     }
 
+    public String getFilter() {
+        return mSearchTag;
+    }
+
     public boolean hasNextPage() {
         if (mSearchTag != null) return false;
         return mDateFrom.before(mThisSeasonFrom);
@@ -146,7 +151,7 @@ public class SummaryChart {
 
     public String getYAxisLabel(float value) {
         // 縦軸の valueは高度
-        return mContext.getString(R.string.fmt_meter, value);
+        return AppUtils.getFormattedMeter(mContext, value);
     }
 
     public void clearChart() {
@@ -162,6 +167,8 @@ public class SummaryChart {
     }
 
     public void drawChart() {
+        clearChart();
+
         if (mSearchTag != null) {
             // tagで絞る
             mSkiLogs = DbUtils.selectLogSummaries(mContext, mSearchTag);
@@ -175,7 +182,6 @@ public class SummaryChart {
         if (logs == null) return;
 
         BarData data = new BarData(logs);
-        clearChart();
         mChart.setData(data);
 
         mChart.getXAxis().setTextColor(mColorForeground);
