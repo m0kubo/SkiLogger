@@ -66,6 +66,8 @@
     <string name="msg_fail_to_google_place_api">情報が取得できませんでした。通信環境の良い場所で再度お試しください</string>
     <string name="msg_gps_not_available">位置情報の設定が無効です</string>
 
+    <string name="msg_close_application">アプリを終了します</string>
+
     <string name="title_delete_logs">記録削除</string>
     <string name="fmt_delete_daily_logs">%sの一日分の記録を削除しますか？\n\n削除したデータは復活できません。</string>
     <string name="fmt_delete_seasonal_logs">%sの全記録を削除しますか？\n\n削除したデータは復活できません。</string>

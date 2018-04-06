@@ -25,6 +25,7 @@ import com.insprout.okubo.skilog.util.UiUtils;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
     private final static int RC_CHANGE_THEME = 1;
+    private final static int REQ_CODE_FINISH_APP = 101;
 
     private ServiceMessenger mServiceMessenger;
 
@@ -114,6 +115,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onPause() {
         mServiceMessenger.unbind();
         super.onPause();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // アプリ終了確認ダイアログを出す
+        DialogUtils.showOkCancelDialog(this, 0, R.string.msg_close_application, R.string.btn_finish_app, R.string.btn_cancel, REQ_CODE_FINISH_APP);
     }
 
     private void startService() {
@@ -208,6 +215,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             startActivity(intent);
                         }
                     }
+                }
+                break;
+
+            case REQ_CODE_FINISH_APP:
+                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                    // アプリ終了する
+                    finish();
                 }
                 break;
         }
