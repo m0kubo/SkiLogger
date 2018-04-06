@@ -123,6 +123,10 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                     case ChartPagerAdapter.TYPE_TITLE_UPDATED:
                         if (obj instanceof String) setTitle((String)obj);
                         break;
+
+                    case ChartPagerAdapter.TYPE_PAGE_SELECTED:
+                        if (obj instanceof Integer) mViewPager.setCurrentItem((Integer)obj);
+                        break;
                 }
             }
         });

@@ -223,16 +223,15 @@ public class SummaryChart {
         xAxis.setDrawAxisLine(true);
 
         float minimumYAxis = -0.5f;
-        int MAX_X_LABELS = 6;
+//        int MAX_X_LABELS = 6;
+        int MAX_X_LABELS = 7;
         int dataCount = mXAxisLabels.size();
         if (dataCount <= MAX_X_LABELS) {
-            mChart.setVisibleXRangeMinimum(MAX_X_LABELS);               // 一度に表示する棒グラフの数 (少ないと棒の幅が広すぎるため設定)
-            xAxis.setLabelCount(dataCount);
-            if (dataCount <= 1) minimumYAxis = -0.6f;           // データが一件の際、なぜかラベルが 2つ書かれる(0軸にも書かれる)ので、パッチ処理
+            mChart.setVisibleXRangeMinimum(MAX_X_LABELS);                       // 一度に表示する棒グラフの数 (少ないと棒の幅が広すぎるため設定)
+            if (dataCount <= 1) minimumYAxis = -0.6f;                           // データが一件の際、なぜかラベルが 2つ書かれる(0軸にも書かれる)ので、パッチ処理
         } else {
-//            mChart.setVisibleXRangeMaximum(7.5f);               // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
-//            mChart.moveViewToX((float)dataCount - 0.5f);
-            mChart.setVisibleXRangeMinimum(MAX_X_LABELS);
+            mChart.setVisibleXRangeMaximum(MAX_X_LABELS + 0.5f);                // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
+            mChart.moveViewToX((float)dataCount - 0.5f);
         }
         xAxis.setAxisMinimum(minimumYAxis);
 

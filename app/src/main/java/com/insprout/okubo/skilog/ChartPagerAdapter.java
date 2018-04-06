@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -37,7 +38,7 @@ public class ChartPagerAdapter extends PagerAdapter {
     private ImageButton mBtnNext1;
     private ImageButton mBtnPrev1;
     private ImageButton mBtnOption1;
-    private OnChartEventListener mTagButtonListener;
+    private OnChartEventListener mChartEventListener;
 
     private DailyChart mChart2;
     private TextView mTvValue2;
@@ -53,7 +54,7 @@ public class ChartPagerAdapter extends PagerAdapter {
     public ChartPagerAdapter(Context context, OnChartEventListener listener) {
         mContext = context;
         mInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mTagButtonListener = listener;
+        mChartEventListener = listener;
     }
 
 
@@ -132,6 +133,18 @@ public class ChartPagerAdapter extends PagerAdapter {
                     @Override
                     public void onValueSelected(Entry entry, Highlight h) {
                         displayValue(entry);
+                        Date date = mChart1.getSelectedDate();
+                        if (date != null && mChart2 != null) {
+                            mChart2.setSelectedDate(date);
+                            String msg = mContext.getString(R.string.fmt_title_chart, mChart1.getXAxisLabelFull(entry.getX()));
+                            Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
+                            if (mChartEventListener != null) {
+                                if (mChartEventListener != null) {
+                                    Integer pageIndex = 1;
+                                    mChartEventListener.onChartEvent(0, TYPE_PAGE_SELECTED, pageIndex);
+                                }
+                            }
+                        }
                     }
 
                     @Override
@@ -171,8 +184,8 @@ public class ChartPagerAdapter extends PagerAdapter {
                 mBtnOption1.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        if (mTagButtonListener != null) {
-                            mTagButtonListener.onChartEvent(0, TYPE_VIEW_CLICKED, mBtnOption1);
+                        if (mChartEventListener != null) {
+                            mChartEventListener.onChartEvent(0, TYPE_VIEW_CLICKED, mBtnOption1);
                         }
                     }
                 });
@@ -242,8 +255,8 @@ public class ChartPagerAdapter extends PagerAdapter {
                 break;
         }
 
-        if (mTagButtonListener != null) {
-            mTagButtonListener.onChartEvent(position, TYPE_TITLE_UPDATED, getSubject(position));
+        if (mChartEventListener != null) {
+            mChartEventListener.onChartEvent(position, TYPE_TITLE_UPDATED, getSubject(position));
         }
     }
 
@@ -310,6 +323,7 @@ public class ChartPagerAdapter extends PagerAdapter {
     //
 
     public final static int TYPE_VIEW_CLICKED = 100;
+    public final static int TYPE_PAGE_SELECTED = 110;
     public final static int TYPE_TITLE_UPDATED = 200;
 
     public interface OnChartEventListener extends EventListener {

@@ -74,20 +74,18 @@ public class MiscUtils {
      * @return Date型の値
      */
     public static Date toDate(int year, int month, int day, int hour, int minute, int second) {
-        Date date;
         Calendar cal = Calendar.getInstance();
         cal.setLenient(false);          // 日付のチェックを厳密に行う
 
         try {
             cal.set(year, month, day, hour, minute, second);
             cal.set(Calendar.MILLISECOND, 0);                   // 小数点以下の秒数は 明示的に設定しないと不定になるので注意
-            date = cal.getTime();
+            return new Date(cal.getTimeInMillis());
 
         } catch (IllegalArgumentException e){
             // 不正な日付の場合は nullを返す
             return null;
         }
-        return date;
     }
 
     /**
