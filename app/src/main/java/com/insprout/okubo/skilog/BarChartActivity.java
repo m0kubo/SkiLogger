@@ -7,46 +7,28 @@ import android.os.Bundle;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 
 import com.github.mikephil.charting.charts.BarChart;
-import com.github.mikephil.charting.components.AxisBase;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.formatter.IAxisValueFormatter;
-import com.github.mikephil.charting.formatter.IValueFormatter;
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.insprout.okubo.skilog.chart.SummaryChart;
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.SkiLogData;
 import com.insprout.okubo.skilog.database.TagData;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
-import com.insprout.okubo.skilog.util.DialogUtils;
-import com.insprout.okubo.skilog.util.MiscUtils;
-import com.insprout.okubo.skilog.util.SdkUtils;
+import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.UiUtils;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 
-public class BarChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
+public class BarChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUi.DialogEventListener {
     private final static int RC_DELETE_LOG = 1;
     private final static int RC_SELECT_TAG = 2;
 
@@ -192,7 +174,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         // データ削除
         String title = getString(R.string.title_delete_logs);
         String message = getString(R.string.fmt_delete_daily_logs,  AppUtils.toDateString(mTargetDate));
-        DialogUtils.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
+        DialogUi.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
     }
 
 
@@ -223,20 +205,20 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             arrayTag[i] = mTags.get(i).getTag();
         }
         arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
-        DialogUtils.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
+        DialogUi.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
     }
 
     @Override
     public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch (requestCode) {
             case RC_DELETE_LOG:
-                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
                     deleteLogs();
                 }
                 break;
 
             case RC_SELECT_TAG:
-                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
                     if (view instanceof ListView) {
                         int pos = ((ListView)view).getCheckedItemPosition();
                         if (mTags != null && pos >= 0 && pos < mTags.size()) {

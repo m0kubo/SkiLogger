@@ -17,13 +17,13 @@ import android.widget.TextView;
 
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.setting.Settings;
-import com.insprout.okubo.skilog.util.DialogUtils;
+import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.SensorUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, DialogUtils.DialogEventListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, DialogUi.DialogEventListener {
     private final static int RC_CHANGE_THEME = 1;
     private final static int REQ_CODE_FINISH_APP = 101;
 
@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onBackPressed() {
         // アプリ終了確認ダイアログを出す
-        DialogUtils.showOkCancelDialog(this, 0, R.string.msg_close_application, R.string.btn_finish_app, R.string.btn_cancel, REQ_CODE_FINISH_APP);
+        DialogUi.showOkCancelDialog(this, 0, R.string.msg_close_application, R.string.btn_finish_app, R.string.btn_cancel, REQ_CODE_FINISH_APP);
     }
 
     private void startService() {
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(item.getItemId()) {
             case R.id.menu_change_theme:
                 mThemeIndex = Settings.getThemeIndex(this);
-                DialogUtils.showItemSelectDialog(this, R.string.menu_theme, mThemeArray, mThemeIndex, RC_CHANGE_THEME);
+                DialogUi.showItemSelectDialog(this, R.string.menu_theme, mThemeArray, mThemeIndex, RC_CHANGE_THEME);
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch(requestCode) {
             case RC_CHANGE_THEME:
-                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
                     if (view instanceof ListView) {
                         int index = ((ListView) view).getCheckedItemPosition();
                         if (index != mThemeIndex) {
@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case REQ_CODE_FINISH_APP:
-                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
                     // アプリ終了する
                     finish();
                 }

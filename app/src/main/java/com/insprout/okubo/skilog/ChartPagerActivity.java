@@ -29,7 +29,7 @@ import com.insprout.okubo.skilog.model.ResponsePlaceData;
 import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
-import com.insprout.okubo.skilog.util.DialogUtils;
+import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.webapi.RequestUrlTask;
 import com.insprout.okubo.skilog.webapi.WebApiUtils;
@@ -38,7 +38,7 @@ import java.util.Date;
 import java.util.List;
 
 
-public class ChartPagerActivity extends AppCompatActivity implements DialogUtils.DialogEventListener {
+public class ChartPagerActivity extends AppCompatActivity implements DialogUi.DialogEventListener {
     private final static int RP_LOCATION = 100;
 
     private final static int RC_DELETE_LOG = 100;
@@ -231,7 +231,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
             arrayTag[i] = mAllTags.get(i).getTag();
         }
         arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
-        DialogUtils.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
+        DialogUi.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
     }
 
 
@@ -295,7 +295,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
         // データ削除
         String title = getString(R.string.title_delete_logs);
         String message = getString(R.string.fmt_delete_daily_logs,  AppUtils.toDateString(mTargetDate));
-        DialogUtils.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
+        DialogUi.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
     }
 
     private void deleteLogs() {
@@ -316,7 +316,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
 
     private void showAddTagDialog() {
         String[] submenu = getResources().getStringArray(R.array.menu_add_tag);
-        DialogUtils.showItemListDialog(this, 0, submenu, R.string.btn_cancel, RC_ADD_TAG);
+        DialogUi.showItemListDialog(this, 0, submenu, R.string.btn_cancel, RC_ADD_TAG);
     }
 
     private void listTags() {
@@ -327,11 +327,11 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
         // 選択用リストを作成
         String[] arrayTag = AppUtils.toStringArray(mTagsOnTarget);
         String title = getString(R.string.fmt_title_list_tags, AppUtils.toDateString(mTargetDate));
-        DialogUtils.showItemSelectDialog(this, title, arrayTag, -1, getString(R.string.btn_delete), getString(R.string.btn_close), RC_LIST_TAG);
+        DialogUi.showItemSelectDialog(this, title, arrayTag, -1, getString(R.string.btn_delete), getString(R.string.btn_close), RC_LIST_TAG);
     }
 
     private void inputTag() {
-        DialogUtils.showCustomDialog(this, R.string.title_input_tag, 0, R.layout.dlg_edittext, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_INPUT);
+        DialogUi.showCustomDialog(this, R.string.title_input_tag, 0, R.layout.dlg_edittext, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_INPUT);
     }
 
     private void selectTagFromHistory() {
@@ -340,7 +340,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
             Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
 
         } else {
-            DialogUtils.showItemSelectDialog(this, R.string.title_input_tag, AppUtils.toStringArray(tagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+            DialogUi.showItemSelectDialog(this, R.string.title_input_tag, AppUtils.toStringArray(tagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
         }
     }
 
@@ -358,7 +358,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
             return;
         }
 
-        final DialogFragment dialog = DialogUtils.showProgressDialog(this, 0, R.string.msg_getting_tags);
+        final DialogFragment dialog = DialogUi.showProgressDialog(this, 0, R.string.msg_getting_tags);
         new LocationProvider(this, new LocationProvider.OnLocatedListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -384,7 +384,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                                 return;
                             }
 
-                            DialogUtils.showItemSelectDialog(ChartPagerActivity.this, R.string.title_input_tag, AppUtils.toStringArray(places.getPlaces(), Const.MAX_TAG_CANDIDATE_BY_LOCATION), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+                            DialogUi.showItemSelectDialog(ChartPagerActivity.this, R.string.title_input_tag, AppUtils.toStringArray(places.getPlaces(), Const.MAX_TAG_CANDIDATE_BY_LOCATION), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
                         }
                     }).execute();
 
@@ -399,13 +399,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
     public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch (requestCode) {
             case RC_DELETE_LOG:
-                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
                     deleteLogs();
                 }
                 break;
 
             case RC_SELECT_TAG:
-                if (which == DialogUtils.EVENT_BUTTON_POSITIVE) {
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
                     if (view instanceof ListView) {
                         int pos = ((ListView)view).getCheckedItemPosition();
                         if (mAllTags != null && pos >= 0 && pos < mAllTags.size()) {
@@ -442,16 +442,16 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                     int pos = ((ListView)view).getCheckedItemPosition();
 
                     switch (which) {
-                        case DialogUtils.EVENT_DIALOG_SHOWN:
+                        case DialogUi.EVENT_DIALOG_SHOWN:
                             dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(pos >= 0);
                             break;
 
-                        case DialogUtils.EVENT_BUTTON_POSITIVE:
+                        case DialogUi.EVENT_BUTTON_POSITIVE:
                             // 削除ボタンが押された
                             if (pos >= 0 && pos < mTagsOnTarget.size()) {
                                 mTargetTag = mTagsOnTarget.get(pos);
                                 // 確認ダイアログを表示する
-                                DialogUtils.showOkCancelDialog(this, getString(R.string.msg_delete_tags), mTargetTag.getTag(), RC_DELETE_TAG);
+                                DialogUi.showOkCancelDialog(this, getString(R.string.msg_delete_tags), mTargetTag.getTag(), RC_DELETE_TAG);
                             }
                             break;
 
@@ -467,7 +467,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
             case RC_DELETE_TAG:
                 // タグ削除
                 switch(which) {
-                    case DialogUtils.EVENT_BUTTON_POSITIVE:
+                    case DialogUi.EVENT_BUTTON_POSITIVE:
                         // 対象のタグデータをDBから削除する
                         if (mTargetTag != null) {
                             boolean result = DbUtils.deleteTag(this, mTargetTag);
@@ -487,7 +487,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                         mTargetTag = null;
                         break;
 
-                    case DialogUtils.EVENT_BUTTON_NEGATIVE:
+                    case DialogUi.EVENT_BUTTON_NEGATIVE:
                         // タグ削除キャンセル
                         mTargetTag = null;
                         break;
@@ -498,13 +498,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                 // タグ直接入力
                 EditText editText = ((View)view).findViewById(R.id._et_dlg);
                 switch (which) {
-                    case DialogUtils.EVENT_DIALOG_SHOWN:
+                    case DialogUi.EVENT_DIALOG_SHOWN:
                         // キーボードを自動で開く
                         InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                         if (inputMethodManager != null) inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
                         break;
 
-                    case DialogUtils.EVENT_BUTTON_POSITIVE:
+                    case DialogUi.EVENT_BUTTON_POSITIVE:
                         // 入力されたタグを登録
                         if (editText != null) {
                             String tag = editText.getText().toString();
@@ -525,11 +525,11 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUtils
                     int pos = ((ListView) view).getCheckedItemPosition();
 
                     switch (which) {
-                        case DialogUtils.EVENT_DIALOG_SHOWN:
+                        case DialogUi.EVENT_DIALOG_SHOWN:
                             dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(pos >= 0);
                             break;
 
-                        case DialogUtils.EVENT_BUTTON_POSITIVE:
+                        case DialogUi.EVENT_BUTTON_POSITIVE:
                             // 入力されたタグを登録
                             String tag = ((ListView) view).getAdapter().getItem(pos).toString();
                             if (!tag.isEmpty() && mTargetDate != null) {

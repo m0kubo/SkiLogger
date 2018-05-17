@@ -21,7 +21,7 @@ import android.widget.TextView;
  * AlertDialogを利用するための ユーティリティクラス
  */
 
-public class DialogUtils {
+public class DialogUi {
     /**
      * 引数受け渡し用のキー
      */
@@ -451,10 +451,10 @@ public class DialogUtils {
         }
 
         @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            if (activity instanceof DialogEventListener) {
-                mListener = (DialogEventListener) activity;
+        public void onAttach(Context context) {
+            super.onAttach(context);
+            if (context instanceof DialogEventListener) {
+                mListener = (DialogEventListener) context;
             }
         }
 
