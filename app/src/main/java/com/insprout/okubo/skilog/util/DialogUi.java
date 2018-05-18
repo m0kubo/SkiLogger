@@ -89,7 +89,7 @@ public class DialogUi {
      * @return 生成されたDialogFragmentオブジェクト
      */
     public static DialogFragment showButtonsDialog(Activity activity, String title, String message, String labelOk, String labelCancel, String labelNeutral, int requestCode) {
-        DialogFragment dialog = BaseDialogFragment.newInstance(requestCode, title, message, labelOk, labelCancel, labelNeutral);
+        DialogFragment dialog = DialogUiFragment.newInstance(requestCode, title, message, labelOk, labelCancel, labelNeutral);
         dialog.show(activity.getFragmentManager(), buildTag(requestCode));
         return dialog;
     }
@@ -182,7 +182,7 @@ public class DialogUi {
      * @return 生成されたDialogFragmentオブジェクト
      */
     public static DialogFragment showItemSelectDialog(final Activity activity, String title, String[] list, int selected, String labelOk, String labelCancel, int requestCode) {
-        DialogFragment dialog = BaseDialogFragment.newInstance(requestCode, title, list, selected, labelOk, labelCancel);
+        DialogFragment dialog = DialogUiFragment.newInstance(requestCode, title, list, selected, labelOk, labelCancel);
         dialog.show(activity.getFragmentManager(), buildTag(requestCode));
         return dialog;
     }
@@ -265,7 +265,7 @@ public class DialogUi {
      * @return 生成されたDialogFragmentオブジェクト
      */
     public static DialogFragment showCustomDialog(final Activity activity, String title, String message, int layoutId, String labelOk, String labelCancel, int requestCode) {
-        DialogFragment dialog = BaseDialogFragment.newInstance(requestCode, title, message, layoutId, labelOk, labelCancel);
+        DialogFragment dialog = DialogUiFragment.newInstance(requestCode, title, message, layoutId, labelOk, labelCancel);
         dialog.show(activity.getFragmentManager(), buildTag(requestCode));
         return dialog;
     }
@@ -304,7 +304,7 @@ public class DialogUi {
      * @return 生成されたDialogFragmentオブジェクト
      */
     public static DialogFragment showProgressDialog(Activity activity, String title, String message, int requestCode) {
-        DialogFragment dialog = BaseDialogFragment.newInstance(requestCode, title, message);
+        DialogFragment dialog = DialogUiFragment.newInstance(requestCode, title, message);
         dialog.show(activity.getFragmentManager(), buildTag(requestCode));
         return dialog;
     }
@@ -350,7 +350,7 @@ public class DialogUi {
     // 基本DialogFragmentクラス
     //
 
-    public static class BaseDialogFragment extends DialogFragment implements DialogInterface.OnClickListener, DialogInterface.OnCancelListener, DialogInterface.OnShowListener {
+    public static class DialogUiFragment extends DialogFragment implements DialogInterface.OnClickListener, DialogInterface.OnCancelListener, DialogInterface.OnShowListener {
         private final static int LAYOUT_ID_DEFAULT = -1;
         private final static float DIP_PADDING_PROGRESS = 15.0f;
 
@@ -372,8 +372,8 @@ public class DialogUi {
          * @param labelNeutral Neutralボタンの表記
          * @return DialogFragmentのインスタンス
          */
-        public static BaseDialogFragment newInstance(int requestCode, String title, String message, String labelOk, String labelCancel, String labelNeutral) {
-            BaseDialogFragment dialogFragment = new BaseDialogFragment();
+        public static DialogUiFragment newInstance(int requestCode, String title, String message, String labelOk, String labelCancel, String labelNeutral) {
+            DialogUiFragment dialogFragment = new DialogUiFragment();
             Bundle args = new Bundle();
             args.putInt(KEY_REQUEST_CODE, requestCode);
             args.putString(KEY_DIALOG_TITLE, title);
@@ -395,8 +395,8 @@ public class DialogUi {
          * @param labelCancel Negativeボタンの表記
          * @return DialogFragmentのインスタンス
          */
-        public static BaseDialogFragment newInstance(int requestCode, String title, String[] selectArray, int selected, String labelOk, String labelCancel) {
-            BaseDialogFragment dialogFragment = new BaseDialogFragment();
+        public static DialogUiFragment newInstance(int requestCode, String title, String[] selectArray, int selected, String labelOk, String labelCancel) {
+            DialogUiFragment dialogFragment = new DialogUiFragment();
             Bundle args = new Bundle();
             args.putInt(KEY_REQUEST_CODE, requestCode);
             args.putString(KEY_DIALOG_TITLE, title);
@@ -418,8 +418,8 @@ public class DialogUi {
          * @param labelCancel Negativeボタンの表記
          * @return DialogFragmentのインスタンス
          */
-        public static BaseDialogFragment newInstance(int requestCode, String title, String message, int layoutId, String labelOk, String labelCancel) {
-            BaseDialogFragment dialogFragment = new BaseDialogFragment();
+        public static DialogUiFragment newInstance(int requestCode, String title, String message, int layoutId, String labelOk, String labelCancel) {
+            DialogUiFragment dialogFragment = new DialogUiFragment();
             Bundle args = new Bundle();
             args.putInt(KEY_REQUEST_CODE, requestCode);
             args.putString(KEY_DIALOG_TITLE, title);
@@ -439,8 +439,8 @@ public class DialogUi {
          * @param message Dialogのメッセージ
          * @return DialogFragmentのインスタンス
          */
-        public static BaseDialogFragment newInstance(int requestCode, String title, String message) {
-            BaseDialogFragment dialogFragment = new BaseDialogFragment();
+        public static DialogUiFragment newInstance(int requestCode, String title, String message) {
+            DialogUiFragment dialogFragment = new DialogUiFragment();
             Bundle args = new Bundle();
             args.putInt(KEY_REQUEST_CODE, requestCode);
             args.putString(KEY_DIALOG_TITLE, title);
