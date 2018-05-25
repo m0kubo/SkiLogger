@@ -174,7 +174,13 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         // データ削除
         String title = getString(R.string.title_delete_logs);
         String message = getString(R.string.fmt_delete_daily_logs,  AppUtils.toDateString(mTargetDate));
-        DialogUi.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
+        new DialogUi.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton()
+                .setNegativeButton()
+                .setRequestCode(RC_DELETE_LOG)
+                .show();
     }
 
 
@@ -205,7 +211,13 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             arrayTag[i] = mTags.get(i).getTag();
         }
         arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
-        DialogUi.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
+        new DialogUi.Builder(this)
+                .setTitle(R.string.title_select_tag)
+                .setSingleChoiceItems(arrayTag, mIndexTag)
+                .setPositiveButton()
+                .setNegativeButton()
+                .setRequestCode(RC_SELECT_TAG)
+                .show();
     }
 
     @Override

@@ -231,7 +231,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
             arrayTag[i] = mAllTags.get(i).getTag();
         }
         arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
-        DialogUi.showItemSelectDialog(this, R.string.title_select_tag, arrayTag, mIndexTag, RC_SELECT_TAG);
+        new DialogUi.Builder(this)
+                .setTitle(R.string.title_select_tag)
+                .setSingleChoiceItems(arrayTag, mIndexTag)
+                .setPositiveButton()
+                .setNegativeButton()
+                .setRequestCode(RC_SELECT_TAG)
+                .show();
     }
 
 
@@ -295,7 +301,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
         // データ削除
         String title = getString(R.string.title_delete_logs);
         String message = getString(R.string.fmt_delete_daily_logs,  AppUtils.toDateString(mTargetDate));
-        DialogUi.showOkCancelDialog(this, title, message, RC_DELETE_LOG);
+        new DialogUi.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton()
+                .setNegativeButton()
+                .setRequestCode(RC_DELETE_LOG)
+                .show();
     }
 
     private void deleteLogs() {
@@ -316,7 +328,11 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
 
     private void showAddTagDialog() {
         String[] submenu = getResources().getStringArray(R.array.menu_add_tag);
-        DialogUi.showItemListDialog(this, 0, submenu, R.string.btn_cancel, RC_ADD_TAG);
+        new DialogUi.Builder(this)
+                .setItems(submenu)
+                .setNegativeButton(R.string.btn_cancel)
+                .setRequestCode(RC_ADD_TAG)
+                .show();
     }
 
     private void listTags() {
@@ -327,11 +343,23 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
         // 選択用リストを作成
         String[] arrayTag = AppUtils.toStringArray(mTagsOnTarget);
         String title = getString(R.string.fmt_title_list_tags, AppUtils.toDateString(mTargetDate));
-        DialogUi.showItemSelectDialog(this, title, arrayTag, -1, getString(R.string.btn_delete), getString(R.string.btn_close), RC_LIST_TAG);
+        new DialogUi.Builder(this)
+                .setTitle(title)
+                .setSingleChoiceItems(arrayTag, -1)
+                .setPositiveButton(R.string.btn_delete)
+                .setNegativeButton(R.string.btn_close)
+                .setRequestCode(RC_LIST_TAG)
+                .show();
     }
 
     private void inputTag() {
-        DialogUi.showCustomDialog(this, R.string.title_input_tag, 0, R.layout.dlg_edittext, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_INPUT);
+        new DialogUi.Builder(this)
+                .setTitle(R.string.title_input_tag)
+                .setView(R.layout.dlg_edittext)
+                .setPositiveButton(R.string.btn_ok)
+                .setNegativeButton(R.string.btn_cancel)
+                .setRequestCode(RC_ADD_TAG_INPUT)
+                .show();
     }
 
     private void selectTagFromHistory() {
@@ -340,7 +368,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
             Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
 
         } else {
-            DialogUi.showItemSelectDialog(this, R.string.title_input_tag, AppUtils.toStringArray(tagsCandidate), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+            new DialogUi.Builder(this)
+                    .setTitle(R.string.title_input_tag)
+                    .setSingleChoiceItems(AppUtils.toStringArray(tagsCandidate), -1)
+                    .setPositiveButton(R.string.btn_ok)
+                    .setNegativeButton(R.string.btn_cancel)
+                    .setRequestCode(RC_ADD_TAG_SELECTION)
+                    .show();
         }
     }
 
@@ -358,7 +392,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
             return;
         }
 
-        final DialogFragment dialog = DialogUi.showProgressDialog(this, 0, R.string.msg_getting_tags);
+        final DialogFragment dialog = new DialogUi.Builder(this, DialogUi.STYLE_PROGRESS_DIALOG).setMessage(R.string.msg_getting_tags).show();
         new LocationProvider(this, new LocationProvider.OnLocatedListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -384,7 +418,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
                                 return;
                             }
 
-                            DialogUi.showItemSelectDialog(ChartPagerActivity.this, R.string.title_input_tag, AppUtils.toStringArray(places.getPlaces(), Const.MAX_TAG_CANDIDATE_BY_LOCATION), -1, R.string.btn_ok, R.string.btn_cancel, RC_ADD_TAG_SELECTION);
+                            new DialogUi.Builder(ChartPagerActivity.this)
+                                    .setTitle(R.string.title_input_tag)
+                                    .setSingleChoiceItems(AppUtils.toStringArray(places.getPlaces(), Const.MAX_TAG_CANDIDATE_BY_LOCATION), -1)
+                                    .setPositiveButton(R.string.btn_ok)
+                                    .setNegativeButton(R.string.btn_cancel)
+                                    .setRequestCode(RC_ADD_TAG_SELECTION)
+                                    .show();
                         }
                     }).execute();
 
@@ -451,7 +491,13 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
                             if (pos >= 0 && pos < mTagsOnTarget.size()) {
                                 mTargetTag = mTagsOnTarget.get(pos);
                                 // 確認ダイアログを表示する
-                                DialogUi.showOkCancelDialog(this, getString(R.string.msg_delete_tags), mTargetTag.getTag(), RC_DELETE_TAG);
+                                new DialogUi.Builder(this)
+                                        .setTitle(R.string.msg_delete_tags)
+                                        .setMessage(mTargetTag.getTag())
+                                        .setPositiveButton()
+                                        .setNegativeButton()
+                                        .setRequestCode(RC_DELETE_TAG)
+                                        .show();
                             }
                             break;
 

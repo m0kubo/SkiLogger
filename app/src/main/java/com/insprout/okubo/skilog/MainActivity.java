@@ -120,7 +120,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onBackPressed() {
         // アプリ終了確認ダイアログを出す
-        DialogUi.showOkCancelDialog(this, 0, R.string.msg_close_application, R.string.btn_finish_app, R.string.btn_cancel, REQ_CODE_FINISH_APP);
+        new DialogUi.Builder(this)
+                .setMessage(R.string.msg_close_application)
+                .setPositiveButton(R.string.btn_finish_app)
+                .setNegativeButton(R.string.btn_cancel)
+                .setRequestCode(REQ_CODE_FINISH_APP)
+                .show();
     }
 
     private void startService() {
@@ -193,7 +198,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(item.getItemId()) {
             case R.id.menu_change_theme:
                 mThemeIndex = Settings.getThemeIndex(this);
-                DialogUi.showItemSelectDialog(this, R.string.menu_theme, mThemeArray, mThemeIndex, RC_CHANGE_THEME);
+                new DialogUi.Builder(this)
+                        .setTitle(R.string.menu_theme)
+                        .setSingleChoiceItems(mThemeArray, mThemeIndex)
+                        .setPositiveButton()
+                        .setNegativeButton()
+                        .setRequestCode(RC_CHANGE_THEME)
+                        .show();
                 return true;
         }
         return super.onOptionsItemSelected(item);
