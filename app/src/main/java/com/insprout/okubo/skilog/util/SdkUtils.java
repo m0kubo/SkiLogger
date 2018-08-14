@@ -136,23 +136,23 @@ public class SdkUtils {
      *
      * @param context コンテキスト
      */
-    public static void requestDisableDozeModeIfNeeded(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // DOZEの無効化設定リクエスト
-            String packageName = context.getPackageName();
-            PowerManager powerManager = context.getSystemService(PowerManager.class);
-            if (powerManager == null) return;
-            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
-                // request disabling doze
-                // ユーザに 指定のアプリを Doze無効にしてもらう
-
-                @SuppressLint("BatteryLife")
-                Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setData(Uri.parse("package:" + packageName));
-                context.startActivity(intent);
-            }
-        }
-    }
+//    public static void requestDisableDozeModeIfNeeded(Context context) {
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            // DOZEの無効化設定リクエスト
+//            String packageName = context.getPackageName();
+//            PowerManager powerManager = context.getSystemService(PowerManager.class);
+//            if (powerManager == null) return;
+//            if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+//                // request disabling doze
+//                // ユーザに 指定のアプリを Doze無効にしてもらう
+//
+//                @SuppressLint("BatteryLife")
+//                Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+//                intent.setData(Uri.parse("package:" + packageName));
+//                context.startActivity(intent);
+//            }
+//        }
+//    }
 
 
     //////////////////////////////////////////////////////////////////////////

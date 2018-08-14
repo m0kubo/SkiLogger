@@ -244,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(id) {
             case R.id.btn_positive:
                 startService();
-                SdkUtils.requestDisableDozeModeIfNeeded(this);
+//                SdkUtils.requestDisableDozeModeIfNeeded(this);
                 break;
 
             case R.id.btn_negative:
