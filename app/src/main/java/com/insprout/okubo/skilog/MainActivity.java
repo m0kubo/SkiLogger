@@ -244,7 +244,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch(id) {
             case R.id.btn_positive:
                 startService();
-//                SdkUtils.requestDisableDozeModeIfNeeded(this);
                 break;
 
             case R.id.btn_negative:
@@ -253,13 +252,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.btn_chart1:
                 UiUtils.setSelected(this, R.id.btn_chart1, true);
-//                LineChartActivity.startActivity(this);
                 ChartPagerActivity.startActivity(this, 1);
                 break;
 
             case R.id.btn_chart2:
                 UiUtils.setSelected(this, R.id.btn_chart2, true);
-//                BarChartActivity.startActivity(this);
                 ChartPagerActivity.startActivity(this, 0);
                 break;
         }

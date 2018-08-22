@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.io.Closeable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ import java.util.TimeZone;
  * データベースアクセス用 クラス
  */
 
-public class SkiLogDb {
+public class SkiLogDb implements Closeable {
     private static final String TAG = "database";
 
     private final static String SQLITE_DATE_FORMAT = "yyyy-MM-dd";
@@ -107,8 +108,14 @@ public class SkiLogDb {
         mDb = dbHelper.getWritableDatabase();
     }
 
+    @Override
     public void close() {
-        if (mDb != null) mDb.close();
+        if (mDb != null) {
+            try {
+                mDb.close();
+            } catch(SQLException ignored) {
+            }
+        }
     }
 
     public void beginTransaction() {

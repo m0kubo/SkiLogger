@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId "com.insprout.okubo.skilog"
-        minSdkVersion 17
+        minSdkVersion 19
         targetSdkVersion 27
         versionCode 110
         versionName "1.1.0"

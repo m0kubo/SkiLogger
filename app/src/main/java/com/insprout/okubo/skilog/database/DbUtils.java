@@ -26,20 +26,10 @@ public class DbUtils {
      * @return 件数
      */
     public static long countLogs(Context context) {
-        long res = 0;
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.countFromTable1(null, null);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.countFromTable1(null, null);
         }
-        return res;
     }
 
     /**
@@ -49,17 +39,10 @@ public class DbUtils {
      * @return 挿入された行の id。エラーの場合は0
      */
     public static long insertLog(Context context, SkiLogData data) {
-        long id = 0;
-
-        SkiLogDb database = null;
-        try {
-            database = new SkiLogDb(context);
-            id = database.insert(data);
-
-        } finally {
-            if (database != null) database.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.insert(data);
         }
-        return id;
     }
 
     /**
@@ -69,17 +52,10 @@ public class DbUtils {
      * @return updateされた行の行数。成功の場合は1。エラーの場合は0
      */
     public static long updateLog(Context context, SkiLogData data) {
-        long id = 0;
-
-        SkiLogDb database = null;
-        try {
-            database = new SkiLogDb(context);
-            id = database.update(data);
-
-        } finally {
-            if (database != null) database.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.update(data);
         }
-        return id;
     }
 
 
@@ -90,24 +66,15 @@ public class DbUtils {
      * @return 結果
      */
     public static boolean deleteLogs(Context context, Date date) {
-        boolean res;
         if (date == null) return false;
 
         String selection = String.format("date(created,'%s') = ?", SkiLogDb.utcModifier());
         String[] selectionArgs = { SkiLogDb.formatDate(date) };
 
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.deleteFromTable1(selection, selectionArgs);
-
-        } catch(Exception ex) {
-            return false;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.deleteFromTable1(selection, selectionArgs);
         }
-        return res;
     }
 
     /**
@@ -120,22 +87,13 @@ public class DbUtils {
     public static boolean deleteLogs(Context context, Date fromDate, Date toDate) {
         if (fromDate == null || toDate == null || !fromDate.before(toDate)) return false;
 
-        boolean res;
         String selection = "created >= ? AND created < ?";
         String[] selectionArgs = new String[] { SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) };
 
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.deleteFromTable1(selection, selectionArgs);
-
-        } catch(Exception ex) {
-            return false;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.deleteFromTable1(selection, selectionArgs);
         }
-        return res;
     }
 
     public static List<SkiLogData> selectLogs(Context context, Date date) {
@@ -143,25 +101,16 @@ public class DbUtils {
     }
 
     public static List<SkiLogData> selectLogs(Context context, Date date, int offset, int limit, String orderBy) {
-        List<SkiLogData> res = new ArrayList<>();
-        if (date == null) return res;
+        if (date == null) return new ArrayList<>();
 
         String selection = String.format("date(created,'%s') = ?", SkiLogDb.utcModifier());
         //String selection = String.format(Locale.ENGLISH, "date(created,'%s') = ? AND altitude > -500", SkiLogDb.utcModifier());
         String[] selectionArgs = { SkiLogDb.formatDate(date) };
 
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.selectFromTable1(selection, selectionArgs, offset, limit, orderBy, null);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.selectFromTable1(selection, selectionArgs, offset, limit, orderBy, null);
         }
-        return res;
     }
 
 
@@ -174,20 +123,10 @@ public class DbUtils {
      * @return データ(複数件)
      */
     public static List<SkiLogData> selectLogSummaries(Context context, int offset, int limit) {
-        List<SkiLogData> res = new ArrayList<>();
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.selectLogSummaries(offset, limit);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.selectLogSummaries(offset, limit);
         }
-        return res;
     }
 
     /**
@@ -199,25 +138,12 @@ public class DbUtils {
      * @return データ(複数件)
      */
     public static List<SkiLogData> selectLogSummaries(Context context, Date fromDate, Date toDate) {
-        List<SkiLogData> res = new ArrayList<>();
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            //res = fbkDatabase.selectLogSummaries(fromDate, toDate);
-            String sqlCmd = String.format("SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created,'%1$s'))", SkiLogDb.utcModifier());
-            res = DbUtils.listByRawQuery(
-                    context,
-                    sqlCmd,
-                    new String[]{ SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) } );
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
-        }
-        return res;
+        String sqlCmd = String.format("SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created,'%1$s'))", SkiLogDb.utcModifier());
+        return DbUtils.listByRawQuery(
+                context,
+                sqlCmd,
+                new String[]{ SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) }
+                );
     }
 
     /**
@@ -228,41 +154,18 @@ public class DbUtils {
      * @return データ(複数件)
      */
     public static List<SkiLogData> selectLogSummaries(Context context, String tag) {
-        List<SkiLogData> res = new ArrayList<>();
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            String sqlCmd = String.format("SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE date(created,'%1$s') IN (SELECT date(date,'%1$s') FROM ski_tag WHERE tag = ? ) GROUP BY date(created,'%1$s'))", SkiLogDb.utcModifier());
-            res = DbUtils.listByRawQuery(
-                    context,
-                    sqlCmd,
-                    new String[]{ tag });
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
-        }
-        return res;
+        String sqlCmd = String.format("SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE date(created,'%1$s') IN (SELECT date(date,'%1$s') FROM ski_tag WHERE tag = ? ) GROUP BY date(created,'%1$s'))", SkiLogDb.utcModifier());
+        return DbUtils.listByRawQuery(
+                context,
+                sqlCmd,
+                new String[]{ tag });
     }
 
     public static List<SkiLogData> listByRawQuery(Context context, String sql, String[] sqlArgs) {
-        List<SkiLogData> res = new ArrayList<>();
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.listByRawQuery(sql, sqlArgs);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.listByRawQuery(sql, sqlArgs);
         }
-        return res;
     }
 
 
@@ -277,20 +180,10 @@ public class DbUtils {
      * @return 件数
      */
     public static long countTags(Context context) {
-        long res = 0;
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.countFromTable2(null, null);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.countFromTable2(null, null);
         }
-        return res;
     }
 
     /**
@@ -300,17 +193,10 @@ public class DbUtils {
      * @return 結果
      */
     public static boolean deleteTag(Context context, TagData data) {
-        boolean result;
-
-        SkiLogDb database = null;
-        try {
-            database = new SkiLogDb(context);
-            result = database.deleteFromTable2(data);
-
-        } finally {
-            if (database != null) database.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.deleteFromTable2(data);
         }
-        return result;
     }
 
     /**
@@ -322,19 +208,13 @@ public class DbUtils {
     public static boolean deleteTags(Context context, Date targetDate) {
         if (targetDate == null) return false;
 
-        boolean result;
         String selection = "date(date, ?) = ?";
         String[] selectionArgs = new String[] { SkiLogDb.utcModifier(), SkiLogDb.formatDate(targetDate) };
 
-        SkiLogDb database = null;
-        try {
-            database = new SkiLogDb(context);
-            result = database.deleteFromTable2(selection, selectionArgs);
-
-        } finally {
-            if (database != null) database.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.deleteFromTable2(selection, selectionArgs);
         }
-        return result;
     }
 
     /**
@@ -347,19 +227,13 @@ public class DbUtils {
     public static boolean deleteTags(Context context, Date fromDate, Date toDate) {
         if (fromDate == null || toDate == null || !fromDate.before(toDate)) return false;
 
-        boolean result;
         String selection = "created >= ? AND created < ?";
         String[] selectionArgs = new String[] { SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) };
 
-        SkiLogDb database = null;
-        try {
-            database = new SkiLogDb(context);
-            result = database.deleteFromTable2(selection, selectionArgs);
-
-        } finally {
-            if (database != null) database.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.deleteFromTable2(selection, selectionArgs);
         }
-        return result;
     }
 
     /**
@@ -369,17 +243,10 @@ public class DbUtils {
      * @return 挿入された行の id。エラーの場合は0
      */
     public static long insertTag(Context context, TagData data) {
-        long id = 0;
-
-        SkiLogDb database = null;
-        try {
-            database = new SkiLogDb(context);
-            id = database.insertIntoTable2(data);
-
-        } finally {
-            if (database != null) database.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.insertIntoTable2(data);
         }
-        return id;
     }
 
 
@@ -390,7 +257,6 @@ public class DbUtils {
      * @return データ(複数件)
      */
     public static List<TagData> selectTags(Context context, Date targetDate) {
-        List<TagData> res = new ArrayList<>();
         String selection = null;
         String[] selectionArgs = null;
 
@@ -399,18 +265,10 @@ public class DbUtils {
             selectionArgs = new String[] { SkiLogDb.utcModifier(), SkiLogDb.formatDate(targetDate) };
         }
 
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.selectFromTable2(selection, selectionArgs, 0, 0, "updated DESC", null);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.selectFromTable2(selection, selectionArgs, 0, 0, "updated DESC", null);
         }
-        return res;
     }
 
     /**
@@ -422,41 +280,18 @@ public class DbUtils {
     public static List<TagData> selectDistinctTags(Context context) {
         // 新しい順でソートさせたいので、DISTINCTを使用しない。
         // _idは自動採番なので、値の大きいものが 新しいと見做す
+        return DbUtils.listByRawQueryOnTable2(
+                context,
+                "SELECT * FROM ski_tag WHERE _id IN (SELECT MAX(_id) FROM ski_tag GROUP BY tag) ORDER BY _id DESC",
+                null);
 
-        List<TagData> res = new ArrayList<>();
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = DbUtils.listByRawQueryOnTable2(
-                    context,
-                    "SELECT * FROM ski_tag WHERE _id IN (SELECT MAX(_id) FROM ski_tag GROUP BY tag) ORDER BY _id DESC",
-                    null);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
-        }
-        return res;
     }
 
     public static List<TagData> listByRawQueryOnTable2(Context context, String sql, String[] sqlArgs) {
-        List<TagData> res = new ArrayList<>();
-
-        SkiLogDb fbkDatabase = null;
-        try {
-            fbkDatabase = new SkiLogDb(context);
-            res = fbkDatabase.listByRawQueryOnTable2(sql, sqlArgs);
-
-        } catch(Exception ex) {
-            return res;
-
-        } finally {
-            if (fbkDatabase != null) fbkDatabase.close();
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (SkiLogDb database = new SkiLogDb(context)) {
+            return database.listByRawQueryOnTable2(sql, sqlArgs);
         }
-        return res;
     }
 
 }
