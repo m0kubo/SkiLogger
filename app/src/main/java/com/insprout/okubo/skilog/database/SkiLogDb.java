@@ -139,7 +139,7 @@ public class SkiLogDb implements Closeable {
 
 
     /**
-     * 指定のテーブルからレコードを削除する
+     * テーブルから指定されたレコードを削除する
      * @param tableName 操作するテーブル
      * @param selection where句
      * @param selectionArgs where句にあたえる引数
@@ -158,9 +158,31 @@ public class SkiLogDb implements Closeable {
         return true;
     }
 
+    /**
+     * テーブルから全てのレコードを削除する
+     * (空のテーブルとなる。DROP TABLEではない)
+     * @param tableName 操作するテーブル
+     * @return 結果 boolean
+     */
+    public boolean deleteAllFromTable(String tableName) {
+        if (tableName == null || tableName.isEmpty()) return false;
+
+        try {
+            // 全削除の際 DROP TABLEは使用しない。 次回使用時に Helperコンストラクタの、onCreate()が呼ばれない為エラーになる
+            mDb.delete(tableName, "1", null);
+            mDb.execSQL( "vacuum" );
+
+        } catch (SQLException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+            return false;
+        }
+        return true;
+    }
+
 
     /**
-     * 指定のテーブルの 該当するレコードの数を返す
+     * テーブルの 該当するレコードの数を返す
      * @param tableName 操作するテーブル
      * @param countColumn COUNTに使用するカラム名 (SQLiteは COUNT(*)だと遅いので Primary keyなどを指定する)
      * @param selection where句
@@ -168,34 +190,42 @@ public class SkiLogDb implements Closeable {
      * @return 結果件数
      */
     public long countFromTable(String tableName, String countColumn, String selection, String[] selectionArgs) {
-        Cursor cursor = null;
-        long count = 0;
-        String countCommand = String.format("COUNT(%s)", countColumn);          // sqliteは COUNT(*)だと遅い
+        String countCommand = String.format("COUNT(%s)", countColumn);          // sqliteは COUNT(*)だと遅いので、primaryキーをカウントする
 
-        try{
-            cursor = mDb.query( tableName,
-                    new String[] { countCommand },
-                    selection,
-                    selectionArgs,
-                    null,
-                    null,
-                    null);
+        try (Cursor cursor = mDb.query(tableName,
+                new String[]{ countCommand },
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null)) {
 
             if (cursor.moveToFirst()) {
-                count =cursor.getInt(0);
+                return cursor.getInt(0);
             }
 
         } catch (SQLiteException e) {
             // SQLite error
             Log.e(TAG, "DB error: " + e.toString());
+        }
+        return 0;
+    }
 
-        } finally {
-            // Cursorを忘れずにcloseする
-            if (cursor != null) cursor.close();
+
+    public long update(String tableName, ContentValues record, String selection, String[] selectionArgs) {
+        long count = 0;
+
+        if (tableName == null || tableName.isEmpty() || record == null) return 0;
+        try {
+            // 挿入するデータはContentValuesに格納
+            count = mDb.update(tableName, record, selection, selectionArgs);
+
+        } catch (SQLException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
         }
         return count;
     }
-
 
     ////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -291,20 +321,18 @@ public class SkiLogDb implements Closeable {
 
 
     public List<SkiLogData> selectFromTable1(String selection, String[] selectionArgs, int offset, int limit, String orderBy, String groupBy) {
-        Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
 
-        try{
-            cursor = mDb.query( TABLE_1,
-                    null,           // 全カラム返却
-                    selection,
-                    selectionArgs,
-                    groupBy,
-                    null,
-                    orderBy,
-                    (limit > 0 ? String.format("%s,%s", offset, limit) : null));
+        try (Cursor cursor = mDb.query(TABLE_1,
+                null,           // 全カラム返却
+                selection,
+                selectionArgs,
+                groupBy,
+                null,
+                orderBy,
+                (limit > 0 ? String.format("%s,%s", offset, limit) : null))) {
 
-            while( cursor.moveToNext() ) {
+            while (cursor.moveToNext()) {
                 // 取得したデータを格納する
                 SkiLogData data = new SkiLogData();
                 data.setId(cursor.getLong(cursor.getColumnIndex(COL_1_0)));
@@ -319,11 +347,8 @@ public class SkiLogDb implements Closeable {
         } catch (SQLiteException e) {
             // SQLite error
             Log.e(TAG, "DB error: " + e.toString());
-
-        } finally {
-            // Cursorを忘れずにcloseする
-            if (cursor != null) cursor.close();
         }
+
         return result;
     }
 
@@ -336,7 +361,6 @@ public class SkiLogDb implements Closeable {
     }
 
     public List<SkiLogData> selectLogSummaries(Date fromDate, Date toDate, int offset, int limit, String orderBy) {
-        Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
         String groupBy = String.format("date(created,'%s')", utcModifier());
         String where = null;
@@ -358,15 +382,14 @@ public class SkiLogDb implements Closeable {
             whereArgs = new String[] { formatUtcDateTime(toDate) };
         }
 
-        try{
-            cursor = mDb.query( TABLE_1,
+        try (Cursor cursor = mDb.query( TABLE_1,
                     new String[] { "MAX(_id)", "MAX(altitude)", "MAX(asc_total)", "MIN(desc_total)", "MAX(count)", "MAX(created)" },           // 全カラム返却
                     where,
                     whereArgs,
                     groupBy,
                     null,
                     orderBy,
-                    (limit > 0 ? String.format("%s,%s", offset, limit) : null));
+                    (limit > 0 ? String.format("%s,%s", offset, limit) : null))) {
 
             while( cursor.moveToNext() ) {
                 // 取得したデータを格納する
@@ -383,10 +406,6 @@ public class SkiLogDb implements Closeable {
         } catch (SQLiteException e) {
             // SQLite error
             Log.e(TAG, "DB error: " + e.toString());
-
-        } finally {
-            // Cursorを忘れずにcloseする
-            if (cursor != null) cursor.close();
         }
         return result;
     }
@@ -400,12 +419,9 @@ public class SkiLogDb implements Closeable {
      * @return SQLの結果 (SkiLogDataクラスのList形式)
      */
     public List<SkiLogData> listByRawQuery(String sql, String[] selectionArgs) {
-        Cursor cursor = null;
         List<SkiLogData> result = new ArrayList<>();
 
-        try{
-            cursor = mDb.rawQuery(sql, selectionArgs);
-
+        try (Cursor cursor = mDb.rawQuery(sql, selectionArgs)) {
             while( cursor.moveToNext() ) {
                 // 取得したデータを格納する
                 SkiLogData data = new SkiLogData();
@@ -421,10 +437,6 @@ public class SkiLogDb implements Closeable {
         } catch (SQLiteException e) {
             // SQLite error
             Log.e(TAG, "DB error: " + e.toString());
-
-        } finally {
-            // Cursorを忘れずにcloseする
-            if (cursor != null) cursor.close();
         }
         return result;
     }
@@ -510,18 +522,16 @@ public class SkiLogDb implements Closeable {
 
 
     public List<TagData> selectFromTable2(String selection, String[] selectionArgs, int offset, int limit, String orderBy, String groupBy) {
-        Cursor cursor = null;
         List<TagData> result = new ArrayList<>();
 
-        try{
-            cursor = mDb.query( TABLE_2,
+        try (Cursor cursor = mDb.query( TABLE_2,
                     null,               // 全カラム取得
                     selection,
                     selectionArgs,
                     groupBy,
                     null,
                     orderBy,
-                    (limit > 0 ? String.format("%s,%s", offset, limit) : null));
+                    (limit > 0 ? String.format("%s,%s", offset, limit) : null))) {
 
             while( cursor.moveToNext() ) {
                 // 取得したデータを格納する
@@ -537,10 +547,6 @@ public class SkiLogDb implements Closeable {
         } catch (SQLiteException e) {
             // SQLite error
             Log.e(TAG, "DB error: " + e.toString());
-
-        } finally {
-            // Cursorを忘れずにcloseする
-            if (cursor != null) cursor.close();
         }
         return result;
     }
@@ -559,12 +565,9 @@ public class SkiLogDb implements Closeable {
      * @return SQLの結果 (SkiLogDataクラスのList形式)
      */
     public List<TagData> listByRawQueryOnTable2(String sql, String[] selectionArgs) {
-        Cursor cursor = null;
         List<TagData> result = new ArrayList<>();
 
-        try{
-            cursor = mDb.rawQuery(sql, selectionArgs);
-
+        try (Cursor cursor = mDb.rawQuery(sql, selectionArgs)) {
             while( cursor.moveToNext() ) {
                 // 取得したデータを格納する
                 TagData data = new TagData();
@@ -579,10 +582,6 @@ public class SkiLogDb implements Closeable {
         } catch (SQLiteException e) {
             // SQLite error
             Log.e(TAG, "DB error: " + e.toString());
-
-        } finally {
-            // Cursorを忘れずにcloseする
-            if (cursor != null) cursor.close();
         }
         return result;
     }
