@@ -28,7 +28,7 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.chart.DailyChart;
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.TagData;
+import com.insprout.okubo.skilog.database.ModelTag;
 import com.insprout.okubo.skilog.model.ResponsePlaceData;
 import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
@@ -60,8 +60,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private RadioGroup mRgChartType;
 
     private DailyChart mDailyChart;
-    private List<TagData> mAllTags;
-    private TagData mTargetTag = null;
+    private List<ModelTag> mAllTags;
+    private ModelTag mTargetTag = null;
 
 
     @Override
@@ -332,7 +332,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void selectTagFromHistory() {
-        List<TagData> tagsCandidate = AppUtils.getTags(this, mAllTags);
+        List<ModelTag> tagsCandidate = AppUtils.getTags(this, mAllTags);
         if (tagsCandidate == null || tagsCandidate.isEmpty()) {
             Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
 
@@ -499,7 +499,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                             Date targetDate = mDailyChart.getSelectedDate();
                             String tag = editText.getText().toString();
                             if (!tag.isEmpty() && targetDate != null) {
-                                DbUtils.insertTag(this, new TagData(targetDate, tag));
+                                DbUtils.insertTag(this, new ModelTag(targetDate, tag));
                             }
                         }
                         break;
@@ -521,7 +521,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                             Date targetDate = mDailyChart.getSelectedDate();
                             String tag = ((ListView) view).getAdapter().getItem(pos).toString();
                             if (!tag.isEmpty() && targetDate != null) {
-                                DbUtils.insertTag(this, new TagData(targetDate, tag));
+                                DbUtils.insertTag(this, new ModelTag(targetDate, tag));
                             }
                             break;
 

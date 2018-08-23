@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.insprout.okubo.skilog.R;
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.TagData;
+import com.insprout.okubo.skilog.database.ModelTag;
 import com.insprout.okubo.skilog.model.PlaceData;
 import com.insprout.okubo.skilog.model.ResponsePlaceData;
 
@@ -38,16 +38,16 @@ public class AppUtils {
         return mDateFormat.format(date);
     }
 
-    public static List<TagData> getTags(Context context) {
+    public static List<ModelTag> getTags(Context context) {
         return DbUtils.selectDistinctTags(context);
     }
 
-    public static List<TagData> getTags(Context context, List<TagData> exclude) {
-        List<TagData> tags = new ArrayList<>();
-        List<TagData> tagsAll = DbUtils.selectDistinctTags(context);
+    public static List<ModelTag> getTags(Context context, List<ModelTag> exclude) {
+        List<ModelTag> tags = new ArrayList<>();
+        List<ModelTag> tagsAll = DbUtils.selectDistinctTags(context);
 
         if (tagsAll != null && !tagsAll.isEmpty()) {
-            for (TagData tagData : tagsAll) {
+            for (ModelTag tagData : tagsAll) {
                 String tag = tagData.getTag();
                 if (tag != null && !containsTag(tagData, exclude)) tags.add(tagData);
             }
@@ -55,12 +55,12 @@ public class AppUtils {
         return tags;
     }
 
-    private static boolean containsTag(TagData tag, List<TagData> tags) {
+    private static boolean containsTag(ModelTag tag, List<ModelTag> tags) {
         if (tag == null || tags == null) return false;
         String tagText = tag.getTag();
         if (tagText == null) return false;
 
-        for (TagData tagData : tags) {
+        for (ModelTag tagData : tags) {
             if (tagText.equals(tagData.getTag())) {
                 return true;
             }
@@ -83,8 +83,8 @@ public class AppUtils {
             if (item instanceof PlaceData) {
                 array[i] = ((PlaceData)item).getName();
 
-            } else if (item instanceof TagData) {
-                array[i] = ((TagData)item).getTag();
+            } else if (item instanceof ModelTag) {
+                array[i] = ((ModelTag)item).getTag();
 
             } else {
                 array[i] = item.toString();

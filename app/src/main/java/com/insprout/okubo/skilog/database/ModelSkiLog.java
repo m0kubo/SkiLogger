@@ -10,7 +10,7 @@ import java.util.Date;
  * データベースのレコードデータを格納するクラス
  */
 
-public class SkiLogData implements IModelSQLite {
+public class ModelSkiLog implements IModelSQLite {
     public final static String TABLE_NAME = DbConfiguration.TABLE_1;
 
     private long mId;
@@ -26,14 +26,20 @@ public class SkiLogData implements IModelSQLite {
     // コンストラクタ
     //
 
-    public SkiLogData() {
+    public ModelSkiLog() {
     }
 
-    public SkiLogData(float altitude, float ascTotal, float descTotal, int count) {
+    public ModelSkiLog(float altitude, float ascTotal, float descTotal, int count) {
         mAltitude = altitude;
         mAscTotal = ascTotal;
         mDescTotal = descTotal;
         mCount = count;
+    }
+
+    public ModelSkiLog(long id, float altitude, float ascTotal, float descTotal, int count, Date created) {
+        this(altitude, ascTotal, descTotal, count);
+        mId = id;
+        mCreated = created;
     }
 
 
@@ -46,40 +52,20 @@ public class SkiLogData implements IModelSQLite {
         return mId;
     }
 
-    public void setId(long id) {
-        mId = id;
-    }
-
     public float getAltitude() {
         return mAltitude;
-    }
-
-    public void setAltitude(float altitude) {
-        mAltitude = altitude;
     }
 
     public float getAscTotal() {
         return mAscTotal;
     }
 
-    public void setAscTotal(float ascTotal) {
-        mAscTotal = ascTotal;
-    }
-
     public float getDescTotal() {
         return mDescTotal;
     }
 
-    public void setDescTotal(float descTotal) {
-        mDescTotal = descTotal;
-    }
-
     public int getCount() {
         return mCount;
-    }
-
-    public void setCount(int count) {
-        mCount = count;
     }
 
     public Date getCreated() {
@@ -123,13 +109,13 @@ public class SkiLogData implements IModelSQLite {
 
     @Override
     public IModelSQLite fromDatabase(Cursor cursor) {
-        SkiLogData data = new SkiLogData();
-        data.setId(cursor.getLong(cursor.getColumnIndex(DbConfiguration.COL_1_0)));
-        data.setAltitude(cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_1)));
-        data.setAscTotal(cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_2)));
-        data.setDescTotal(cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_3)));
-        data.setCount(cursor.getInt(cursor.getColumnIndex(DbConfiguration.COL_1_4)));
-        data.setCreated(DbSQLite.getSQLiteDate(cursor, DbConfiguration.COL_1_5));
-        return data;
+        return new ModelSkiLog(
+                cursor.getLong(cursor.getColumnIndex(DbConfiguration.COL_1_0)),
+                cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_1)),
+                cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_2)),
+                cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_3)),
+                cursor.getInt(cursor.getColumnIndex(DbConfiguration.COL_1_4)),
+                DbSQLite.getSQLiteDate(cursor, DbConfiguration.COL_1_5)
+        );
     }
 }

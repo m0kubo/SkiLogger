@@ -2,14 +2,11 @@ package com.insprout.okubo.skilog.util;
 
 import android.graphics.Bitmap;
 
-import com.insprout.okubo.skilog.database.TagData;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by okubo on 2018/02/01.

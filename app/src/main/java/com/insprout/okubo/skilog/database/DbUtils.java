@@ -27,7 +27,7 @@ public class DbUtils {
     public static long countLogs(Context context) {
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return database.countAll(new SkiLogData());
+            return database.countAll(new ModelSkiLog());
         }
     }
 
@@ -37,7 +37,7 @@ public class DbUtils {
      * @param data insertするLogデータ
      * @return 挿入された行の id。エラーの場合は0
      */
-    public static long insertLog(Context context, SkiLogData data) {
+    public static long insertLog(Context context, ModelSkiLog data) {
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
             return database.insert(data);
@@ -50,7 +50,7 @@ public class DbUtils {
      * @param data updateするLogデータ
      * @return updateされた行の行数。成功の場合は1。エラーの場合は0
      */
-    public static long updateLog(Context context, SkiLogData data) {
+    public static long updateLog(Context context, ModelSkiLog data) {
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
             return database.update(data);
@@ -72,7 +72,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return database.deleteFromTable(SkiLogData.TABLE_NAME, selection, selectionArgs);
+            return database.deleteFromTable(ModelSkiLog.TABLE_NAME, selection, selectionArgs);
         }
     }
 
@@ -91,16 +91,16 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return database.deleteFromTable(SkiLogData.TABLE_NAME, selection, selectionArgs);
+            return database.deleteFromTable(ModelSkiLog.TABLE_NAME, selection, selectionArgs);
         }
     }
 
-    public static List<SkiLogData> selectLogs(Context context, Date date) {
+    public static List<ModelSkiLog> selectLogs(Context context, Date date) {
         return selectLogs(context, date, 0, 0, null);
     }
 
     @SuppressWarnings("unchecked")
-    public static List<SkiLogData> selectLogs(Context context, Date date, int offset, int limit, String orderBy) {
+    public static List<ModelSkiLog> selectLogs(Context context, Date date, int offset, int limit, String orderBy) {
         if (date == null) return new ArrayList<>();
 
         String selection = String.format("date(created,'%s') = ?", DbSQLite.utcModifier());
@@ -109,7 +109,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return (List<SkiLogData>)database.select(new SkiLogData(), selection, selectionArgs, offset, limit, orderBy, null);
+            return (List<ModelSkiLog>)database.select(new ModelSkiLog(), selection, selectionArgs, offset, limit, orderBy, null);
         }
     }
 
@@ -122,7 +122,7 @@ public class DbUtils {
      * @return データ(複数件)
      */
     @SuppressWarnings("unchecked")
-    public static List<SkiLogData> selectLogSummaries(Context context, int offset, int limit) {
+    public static List<ModelSkiLog> selectLogSummaries(Context context, int offset, int limit) {
         String sqlCmd = String.format(
                 "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log GROUP BY date(created,'%1$s')) %2$s",
                 DbSQLite.utcModifier(),
@@ -131,7 +131,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return (List<SkiLogData>)database.rawQuery(new SkiLogData(), sqlCmd, null);
+            return (List<ModelSkiLog>)database.rawQuery(new ModelSkiLog(), sqlCmd, null);
         }
     }
 
@@ -144,7 +144,7 @@ public class DbUtils {
      * @return データ(複数件)
      */
     @SuppressWarnings("unchecked")
-    public static List<SkiLogData> selectLogSummaries(Context context, Date fromDate, Date toDate) {
+    public static List<ModelSkiLog> selectLogSummaries(Context context, Date fromDate, Date toDate) {
         String sqlCmd = String.format(
                 "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created,'%1$s'))",
                 DbSQLite.utcModifier()
@@ -153,7 +153,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return (List<SkiLogData>)database.rawQuery(new SkiLogData(), sqlCmd, sqlArgs);
+            return (List<ModelSkiLog>)database.rawQuery(new ModelSkiLog(), sqlCmd, sqlArgs);
         }
     }
 
@@ -165,7 +165,7 @@ public class DbUtils {
      * @return データ(複数件)
      */
     @SuppressWarnings("unchecked")
-    public static List<SkiLogData> selectLogSummaries(Context context, String tag) {
+    public static List<ModelSkiLog> selectLogSummaries(Context context, String tag) {
         String sqlCmd = String.format(
                 "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE date(created,'%1$s') IN (SELECT date(date,'%1$s') FROM ski_tag WHERE tag = ? ) GROUP BY date(created,'%1$s'))",
                 DbSQLite.utcModifier()
@@ -174,7 +174,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return (List<SkiLogData>)database.rawQuery(new SkiLogData(), sqlCmd, sqlArgs);
+            return (List<ModelSkiLog>)database.rawQuery(new ModelSkiLog(), sqlCmd, sqlArgs);
         }
     }
 
@@ -203,7 +203,7 @@ public class DbUtils {
     public static long countTags(Context context) {
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return database.countAll(new TagData());
+            return database.countAll(new ModelTag());
         }
     }
 
@@ -213,7 +213,7 @@ public class DbUtils {
      * @param data 削除するtagデータ
      * @return 結果
      */
-    public static boolean deleteTag(Context context, TagData data) {
+    public static boolean deleteTag(Context context, ModelTag data) {
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
             return database.delete(data);
@@ -234,7 +234,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return database.deleteFromTable(TagData.TABLE_NAME, selection, selectionArgs);
+            return database.deleteFromTable(ModelTag.TABLE_NAME, selection, selectionArgs);
         }
     }
 
@@ -253,7 +253,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return database.deleteFromTable(TagData.TABLE_NAME, selection, selectionArgs);
+            return database.deleteFromTable(ModelTag.TABLE_NAME, selection, selectionArgs);
         }
     }
 
@@ -263,7 +263,7 @@ public class DbUtils {
      * @param data insertするLogデータ
      * @return 挿入された行の id。エラーの場合は0
      */
-    public static long insertTag(Context context, TagData data) {
+    public static long insertTag(Context context, ModelTag data) {
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
             return database.insert(data);
@@ -278,7 +278,7 @@ public class DbUtils {
      * @return データ(複数件)
      */
     @SuppressWarnings("unchecked")
-    public static List<TagData> selectTags(Context context, Date targetDate) {
+    public static List<ModelTag> selectTags(Context context, Date targetDate) {
         String selection = null;
         String[] selectionArgs = null;
 
@@ -289,7 +289,7 @@ public class DbUtils {
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return (List<TagData>)database.select(new TagData(), selection, selectionArgs, 0, 0, "updated DESC", null);
+            return (List<ModelTag>)database.select(new ModelTag(), selection, selectionArgs, 0, 0, "updated DESC", null);
         }
     }
 
@@ -300,14 +300,14 @@ public class DbUtils {
      * @return データ(複数件)
      */
     @SuppressWarnings("unchecked")
-    public static List<TagData> selectDistinctTags(Context context) {
+    public static List<ModelTag> selectDistinctTags(Context context) {
         // 新しい順でソートさせたいので、DISTINCTを使用しない。
         // _idは自動採番なので、値の大きいものが 新しいと見做す
         String sqlCmd = "SELECT * FROM ski_tag WHERE _id IN (SELECT MAX(_id) FROM ski_tag GROUP BY tag) ORDER BY _id DESC";
 
         // try-with-resources構文で closeを自動的に呼び出す
         try (DbSQLite database = new DbSQLite(context)) {
-            return (List<TagData>)database.rawQuery(new TagData(), sqlCmd, null);
+            return (List<ModelTag>)database.rawQuery(new ModelTag(), sqlCmd, null);
         }
 
     }

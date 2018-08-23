@@ -18,7 +18,7 @@ import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.R;
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.SkiLogData;
+import com.insprout.okubo.skilog.database.ModelSkiLog;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
@@ -77,7 +77,7 @@ public class DailyChart {
 
     private void initVars() {
         mDateList = new ArrayList<>();
-        List<SkiLogData>data = DbUtils.selectLogSummaries(mContext, 0, 0);
+        List<ModelSkiLog>data = DbUtils.selectLogSummaries(mContext, 0, 0);
         if (data == null || data.isEmpty()) {
             mDateIndex = -1;
 
@@ -85,7 +85,7 @@ public class DailyChart {
             mDateIndex = -1;
             // 取得したログの 日付情報のリストを作成する
             for(int i = 0; i<data.size(); i++) {
-                SkiLogData log = data.get(i);
+                ModelSkiLog log = data.get(i);
                 mDateList.add(log.getCreated());
             }
 
@@ -245,7 +245,7 @@ public class DailyChart {
         Date targetDate = getSelectedDate();
         if (targetDate == null) return false;
 
-        List<SkiLogData> data = DbUtils.selectLogs(mContext, targetDate);
+        List<ModelSkiLog> data = DbUtils.selectLogs(mContext, targetDate);
         if (data == null || data.size() == 0) {
             return false;
         }
@@ -257,14 +257,14 @@ public class DailyChart {
         float maxY1 = 0.0f;
         float minY2 = 0.0f;
         float maxY2 = 0.0f;
-        SkiLogData lastData = data.get(data.size()-1);
+        ModelSkiLog lastData = data.get(data.size()-1);
         mAccumulateAsc = lastData.getAscTotal();
         mAccumulateDesc = -lastData.getDescTotal();
         mRunCount = lastData.getCount();
 
         // チャート用の データクラスに格納する
         long timeAm0 = MiscUtils.getDate(targetDate).getTime();
-        for (SkiLogData log : data) {
+        for (ModelSkiLog log : data) {
             // X軸は 対象日の午前0時からの経過時間とする
             float hours = (log.getCreated().getTime() - timeAm0) / (60 * 60 * 1000.0f);
             float altitude = log.getAltitude();

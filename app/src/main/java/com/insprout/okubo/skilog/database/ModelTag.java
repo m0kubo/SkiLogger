@@ -11,7 +11,7 @@ import java.util.Date;
  * データベースのレコードデータを格納するクラス
  */
 
-public class TagData implements IModelSQLite {
+public class ModelTag implements IModelSQLite {
     public final static String TABLE_NAME = DbConfiguration.TABLE_2;
 
     private long mId;
@@ -26,12 +26,20 @@ public class TagData implements IModelSQLite {
     // コンストラクタ
     //
 
-    public TagData() {
+    public ModelTag() {
     }
 
-    public TagData(Date date, String tag) {
+    public ModelTag(Date date, String tag) {
         mDate = date;
         mTag = tag;
+    }
+
+    public ModelTag(long id, Date date, String tag, Date created, Date updated) {
+        mId = id;
+        mDate = date;
+        mTag = tag;
+        mCreated = created;
+        mUpdated = updated;
     }
 
 
@@ -44,40 +52,20 @@ public class TagData implements IModelSQLite {
         return mId;
     }
 
-    public void setId(long id) {
-        mId = id;
-    }
-
     public Date getDate() {
         return mDate;
-    }
-
-    public void setDate(Date date) {
-        mDate = date;
     }
 
     public String getTag() {
         return mTag;
     }
 
-    public void setTag(String tag) {
-        mTag = tag;
-    }
-
     public Date getCreated() {
         return mCreated;
     }
 
-    public void setCreated(Date created) {
-        mCreated = created;
-    }
-
     public Date getUpdated() {
         return mUpdated;
-    }
-
-    public void setUpdated(Date updated) {
-        mUpdated = updated;
     }
 
     @Override
@@ -117,12 +105,12 @@ public class TagData implements IModelSQLite {
 
     @Override
     public IModelSQLite fromDatabase(Cursor cursor) {
-        TagData data = new TagData();
-        data.setId(cursor.getLong(0));
-        data.setDate(DbSQLite.toUtcDate(cursor.getString(1)));
-        data.setTag(cursor.getString(2));
-        data.setCreated(DbSQLite.toUtcDate(cursor.getString(3)));
-        data.setUpdated(DbSQLite.toUtcDate(cursor.getString(4)));
-        return data;
+        return new ModelTag(
+                cursor.getLong(0),
+                DbSQLite.toUtcDate(cursor.getString(1)),
+                cursor.getString(2),
+                DbSQLite.toUtcDate(cursor.getString(3)),
+                DbSQLite.toUtcDate(cursor.getString(4))
+        );
     }
 }
