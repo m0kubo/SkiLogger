@@ -5,7 +5,6 @@ import android.content.Context;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by okubo on 2018/01/30.
@@ -27,8 +26,8 @@ public class DbUtils {
      */
     public static long countLogs(Context context) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.countFromTable1(null, null);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.countAll(new SkiLogData());
         }
     }
 
@@ -40,7 +39,7 @@ public class DbUtils {
      */
     public static long insertLog(Context context, SkiLogData data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
+        try (DbSQLite database = new DbSQLite(context)) {
             return database.insert(data);
         }
     }
@@ -53,7 +52,7 @@ public class DbUtils {
      */
     public static long updateLog(Context context, SkiLogData data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
+        try (DbSQLite database = new DbSQLite(context)) {
             return database.update(data);
         }
     }
@@ -68,12 +67,12 @@ public class DbUtils {
     public static boolean deleteLogs(Context context, Date date) {
         if (date == null) return false;
 
-        String selection = String.format("date(created,'%s') = ?", SkiLogDb.utcModifier());
-        String[] selectionArgs = { SkiLogDb.formatDate(date) };
+        String selection = String.format("date(created,'%s') = ?", DbSQLite.utcModifier());
+        String[] selectionArgs = { DbSQLite.formatDate(date) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.deleteFromTable1(selection, selectionArgs);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.deleteFromTable(SkiLogData.TABLE_NAME, selection, selectionArgs);
         }
     }
 
@@ -88,11 +87,11 @@ public class DbUtils {
         if (fromDate == null || toDate == null || !fromDate.before(toDate)) return false;
 
         String selection = "created >= ? AND created < ?";
-        String[] selectionArgs = new String[] { SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) };
+        String[] selectionArgs = new String[] { DbSQLite.formatUtcDateTime(fromDate), DbSQLite.formatUtcDateTime(toDate) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.deleteFromTable1(selection, selectionArgs);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.deleteFromTable(SkiLogData.TABLE_NAME, selection, selectionArgs);
         }
     }
 
@@ -100,19 +99,19 @@ public class DbUtils {
         return selectLogs(context, date, 0, 0, null);
     }
 
+    @SuppressWarnings("unchecked")
     public static List<SkiLogData> selectLogs(Context context, Date date, int offset, int limit, String orderBy) {
         if (date == null) return new ArrayList<>();
 
-        String selection = String.format("date(created,'%s') = ?", SkiLogDb.utcModifier());
+        String selection = String.format("date(created,'%s') = ?", DbSQLite.utcModifier());
         //String selection = String.format(Locale.ENGLISH, "date(created,'%s') = ? AND altitude > -500", SkiLogDb.utcModifier());
-        String[] selectionArgs = { SkiLogDb.formatDate(date) };
+        String[] selectionArgs = { DbSQLite.formatDate(date) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.selectFromTable1(selection, selectionArgs, offset, limit, orderBy, null);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return (List<SkiLogData>)database.select(new SkiLogData(), selection, selectionArgs, offset, limit, orderBy, null);
         }
     }
-
 
     /**
      * 日別記録のサマリー情報を取得する。1日1サマリー、複数日分の記録を返す。
@@ -122,10 +121,17 @@ public class DbUtils {
      * @param limit 取得するデータの件数上限。0以下の値が指定された場合は全件を取得する
      * @return データ(複数件)
      */
+    @SuppressWarnings("unchecked")
     public static List<SkiLogData> selectLogSummaries(Context context, int offset, int limit) {
+        String sqlCmd = String.format(
+                "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log GROUP BY date(created,'%1$s')) %2$s",
+                DbSQLite.utcModifier(),
+                sqlLimit(offset, limit)
+        );
+
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.selectLogSummaries(offset, limit);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return (List<SkiLogData>)database.rawQuery(new SkiLogData(), sqlCmd, null);
         }
     }
 
@@ -137,13 +143,18 @@ public class DbUtils {
      * @param toDate 指定日時未満のデータを取得する (指定時刻ジャストのデータは含まない)
      * @return データ(複数件)
      */
+    @SuppressWarnings("unchecked")
     public static List<SkiLogData> selectLogSummaries(Context context, Date fromDate, Date toDate) {
-        String sqlCmd = String.format("SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created,'%1$s'))", SkiLogDb.utcModifier());
-        return DbUtils.listByRawQuery(
-                context,
-                sqlCmd,
-                new String[]{ SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) }
-                );
+        String sqlCmd = String.format(
+                "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE created >= ? AND created < ? GROUP BY date(created,'%1$s'))",
+                DbSQLite.utcModifier()
+        );
+        String[] sqlArgs = { DbSQLite.formatUtcDateTime(fromDate), DbSQLite.formatUtcDateTime(toDate) };
+
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (DbSQLite database = new DbSQLite(context)) {
+            return (List<SkiLogData>)database.rawQuery(new SkiLogData(), sqlCmd, sqlArgs);
+        }
     }
 
     /**
@@ -153,19 +164,29 @@ public class DbUtils {
      * @param tag データを絞りこむタグ
      * @return データ(複数件)
      */
+    @SuppressWarnings("unchecked")
     public static List<SkiLogData> selectLogSummaries(Context context, String tag) {
-        String sqlCmd = String.format("SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE date(created,'%1$s') IN (SELECT date(date,'%1$s') FROM ski_tag WHERE tag = ? ) GROUP BY date(created,'%1$s'))", SkiLogDb.utcModifier());
-        return DbUtils.listByRawQuery(
-                context,
-                sqlCmd,
-                new String[]{ tag });
+        String sqlCmd = String.format(
+                "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE date(created,'%1$s') IN (SELECT date(date,'%1$s') FROM ski_tag WHERE tag = ? ) GROUP BY date(created,'%1$s'))",
+                DbSQLite.utcModifier()
+        );
+        String[] sqlArgs = { tag };
+
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (DbSQLite database = new DbSQLite(context)) {
+            return (List<SkiLogData>)database.rawQuery(new SkiLogData(), sqlCmd, sqlArgs);
+        }
     }
 
-    public static List<SkiLogData> listByRawQuery(Context context, String sql, String[] sqlArgs) {
-        // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.listByRawQuery(sql, sqlArgs);
+    private static String sqlLimit(int offset, int limit) {
+        String limitCmd = "";
+        if (limit >= 1) {
+            limitCmd = "LIMIT " + limit;
+            if (offset >= 1) {
+                limitCmd += " OFFSET " + offset;
+            }
         }
+        return limitCmd;
     }
 
 
@@ -181,8 +202,8 @@ public class DbUtils {
      */
     public static long countTags(Context context) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.countFromTable2(null, null);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.countAll(new TagData());
         }
     }
 
@@ -194,8 +215,8 @@ public class DbUtils {
      */
     public static boolean deleteTag(Context context, TagData data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.deleteFromTable2(data);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.delete(data);
         }
     }
 
@@ -209,11 +230,11 @@ public class DbUtils {
         if (targetDate == null) return false;
 
         String selection = "date(date, ?) = ?";
-        String[] selectionArgs = new String[] { SkiLogDb.utcModifier(), SkiLogDb.formatDate(targetDate) };
+        String[] selectionArgs = new String[] { DbSQLite.utcModifier(), DbSQLite.formatDate(targetDate) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.deleteFromTable2(selection, selectionArgs);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.deleteFromTable(TagData.TABLE_NAME, selection, selectionArgs);
         }
     }
 
@@ -228,11 +249,11 @@ public class DbUtils {
         if (fromDate == null || toDate == null || !fromDate.before(toDate)) return false;
 
         String selection = "created >= ? AND created < ?";
-        String[] selectionArgs = new String[] { SkiLogDb.formatUtcDateTime(fromDate), SkiLogDb.formatUtcDateTime(toDate) };
+        String[] selectionArgs = new String[] { DbSQLite.formatUtcDateTime(fromDate), DbSQLite.formatUtcDateTime(toDate) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.deleteFromTable2(selection, selectionArgs);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.deleteFromTable(TagData.TABLE_NAME, selection, selectionArgs);
         }
     }
 
@@ -244,8 +265,8 @@ public class DbUtils {
      */
     public static long insertTag(Context context, TagData data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.insertIntoTable2(data);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return database.insert(data);
         }
     }
 
@@ -256,18 +277,19 @@ public class DbUtils {
      * @param targetDate 取得するタグの日付
      * @return データ(複数件)
      */
+    @SuppressWarnings("unchecked")
     public static List<TagData> selectTags(Context context, Date targetDate) {
         String selection = null;
         String[] selectionArgs = null;
 
         if (targetDate != null) {
             selection = "date(date, ?) = ?";
-            selectionArgs = new String[] { SkiLogDb.utcModifier(), SkiLogDb.formatDate(targetDate) };
+            selectionArgs = new String[] { DbSQLite.utcModifier(), DbSQLite.formatDate(targetDate) };
         }
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.selectFromTable2(selection, selectionArgs, 0, 0, "updated DESC", null);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return (List<TagData>)database.select(new TagData(), selection, selectionArgs, 0, 0, "updated DESC", null);
         }
     }
 
@@ -277,21 +299,17 @@ public class DbUtils {
      * @param context コンテキスト
      * @return データ(複数件)
      */
+    @SuppressWarnings("unchecked")
     public static List<TagData> selectDistinctTags(Context context) {
         // 新しい順でソートさせたいので、DISTINCTを使用しない。
         // _idは自動採番なので、値の大きいものが 新しいと見做す
-        return DbUtils.listByRawQueryOnTable2(
-                context,
-                "SELECT * FROM ski_tag WHERE _id IN (SELECT MAX(_id) FROM ski_tag GROUP BY tag) ORDER BY _id DESC",
-                null);
+        String sqlCmd = "SELECT * FROM ski_tag WHERE _id IN (SELECT MAX(_id) FROM ski_tag GROUP BY tag) ORDER BY _id DESC";
 
-    }
-
-    public static List<TagData> listByRawQueryOnTable2(Context context, String sql, String[] sqlArgs) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (SkiLogDb database = new SkiLogDb(context)) {
-            return database.listByRawQueryOnTable2(sql, sqlArgs);
+        try (DbSQLite database = new DbSQLite(context)) {
+            return (List<TagData>)database.rawQuery(new TagData(), sqlCmd, null);
         }
+
     }
 
 }
