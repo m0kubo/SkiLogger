@@ -18,7 +18,7 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.chart.SummaryChart;
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.ModelTag;
+import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
@@ -35,7 +35,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private ServiceMessenger mServiceMessenger;
 
     private SummaryChart mSummaryChart;
-    private List<ModelTag> mTags;
+    private List<TagDb> mTags;
     private int mIndexTag = -1;
     private Date mTargetDate = null;
 

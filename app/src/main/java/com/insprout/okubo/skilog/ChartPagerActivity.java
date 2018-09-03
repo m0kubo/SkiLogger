@@ -24,7 +24,7 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.ModelTag;
+import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.model.ResponsePlaceData;
 import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
@@ -59,11 +59,11 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
     private ChartPagerAdapter mChartPagerAdapter;
     private RadioGroup mRadioGroup;
 
-    private List<ModelTag> mAllTags;
-    private List<ModelTag> mTagsOnTarget;
+    private List<TagDb> mAllTags;
+    private List<TagDb> mTagsOnTarget;
     private int mIndexTag = -1;
     private Date mTargetDate = null;
-    private ModelTag mTargetTag = null;
+    private TagDb mTargetTag = null;
 
 
     @Override
@@ -337,7 +337,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
 
     private void listTags() {
         // 付与されているタグ一覧メニュー
-        List<ModelTag> tagsOnTarget = DbUtils.selectTags(this, mTargetDate);
+        List<TagDb> tagsOnTarget = DbUtils.selectTags(this, mTargetDate);
         if (tagsOnTarget == null || tagsOnTarget.isEmpty()) return;
 
         // 選択用リストを作成
@@ -363,7 +363,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
     }
 
     private void selectTagFromHistory() {
-        List<ModelTag> tagsCandidate = AppUtils.getTags(this, mTagsOnTarget);
+        List<TagDb> tagsCandidate = AppUtils.getTags(this, mTagsOnTarget);
         if (tagsCandidate == null || tagsCandidate.isEmpty()) {
             Toast.makeText(this, R.string.msg_no_more_tags, Toast.LENGTH_SHORT).show();
 
@@ -555,7 +555,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
                         if (editText != null) {
                             String tag = editText.getText().toString();
                             if (!tag.isEmpty() && mTargetDate != null) {
-                                DbUtils.insertTag(this, new ModelTag(mTargetDate, tag));
+                                DbUtils.insertTag(this, new TagDb(mTargetDate, tag));
 
                                 // 絞り込み用のタグリスト再取得
                                 setupFilteringTag();
@@ -579,7 +579,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
                             // 入力されたタグを登録
                             String tag = ((ListView) view).getAdapter().getItem(pos).toString();
                             if (!tag.isEmpty() && mTargetDate != null) {
-                                DbUtils.insertTag(this, new ModelTag(mTargetDate, tag));
+                                DbUtils.insertTag(this, new TagDb(mTargetDate, tag));
 
                                 // 絞り込み用のタグリスト再取得
                                 setupFilteringTag();

@@ -20,7 +20,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.ModelSkiLog;
+import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.util.SensorUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 
@@ -356,7 +356,7 @@ public class SkiLogService extends Service implements SensorEventListener {
     private long recordLog(float altitude) {
         mRecordTime = System.currentTimeMillis();
 
-        long id = DbUtils.insertLog(this, new ModelSkiLog(altitude, mTotalAsc, mTotalDesc, mRunCount));
+        long id = DbUtils.insertLog(this, new SkiLogDb(altitude, mTotalAsc, mTotalDesc, mRunCount));
         if (id <= 0) {
             Log.e(TAG, "DB error: fail to insert");
             return -1;
@@ -376,9 +376,9 @@ public class SkiLogService extends Service implements SensorEventListener {
 
     private void getPreviousLog() {
         // 同日にすでに記録があった場合は、前回高度、積算、滑走回数を引き継ぐ
-        List<ModelSkiLog> data = DbUtils.selectLogs(this, new Date(System.currentTimeMillis()), 1, 0, "_id DESC");
+        List<SkiLogDb> data = DbUtils.selectLogs(this, new Date(System.currentTimeMillis()), 1, 0, "_id DESC");
         if (data != null && data.size() >= 1) {
-            ModelSkiLog log = data.get(0);
+            SkiLogDb log = data.get(0);
             mPrevAltitude = log.getAltitude();
             mTotalAsc = log.getAscTotal();
             mTotalDesc = log.getDescTotal();

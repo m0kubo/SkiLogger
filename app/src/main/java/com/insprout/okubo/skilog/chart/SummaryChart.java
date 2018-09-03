@@ -21,7 +21,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.insprout.okubo.skilog.R;
 import com.insprout.okubo.skilog.database.DbUtils;
-import com.insprout.okubo.skilog.database.ModelSkiLog;
+import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
@@ -44,7 +44,7 @@ public class SummaryChart {
     private OnChartValueSelectedListener mValueSelectedListener;
     private int mColorForeground;
 
-    private List<ModelSkiLog> mSkiLogs;
+    private List<SkiLogDb> mSkiLogs;
     private List<String> mXAxisLabels;                              //X軸に表示するLabelのリスト
     private float mYAxisMax = 0f;
     private float mYAxisMin = 0f;
@@ -77,7 +77,7 @@ public class SummaryChart {
         // スキーシーズンの 開始日付と終了日付を設定する
         mDateFrom = new Date(mThisSeasonFrom.getTime());
         mDateTo = MiscUtils.addYears(mDateFrom, 1);
-        List<ModelSkiLog> logs = DbUtils.selectLogSummaries(mContext, 0, 1);    // 最古の1件を取得する
+        List<SkiLogDb> logs = DbUtils.selectLogSummaries(mContext, 0, 1);    // 最古の1件を取得する
         // データの 下限日付を取得しておく
         if (logs != null && !logs.isEmpty()) {
             mDateOldest = logs.get(0).getCreated();
@@ -265,7 +265,7 @@ public class SummaryChart {
         mYAxisMin = 0.0f;
 
         for (int i=0; i<mSkiLogs.size(); i++) {
-            ModelSkiLog log = mSkiLogs.get(i);
+            SkiLogDb log = mSkiLogs.get(i);
             mXAxisLabels.add(mDateFormat.format(log.getCreated()));
 
             float accumulate = Math.abs(log.getDescTotal());

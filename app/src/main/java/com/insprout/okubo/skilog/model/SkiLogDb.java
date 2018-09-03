@@ -1,7 +1,10 @@
-package com.insprout.okubo.skilog.database;
+package com.insprout.okubo.skilog.model;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+
+import com.insprout.okubo.skilog.database.DbConfiguration;
+import com.insprout.okubo.skilog.database.DbSQLite;
 
 import java.util.Date;
 
@@ -10,7 +13,7 @@ import java.util.Date;
  * データベースのレコードデータを格納するクラス
  */
 
-public class ModelSkiLog implements IModelSQLite {
+public class SkiLogDb implements DbSQLite.IModelSQLite {
     public final static String TABLE_NAME = DbConfiguration.TABLE_1;
 
     private long mId;
@@ -26,17 +29,17 @@ public class ModelSkiLog implements IModelSQLite {
     // コンストラクタ
     //
 
-    public ModelSkiLog() {
+    public SkiLogDb() {
     }
 
-    public ModelSkiLog(float altitude, float ascTotal, float descTotal, int count) {
+    public SkiLogDb(float altitude, float ascTotal, float descTotal, int count) {
         mAltitude = altitude;
         mAscTotal = ascTotal;
         mDescTotal = descTotal;
         mCount = count;
     }
 
-    public ModelSkiLog(long id, float altitude, float ascTotal, float descTotal, int count, Date created) {
+    public SkiLogDb(long id, float altitude, float ascTotal, float descTotal, int count, Date created) {
         this(altitude, ascTotal, descTotal, count);
         mId = id;
         mCreated = created;
@@ -108,8 +111,8 @@ public class ModelSkiLog implements IModelSQLite {
     }
 
     @Override
-    public IModelSQLite fromDatabase(Cursor cursor) {
-        return new ModelSkiLog(
+    public DbSQLite.IModelSQLite fromDatabase(Cursor cursor) {
+        return new SkiLogDb(
                 cursor.getLong(cursor.getColumnIndex(DbConfiguration.COL_1_0)),
                 cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_1)),
                 cursor.getFloat(cursor.getColumnIndex(DbConfiguration.COL_1_2)),

@@ -2,7 +2,6 @@ package com.insprout.okubo.skilog.database;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
@@ -21,6 +20,20 @@ import java.util.TimeZone;
 
 
 public class DbSQLite implements Closeable {
+
+    public interface IModelSQLite {
+        String getTable();
+
+        String getPrimaryKeyName();
+
+        String getPrimaryKeyValue();
+
+        ContentValues toRecord();
+
+        IModelSQLite fromDatabase(Cursor cursor);
+    }
+
+
     private static final String TAG = "database";
 
     private final static String SQLITE_DATE_FORMAT = "yyyy-MM-dd";
@@ -29,11 +42,6 @@ public class DbSQLite implements Closeable {
 
     private SQLiteDatabase mDb = null;
 
-
-//    public DbSQLite(Context context) {
-//        // Helperを使用してデータベースを開く
-//        mDb = new DbConfiguration(context).getWritableDatabase();
-//    }
 
     public DbSQLite(SQLiteDatabase database) {
         // Helperを使用してデータベースを開く

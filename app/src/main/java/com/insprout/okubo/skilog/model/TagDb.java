@@ -1,7 +1,10 @@
-package com.insprout.okubo.skilog.database;
+package com.insprout.okubo.skilog.model;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+
+import com.insprout.okubo.skilog.database.DbConfiguration;
+import com.insprout.okubo.skilog.database.DbSQLite;
 
 import java.util.Date;
 
@@ -11,7 +14,7 @@ import java.util.Date;
  * データベースのレコードデータを格納するクラス
  */
 
-public class ModelTag implements IModelSQLite {
+public class TagDb implements DbSQLite.IModelSQLite {
     public final static String TABLE_NAME = DbConfiguration.TABLE_2;
 
     private long mId;
@@ -26,15 +29,15 @@ public class ModelTag implements IModelSQLite {
     // コンストラクタ
     //
 
-    public ModelTag() {
+    public TagDb() {
     }
 
-    public ModelTag(Date date, String tag) {
+    public TagDb(Date date, String tag) {
         mDate = date;
         mTag = tag;
     }
 
-    public ModelTag(long id, Date date, String tag, Date created, Date updated) {
+    public TagDb(long id, Date date, String tag, Date created, Date updated) {
         mId = id;
         mDate = date;
         mTag = tag;
@@ -104,8 +107,8 @@ public class ModelTag implements IModelSQLite {
     }
 
     @Override
-    public IModelSQLite fromDatabase(Cursor cursor) {
-        return new ModelTag(
+    public DbSQLite.IModelSQLite fromDatabase(Cursor cursor) {
+        return new TagDb(
                 cursor.getLong(0),
                 DbSQLite.toUtcDate(cursor.getString(1)),
                 cursor.getString(2),
