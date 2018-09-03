@@ -95,7 +95,7 @@ public class ModelTag implements IModelSQLite {
     }
 
     @Override
-    public ContentValues getRecord() {
+    public ContentValues toRecord() {
         ContentValues record = new ContentValues();
         record.put(DbConfiguration.COL_2_1, DbSQLite.formatUtcDateTime(mDate));
         record.put(DbConfiguration.COL_2_2, mTag);

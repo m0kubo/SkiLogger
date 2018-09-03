@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.io.Closeable;
@@ -29,9 +30,19 @@ public class DbSQLite implements Closeable {
     private SQLiteDatabase mDb = null;
 
 
-    public DbSQLite(Context context) {
+//    public DbSQLite(Context context) {
+//        // Helperを使用してデータベースを開く
+//        mDb = new DbConfiguration(context).getWritableDatabase();
+//    }
+
+    public DbSQLite(SQLiteDatabase database) {
         // Helperを使用してデータベースを開く
-        mDb = new DbConfiguration(context).getWritableDatabase();
+        mDb = database;
+    }
+
+    public DbSQLite(SQLiteOpenHelper helper) {
+        // Helperを使用してデータベースを開く
+        mDb = helper.getWritableDatabase();
     }
 
     @Override
@@ -163,7 +174,7 @@ public class DbSQLite implements Closeable {
     public boolean delete(IModelSQLite model) {
         if (model == null) return false;
 
-        return deleteFromTable(model.getTable(), selection(model), selectionArgs(model));
+        return deleteFromTable(model.getTable(), primarySelection(model), primaryArgs(model));
     }
 
     /**
@@ -173,7 +184,7 @@ public class DbSQLite implements Closeable {
      */
     public long update(IModelSQLite model) {
         if (model == null) return 0;
-        return update(model.getTable(), model.getRecord(), selection(model), selectionArgs(model));
+        return update(model.getTable(), model.toRecord(), primarySelection(model), primaryArgs(model));
     }
 
 
@@ -188,7 +199,7 @@ public class DbSQLite implements Closeable {
         if (model == null) return -1;
         try {
             // 挿入するデータはContentValuesに格納
-            insertedId = mDb.insert(model.getTable(), null, model.getRecord());
+            insertedId = mDb.insert(model.getTable(), null, model.toRecord());
 
         } catch (SQLException e) {
             // SQLite error
@@ -208,7 +219,7 @@ public class DbSQLite implements Closeable {
         if (model == null) return -1;
         try {
             // 挿入するデータはContentValuesに格納
-            rowId = mDb.replace(model.getTable(), null, model.getRecord());
+            rowId = mDb.replace(model.getTable(), null, model.toRecord());
 
         } catch (SQLException e) {
             // SQLite error
@@ -289,7 +300,7 @@ public class DbSQLite implements Closeable {
     public IModelSQLite fetch(IModelSQLite model) {
         if (model == null) return null;
 
-        List<? extends IModelSQLite>  results = select(model, selection(model), selectionArgs(model), 0, 0, null, null);
+        List<? extends IModelSQLite>  results = select(model, primarySelection(model), primaryArgs(model), 0, 0, null, null);
         return (results != null && !results.isEmpty() ? results.get(0) : null);
     }
 
@@ -327,12 +338,12 @@ public class DbSQLite implements Closeable {
     //
 
     // primaryキー名に基づく selection文字列を返す
-    private String selection(IModelSQLite model) {
+    private String primarySelection(IModelSQLite model) {
         return model.getPrimaryKeyName() + " = ?";
     }
 
     // primaryキー値のみの selectionArgs配列を返す
-    private String[] selectionArgs(IModelSQLite model) {
+    private String[] primaryArgs(IModelSQLite model) {
         return new String[] { model.getPrimaryKeyValue() };
     }
 

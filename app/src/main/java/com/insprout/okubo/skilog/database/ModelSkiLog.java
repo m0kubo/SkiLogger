@@ -98,7 +98,7 @@ public class ModelSkiLog implements IModelSQLite {
     }
 
     @Override
-    public ContentValues getRecord() {
+    public ContentValues toRecord() {
         ContentValues record = new ContentValues();
         record.put(DbConfiguration.COL_1_1, mAltitude);
         record.put(DbConfiguration.COL_1_2, mAscTotal);

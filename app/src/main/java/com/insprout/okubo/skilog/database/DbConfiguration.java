@@ -35,17 +35,9 @@ public class DbConfiguration extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         // テーブルを作成する。DBファイルが存在しない場合に呼ばれる
-        // DBファイルはあるけど、TABLEが存在しない場合には呼ばれないので注意
-
+        // DBファイルはあるが、その中にTABLEが存在しない場合には呼ばれないので注意
         // TABLE_1作成
-        db.execSQL(
-                "CREATE TABLE " + TABLE_1 + " ("
-                        + COL_1_0 + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
-                        + COL_1_1 + " REAL NOT NULL DEFAULT 0, "
-                        + COL_1_2 + " REAL NOT NULL DEFAULT 0, "
-                        + COL_1_3 + " REAL NOT NULL DEFAULT 0, "
-                        + COL_1_4 + " INTEGER NOT NULL DEFAULT 0, "
-                        + COL_1_5 + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP )" );
+        createTable1(db);
         // TABLE_2作成
         createTable2(db);
     }
@@ -56,6 +48,17 @@ public class DbConfiguration extends SQLiteOpenHelper {
             // DATABASE_VERSIONが 3以前からの アップグレードの場合は、TABLE_2が存在しないので作成する
             createTable2(db);
         }
+    }
+
+    private void createTable1(SQLiteDatabase db) {
+        db.execSQL(
+                "CREATE TABLE " + TABLE_1 + " ("
+                        + COL_1_0 + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+                        + COL_1_1 + " REAL NOT NULL DEFAULT 0, "
+                        + COL_1_2 + " REAL NOT NULL DEFAULT 0, "
+                        + COL_1_3 + " REAL NOT NULL DEFAULT 0, "
+                        + COL_1_4 + " INTEGER NOT NULL DEFAULT 0, "
+                        + COL_1_5 + " TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP )" );
     }
 
     private void createTable2(SQLiteDatabase db) {

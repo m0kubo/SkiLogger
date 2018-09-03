@@ -10,7 +10,7 @@ public interface IModelSQLite {
 
     String getPrimaryKeyValue();
 
-    ContentValues getRecord();
+    ContentValues toRecord();
 
     IModelSQLite fromDatabase(Cursor cursor);
 }

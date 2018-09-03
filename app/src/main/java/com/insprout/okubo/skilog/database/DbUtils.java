@@ -26,7 +26,7 @@ public class DbUtils {
      */
     public static long countLogs(Context context) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.countAll(new ModelSkiLog());
         }
     }
@@ -39,7 +39,7 @@ public class DbUtils {
      */
     public static long insertLog(Context context, ModelSkiLog data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.insert(data);
         }
     }
@@ -52,7 +52,7 @@ public class DbUtils {
      */
     public static long updateLog(Context context, ModelSkiLog data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.update(data);
         }
     }
@@ -71,7 +71,7 @@ public class DbUtils {
         String[] selectionArgs = { DbSQLite.formatDate(date) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.deleteFromTable(ModelSkiLog.TABLE_NAME, selection, selectionArgs);
         }
     }
@@ -90,7 +90,7 @@ public class DbUtils {
         String[] selectionArgs = new String[] { DbSQLite.formatUtcDateTime(fromDate), DbSQLite.formatUtcDateTime(toDate) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.deleteFromTable(ModelSkiLog.TABLE_NAME, selection, selectionArgs);
         }
     }
@@ -108,7 +108,7 @@ public class DbUtils {
         String[] selectionArgs = { DbSQLite.formatDate(date) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return (List<ModelSkiLog>)database.select(new ModelSkiLog(), selection, selectionArgs, offset, limit, orderBy, null);
         }
     }
@@ -130,7 +130,7 @@ public class DbUtils {
         );
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return (List<ModelSkiLog>)database.rawQuery(new ModelSkiLog(), sqlCmd, null);
         }
     }
@@ -152,7 +152,7 @@ public class DbUtils {
         String[] sqlArgs = { DbSQLite.formatUtcDateTime(fromDate), DbSQLite.formatUtcDateTime(toDate) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return (List<ModelSkiLog>)database.rawQuery(new ModelSkiLog(), sqlCmd, sqlArgs);
         }
     }
@@ -173,7 +173,7 @@ public class DbUtils {
         String[] sqlArgs = { tag };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return (List<ModelSkiLog>)database.rawQuery(new ModelSkiLog(), sqlCmd, sqlArgs);
         }
     }
@@ -202,7 +202,7 @@ public class DbUtils {
      */
     public static long countTags(Context context) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.countAll(new ModelTag());
         }
     }
@@ -215,7 +215,7 @@ public class DbUtils {
      */
     public static boolean deleteTag(Context context, ModelTag data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.delete(data);
         }
     }
@@ -233,7 +233,7 @@ public class DbUtils {
         String[] selectionArgs = new String[] { DbSQLite.utcModifier(), DbSQLite.formatDate(targetDate) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.deleteFromTable(ModelTag.TABLE_NAME, selection, selectionArgs);
         }
     }
@@ -252,7 +252,7 @@ public class DbUtils {
         String[] selectionArgs = new String[] { DbSQLite.formatUtcDateTime(fromDate), DbSQLite.formatUtcDateTime(toDate) };
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.deleteFromTable(ModelTag.TABLE_NAME, selection, selectionArgs);
         }
     }
@@ -265,7 +265,7 @@ public class DbUtils {
      */
     public static long insertTag(Context context, ModelTag data) {
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return database.insert(data);
         }
     }
@@ -288,7 +288,7 @@ public class DbUtils {
         }
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return (List<ModelTag>)database.select(new ModelTag(), selection, selectionArgs, 0, 0, "updated DESC", null);
         }
     }
@@ -306,7 +306,7 @@ public class DbUtils {
         String sqlCmd = "SELECT * FROM ski_tag WHERE _id IN (SELECT MAX(_id) FROM ski_tag GROUP BY tag) ORDER BY _id DESC";
 
         // try-with-resources構文で closeを自動的に呼び出す
-        try (DbSQLite database = new DbSQLite(context)) {
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
             return (List<ModelTag>)database.rawQuery(new ModelTag(), sqlCmd, null);
         }
 
