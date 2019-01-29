@@ -514,4 +514,8 @@ public class DailyChart {
         }
     }
 
+    public int getChartType() {
+        return mChartType;
+    }
+
 }

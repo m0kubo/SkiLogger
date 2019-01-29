@@ -82,7 +82,7 @@ public class ChartPagerAdapter extends PagerAdapter {
                     private void displayValue(Entry entry) {
                         String text = null;
                         if (entry != null) {
-                            text = mContext.getString(R.string.fmt_value_accumulate,
+                            text = mContext.getString(mChart2.getChartType() == DailyChart.TYPE_ALTITUDE ? R.string.fmt_value_altitude : R.string.fmt_value_accumulate,
                                     mChart2.getXAxisLabel(entry.getX()),
                                     mChart2.getYAxisLabel(entry.getY()));
                         }
@@ -113,10 +113,10 @@ public class ChartPagerAdapter extends PagerAdapter {
                     public void onCheckedChanged(RadioGroup radioGroup, int id) {
                         switch (id) {
                             case R.id.btn_altitude:
-                                mChart2.setChartType(0);
+                                mChart2.setChartType(DailyChart.TYPE_ALTITUDE);
                                 break;
                             case R.id.btn_accumulate:
-                                mChart2.setChartType(1);
+                                mChart2.setChartType(DailyChart.TYPE_ACCUMULATE);
                                 break;
                         }
                     }
