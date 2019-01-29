@@ -142,7 +142,7 @@ public class DbSQLite implements Closeable {
                 null)) {
 
             if (cursor.moveToFirst()) {
-                return cursor.getInt(0);
+                return cursor.getLong(0);
             }
 
         } catch (SQLiteException e) {
