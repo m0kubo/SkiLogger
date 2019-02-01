@@ -133,15 +133,15 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
                         if (obj instanceof Integer) mViewPager.setCurrentItem((Integer)obj);
                         break;
 
-                    case ChartPagerAdapter.TYPE_VALUE_SELECTED:
-                        if (position == 0 && obj instanceof Date) {
-                            // 計測期間内に撮影された画像があるか確認する
-                            Date[] period = DbUtils.selectTimePeriods(ChartPagerActivity.this, (Date)obj);
-                            if (period != null && period.length == 2) {
-                                showPhotoViewDialog(ContentsUtils.getImageList(ChartPagerActivity.this, period[0], period[1]));
-                            }
-                        }
-                        break;
+//                    case ChartPagerAdapter.TYPE_VALUE_SELECTED:
+//                        if (position == 0 && obj instanceof Date) {
+//                            // 計測期間内に撮影された画像があるか確認する
+//                            Date[] period = DbUtils.selectTimePeriods(ChartPagerActivity.this, (Date)obj);
+//                            if (period != null && period.length == 2) {
+//                                showPhotoViewDialog(ContentsUtils.getImageList(ChartPagerActivity.this, period[0], period[1]));
+//                            }
+//                        }
+//                        break;
                 }
             }
         });
