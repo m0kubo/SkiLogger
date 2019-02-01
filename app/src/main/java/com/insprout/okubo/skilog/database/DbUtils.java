@@ -116,6 +116,21 @@ public class DbUtils {
         }
     }
 
+    // 指定された日付の 記録開始日時と記録終了日時を取得する
+    public static Date[] selectTimePeriods(Context context, Date date) {
+        // 非効率だが、開始時刻と 終了時刻は 2回に分けて取得する
+        List<SkiLogDb> startTime = selectLogs(context, date, 0, 1, "created ASC");
+        if (startTime == null || startTime.size() < 1) return null;
+
+        List<SkiLogDb> endTime = selectLogs(context, date, 0, 1, "created DESC");
+        if (endTime == null || endTime.size() < 1) return null;
+
+        Date[] times = new Date[2];
+        times[0] = startTime.get(0).getCreated();
+        times[1] = endTime.get(0).getCreated();
+        return times;
+    }
+
     /**
      * 日別記録のサマリー情報を取得する。1日1サマリー、複数日分の記録を返す。
      * orderは 日付の古い順

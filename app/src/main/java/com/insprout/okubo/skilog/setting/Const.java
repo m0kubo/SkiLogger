@@ -17,6 +17,10 @@ public class Const {
     public final static int THEME_LIGHT = R.style.AppTheme;
     public final static int THEME_DARK = R.style.AppThemeDark;
 
+    public final static String EXTRA_PARAM1 = "extra.PARAM_1";
+    public final static String EXTRA_PARAM2 = "extra.PARAM_2";
+
+
     @SuppressLint("InlinedApi")
     public final static String[] PERMISSIONS_LOCATION = {
             Manifest.permission.ACCESS_FINE_LOCATION,

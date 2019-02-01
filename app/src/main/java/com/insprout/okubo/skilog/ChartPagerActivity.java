@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.annotation.NonNull;
@@ -29,11 +30,13 @@ import com.insprout.okubo.skilog.model.ResponsePlaceData;
 import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
+import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.webapi.RequestUrlTask;
 import com.insprout.okubo.skilog.webapi.WebApiUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -48,6 +51,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
     private final static int RC_ADD_TAG_INPUT = 300;
     private final static int RC_ADD_TAG_SELECTION = 301;
     private final static int RC_DELETE_TAG = 400;
+    final static int RC_DIALOG_PHOTO = 901;
 
     private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
 
@@ -64,6 +68,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
     private int mIndexTag = -1;
     private Date mTargetDate = null;
     private TagDb mTargetTag = null;
+    private List<Uri> mPhotoList = null;
 
 
     @Override
@@ -126,6 +131,16 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
 
                     case ChartPagerAdapter.TYPE_PAGE_SELECTED:
                         if (obj instanceof Integer) mViewPager.setCurrentItem((Integer)obj);
+                        break;
+
+                    case ChartPagerAdapter.TYPE_VALUE_SELECTED:
+                        if (position == 0 && obj instanceof Date) {
+                            // 計測期間内に撮影された画像があるか確認する
+                            Date[] period = DbUtils.selectTimePeriods(ChartPagerActivity.this, (Date)obj);
+                            if (period != null && period.length == 2) {
+                                showPhotoViewDialog(ContentsUtils.getImageList(ChartPagerActivity.this, period[0], period[1]));
+                            }
+                        }
                         break;
                 }
             }
@@ -275,6 +290,7 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+            // タイトルバーの backボタン処理
             case android.R.id.home:
                 finish();
                 return true;
@@ -360,6 +376,18 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
                 .setNegativeButton(R.string.btn_cancel)
                 .setRequestCode(RC_ADD_TAG_INPUT)
                 .show();
+    }
+
+    private void showPhotoViewDialog(List<Uri> photos) {
+        mPhotoList = photos;
+        if (photos != null && photos.size() > 0) {
+            new DialogUi.Builder(this)
+                    .setMessage(getString(R.string.fmt_photo_viewer, photos.size()))
+                    .setPositiveButton()
+                    .setNegativeButton()
+                    .setRequestCode(RC_DIALOG_PHOTO)
+                    .show();
+        }
     }
 
     private void selectTagFromHistory() {
@@ -591,6 +619,14 @@ public class ChartPagerActivity extends AppCompatActivity implements DialogUi.Di
                                 dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
                             }
                             break;
+                    }
+                }
+                break;
+
+            case RC_DIALOG_PHOTO:
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
+                    if (mPhotoList != null && mPhotoList.size() >= 1) {
+                        PhotoViewerActivity.startActivity(ChartPagerActivity.this, (ArrayList<Uri>) mPhotoList);
                     }
                 }
                 break;

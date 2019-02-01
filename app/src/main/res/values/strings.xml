@@ -16,6 +16,7 @@
     <string name="fmt_title_chart2">シーズン %d</string>
     <string name="fmt_title_tag">タグ：%s</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
+    <string name="fmt_photo_viewer">記録期間に撮影された写真が%d枚あります。\n表示しますか?</string>
 
     <string name="menu_theme">アプリ テーマ変更</string>
     <string name="menu_not_targeted">(対象日が選択されていません)</string>
@@ -36,6 +37,7 @@
 
     <string name="label_accumulate">積算高度</string>
     <string name="label_altitude">高度</string>
+    <string name="label_photo">写真あり</string>
     <string name="label_count_lift">RUN</string>
     <string name="label_graph_asc">上昇積算</string>
     <string name="label_graph_desc">下降積算</string>

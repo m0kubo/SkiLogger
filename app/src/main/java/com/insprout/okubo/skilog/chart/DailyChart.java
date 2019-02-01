@@ -1,8 +1,11 @@
 package com.insprout.okubo.skilog.chart;
 
+import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.util.TypedValue;
 
 import com.github.mikephil.charting.charts.Chart;
@@ -20,6 +23,7 @@ import com.insprout.okubo.skilog.R;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.util.AppUtils;
+import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
 
@@ -46,15 +50,18 @@ public class DailyChart {
     private int mChartType = TYPE_ALTITUDE;
 
     private int mColor;
+    private int mColorPhoto;
     private int mColorAsc;
     private int mColorDesc;
 
     private ArrayList<Entry> mChartValues11;
+    private ArrayList<Entry> mChartValues12;    // 写真用
     private ArrayList<Entry> mChartValues21;
     private ArrayList<Entry> mChartValues22;
     private RectF mChartAxis1;
     private RectF mChartAxis2;
     private String mChartLabel11;
+    private String mChartLabel12;
     private String mChartLabel21;
     private String mChartLabel22;
 
@@ -98,9 +105,11 @@ public class DailyChart {
         mColorForeground = SdkUtils.getColor(mContext, typedValue.resourceId);
 
         mColor = SdkUtils.getColor(mContext, R.color.colorAltitude);
+        mColorPhoto = SdkUtils.getColor(mContext, R.color.orange);
         mColorAsc = mColorForeground;
         mColorDesc = SdkUtils.getColor(mContext, R.color.colorAccumulateDesc);
         mChartLabel11 = mContext.getString(R.string.label_altitude);
+        mChartLabel12 = mContext.getString(R.string.label_photo);
         mChartLabel21 = mContext.getString(R.string.label_graph_asc);
         mChartLabel22 = mContext.getString(R.string.label_graph_desc);
 
@@ -235,6 +244,7 @@ public class DailyChart {
 
     private boolean setupChartValues() {
         mChartValues11 = new ArrayList<>();
+        mChartValues12 = new ArrayList<>();
         mChartValues21 = new ArrayList<>();
         mChartValues22 = new ArrayList<>();
         mAccumulateAsc = 0f;
@@ -291,6 +301,30 @@ public class DailyChart {
         int boundary = 100;
         mChartAxis1 = new RectF(minX, (float)(Math.ceil(maxY1 / boundary) * boundary), maxX, (float)(Math.floor(minY1 / boundary) * boundary));
         mChartAxis2 = new RectF(minX, (float)(Math.ceil(maxY2 / boundary) * boundary), maxX, (float)(Math.floor(minY2 / boundary) * boundary));
+
+        // 写真データを取得する
+        List<Uri> photos = ContentsUtils.getImageList(mContext, data.get(0).getCreated(), data.get(data.size() - 1).getCreated());
+        if (photos.size() >= 1) {
+            int photoCount = photos.size();
+            Date[] photoTimes = new Date[photos.size()];
+            for (int i = 0; i<photos.size(); i++) {
+                photoTimes[i] = ContentsUtils.getDate(mContext, photos.get(i));
+            }
+
+            for (int i = data.size() - 1; i >= 0; i--) {
+                SkiLogDb log = data.get(i);
+                Date logTime = log.getCreated();
+                for (int j = photos.size() - 1; j>=0 ;j--) {
+                    if (photoTimes[j] != null && photoTimes[j].after(logTime)) {
+                        float hours = (photoTimes[j].getTime() - timeAm0) / (60 * 60 * 1000.0f);
+                        mChartValues12.add(0, new Entry(hours, log.getAltitude()));
+                        photoTimes[j] = null;
+                        photoCount--;
+                    }
+                }
+                if (photoCount <= 0) break;
+            }
+        }
 
         return true;
     }
@@ -373,6 +407,7 @@ public class DailyChart {
                 setupAxis(mChartAxis1);
                 // add the dataSets
                 dataSets.add(newLineDataSet(mChartValues11, mChartLabel11, mColor, true));
+                dataSets.add(newLineDataSet(mChartValues12, mChartLabel12, mColorPhoto, false, true));
                 break;
 
             case TYPE_ACCUMULATE:
@@ -419,6 +454,7 @@ public class DailyChart {
                 // チャートの 軸表示設定
                 setupAxis(mChartAxis1);
                 ((LineDataSet)lineData.getDataSetByIndex(0)).setValues(mChartValues11);
+                if (mChartValues12.size() >= 1) ((LineDataSet)lineData.getDataSetByIndex(1)).setValues(mChartValues12);
                 break;
 
             case TYPE_ACCUMULATE:
@@ -442,11 +478,14 @@ public class DailyChart {
 
 
     private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean lineFilled) {
+        return newLineDataSet(yValues, label, color, lineFilled, false);
+    }
+    private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean lineFilled, boolean marker) {
         LineDataSet dataSet = new LineDataSet(yValues, label);
 
         dataSet.setDrawIcons(false);
         dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(1f);
+        dataSet.setCircleRadius(marker ? 6f : 1f);
         dataSet.setDrawCircleHole(false);
         dataSet.setValueTextSize(0f);
         dataSet.setFormLineWidth(1f);

@@ -134,17 +134,19 @@ public class ChartPagerAdapter extends PagerAdapter {
                     public void onValueSelected(Entry entry, Highlight h) {
                         displayValue(entry);
                         Date date = mChart1.getSelectedDate();
-                        if (date != null && mChart2 != null) {
-                            mChart2.setSelectedDate(date);
-                            String msg = mContext.getString(R.string.fmt_title_chart, mChart1.getXAxisLabelFull(entry.getX()));
-                            Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
-                            if (mChartEventListener != null) {
-                                if (mChartEventListener != null) {
-                                    Integer pageIndex = 1;
-                                    mChartEventListener.onChartEvent(0, TYPE_PAGE_SELECTED, pageIndex);
-                                }
-                            }
-                        }
+//                        // 日別データを表示する
+//                        if (date != null && mChart2 != null) {
+//                            mChart2.setSelectedDate(date);
+//                            String msg = mContext.getString(R.string.fmt_title_chart, mChart1.getXAxisLabelFull(entry.getX()));
+//                            Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
+//                            if (mChartEventListener != null) {
+//                                if (mChartEventListener != null) {
+//                                    Integer pageIndex = 1;
+//                                    mChartEventListener.onChartEvent(0, TYPE_PAGE_SELECTED, pageIndex);
+//                                }
+//                            }
+//                        }
+                        mChartEventListener.onChartEvent(0, TYPE_VALUE_SELECTED, mChart1.getSelectedDate());
                     }
 
                     @Override
@@ -325,6 +327,7 @@ public class ChartPagerAdapter extends PagerAdapter {
     public final static int TYPE_VIEW_CLICKED = 100;
     public final static int TYPE_PAGE_SELECTED = 110;
     public final static int TYPE_TITLE_UPDATED = 200;
+    public final static int TYPE_VALUE_SELECTED = 300;
 
     public interface OnChartEventListener extends EventListener {
         void onChartEvent(int position, int eventType, Object obj);
