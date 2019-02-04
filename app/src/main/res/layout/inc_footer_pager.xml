@@ -11,9 +11,8 @@
 
         <ImageButton
             android:id="@+id/btn_tag"
-            android:src="@mipmap/ic_local_offer_white_36dp"
+            android:src="@mipmap/ic_search_white_48dp"
             android:background="@drawable/bg_circle_medium"
-            android:visibility="gone"
             style="@style/ActionButton" />
 
         <View

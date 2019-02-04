@@ -14,7 +14,7 @@
     <string name="fmt_ski_log">RUN：%d / 下降 %,3.0fm</string>
     <string name="fmt_title_chart">表示日 %s</string>
     <string name="fmt_title_chart2">シーズン %d</string>
-    <string name="fmt_title_tag">タグ：%s</string>
+    <string name="fmt_title_tag">検索：%s</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
     <string name="fmt_photo_viewer">記録期間に撮影された写真が%d枚あります。\n表示しますか?</string>
 
@@ -60,7 +60,7 @@
 
     <string name="title_input_tag">タグ設定</string>
     <string name="hint_tag">設定するタグを入力してください</string>
-    <string name="title_select_tag">タグで絞りこみ</string>
+    <string name="title_select_tag">タグで検索</string>
     <string name="menu_reset_tag">(絞りこみ解除)</string>
     <string name="msg_no_more_tags">選択可能なタグがありません</string>
     <string name="msg_getting_tags">施設情報を取得しています&#8230;</string>

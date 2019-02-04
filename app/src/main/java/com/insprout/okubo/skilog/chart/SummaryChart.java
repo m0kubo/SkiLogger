@@ -43,6 +43,7 @@ public class SummaryChart {
     private BarChart mChart;
     private OnChartValueSelectedListener mValueSelectedListener;
     private int mColorForeground;
+    private int[] mBarColors;
 
     private List<SkiLogDb> mSkiLogs;
     private List<String> mXAxisLabels;                              //X軸に表示するLabelのリスト
@@ -67,6 +68,7 @@ public class SummaryChart {
     }
 
     private void initVars() {
+        // テーマ切り替えに対応するため、フォアグランド色はテーマから取得する
         TypedValue typedValue = new TypedValue();
         mContext.getTheme().resolveAttribute(android.R.attr.colorForeground, typedValue, true);
         mColorForeground = SdkUtils.getColor(mContext, typedValue.resourceId);
@@ -174,9 +176,24 @@ public class SummaryChart {
             mSkiLogs = DbUtils.selectLogSummaries(mContext, mSearchTag);
         } else {
             // 期間で絞る
-            mSkiLogs = DbUtils.selectLogSummaries(mContext, mDateFrom, mDateTo);
+//            mSkiLogs = DbUtils.selectLogSummaries(mContext, mDateFrom, mDateTo);
+            mSkiLogs = DbUtils.selectLogSummaries(mContext, 0, -1);
         }
         if (mSkiLogs == null || mSkiLogs.isEmpty()) return;
+        // 棒グラフの色を設定する。年が変わると色を変える
+        mBarColors = new int[mSkiLogs.size()];
+        int year = -1;
+        int index = 0;
+        int colorId = R.color.colorAccumulateDesc;
+        // 最新のデータが同じ色になるように、現在から過去のデータに向かって色を設定する
+        for (int i = mSkiLogs.size() - 1; i >= 0; i--) {
+            SkiLogDb log = mSkiLogs.get(i);
+            if (MiscUtils.getYear(log.getCreated()) != year) {
+                year = MiscUtils.getYear(log.getCreated());
+                colorId = (index++ % 2 == 0 ? R.color.colorAccumulateDesc : R.color.colorAccumulateDesc2);
+            }
+            mBarColors[i] = colorId;
+        }
 
         List<IBarDataSet> logs = getBarData();
         if (logs == null) return;
@@ -211,8 +228,6 @@ public class SummaryChart {
         YAxis yAxis = mChart.getAxisRight();
         yAxis.setDrawLabels(false);
         yAxis.setDrawGridLines(false);
-//        yAxis.setDrawZeroLine(true);
-//        yAxis.setDrawTopYLabelEntry(true);
 
         //X軸
         XAxis xAxis = mChart.getXAxis();
@@ -222,18 +237,15 @@ public class SummaryChart {
         xAxis.setDrawGridLines(false);
         xAxis.setDrawAxisLine(true);
 
-        float minimumYAxis = -0.5f;
-//        int MAX_X_LABELS = 6;
         int MAX_X_LABELS = 7;
         int dataCount = mXAxisLabels.size();
-        if (dataCount <= MAX_X_LABELS) {
-            mChart.setVisibleXRangeMinimum(MAX_X_LABELS);                       // 一度に表示する棒グラフの数 (少ないと棒の幅が広すぎるため設定)
-            if (dataCount <= 1) minimumYAxis = -0.6f;                           // データが一件の際、なぜかラベルが 2つ書かれる(0軸にも書かれる)ので、パッチ処理
+        if (dataCount > MAX_X_LABELS) {
+            mChart.setVisibleXRange(MAX_X_LABELS + 0.5f, MAX_X_LABELS + 0.5f);      // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
+            mChart.moveViewToX((float) dataCount - MAX_X_LABELS);
         } else {
-            mChart.setVisibleXRangeMaximum(MAX_X_LABELS + 0.5f);                // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
-            mChart.moveViewToX((float)dataCount - 0.5f);
+            mChart.setVisibleXRange(MAX_X_LABELS, MAX_X_LABELS);      // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
+            xAxis.setLabelCount(dataCount, false);
         }
-        xAxis.setAxisMinimum(minimumYAxis);
 
         //グラフ上の表示
         mChart.setDrawValueAboveBar(true);
@@ -243,7 +255,7 @@ public class SummaryChart {
         mChart.setOnChartValueSelectedListener(mValueSelectedListener);
 
         //凡例
-//        mChart.getLegend().setEnabled(false);
+        mChart.getLegend().setEnabled(false);
 
         mChart.setScaleEnabled(false);
         //アニメーション
@@ -279,7 +291,7 @@ public class SummaryChart {
         mYAxisMin = (float)(Math.floor(mYAxisMin / boundary) * boundary);
 
         List<IBarDataSet> bars = new ArrayList<>();
-        BarDataSet dataSet = new BarDataSet(entries, mChartLabel);
+        BarDataSet dataSet = new BarDataSet(entries, "");
         dataSet.setValueTextColor(mColorForeground);
 
         dataSet.setValueTextSize(mChartTextSize);
@@ -294,7 +306,8 @@ public class SummaryChart {
         dataSet.setHighlightEnabled(true);
 
         //Barの色をセット
-        dataSet.setColor(SdkUtils.getColor(mContext, R.color.colorAccumulateDesc));
+        //dataSet.setColor(SdkUtils.getColor(mContext, R.color.colorAccumulateDesc));
+        dataSet.setColors(mBarColors, mContext);
         bars.add(dataSet);
 
         return bars;
@@ -348,9 +361,7 @@ public class SummaryChart {
 
         } else {
             // シーズン表示
-            int[] date = MiscUtils.getDateValues(mDateFrom);
-            if (date[1] >= START_MONTH_OF_SEASON) date[0]++;
-            return mContext.getString(R.string.fmt_title_chart2, date[0]);
+            return mContext.getString(R.string.label_graph_desc);
         }
     }
 

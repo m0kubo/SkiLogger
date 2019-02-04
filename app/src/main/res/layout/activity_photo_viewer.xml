@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager"
@@ -39,4 +38,17 @@
         android:orientation="horizontal">
     </RadioGroup>-->
 
-</LinearLayout>
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:src="@mipmap/ic_arrow_back_white_48dp"
+        android:background="@drawable/bg_circle_medium"
+        style="@style/ActionButton" />
+
+    <ImageButton
+        android:id="@+id/btn_detail"
+        android:layout_gravity="end|bottom"
+        android:src="@mipmap/ic_zoom_out_white_48dp"
+        android:background="@drawable/bg_circle_medium"
+        style="@style/ActionButton" />
+
+</FrameLayout>

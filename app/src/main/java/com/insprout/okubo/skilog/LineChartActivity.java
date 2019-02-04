@@ -10,6 +10,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -18,16 +19,10 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.RadioGroup;
 import android.widget.Toast;
 
-import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.data.Entry;
-
-import com.github.mikephil.charting.highlight.Highlight;
-import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
-import com.insprout.okubo.skilog.chart.DailyChart;
 import com.insprout.okubo.skilog.database.DbUtils;
+import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.model.ResponsePlaceData;
 import com.insprout.okubo.skilog.setting.Const;
@@ -39,6 +34,7 @@ import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.webapi.RequestUrlTask;
 import com.insprout.okubo.skilog.webapi.WebApiUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -57,9 +53,9 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
 
     private ServiceMessenger mServiceMessenger;
-    private RadioGroup mRgChartType;
 
-    private DailyChart mDailyChart;
+    private ViewPager mViewPager;
+    private List<Date> mDateList;
     private List<TagDb> mAllTags;
     private TagDb mTargetTag = null;
 
@@ -68,7 +64,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTheme(Settings.getThemeStyle(this));
-        setContentView(R.layout.activity_line_chart);
+        setContentView(R.layout.activity_bar_chart2);
 
         initVars();                                             // 変数などの初期化
         initView();                                             // View関連の初期化
@@ -80,7 +76,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         super.onResume();
 
         // チャートの描画を開始する
-        mDailyChart.updateChart();
+//        mDailyChart.updateChart();
         if (SkiLogService.isRunning(this)) mServiceMessenger.bind();
     }
 
@@ -92,6 +88,18 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
 
     private void initVars() {
+
+        mDateList = new ArrayList<>();
+        List<SkiLogDb>data = DbUtils.selectLogSummaries(this, 0, 0);
+        if (data != null && !data.isEmpty()) {
+            // 取得したログの 日付情報のリストを作成する
+            for(int i = 0; i<data.size(); i++) {
+                SkiLogDb log = data.get(i);
+                mDateList.add(log.getCreated());
+            }
+        }
+
+
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
             @Override
@@ -101,7 +109,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                         long[] data = (long[]) msg.obj;
                         if (data[0] <= 0) return;
 
-                        mDailyChart.appendChartValue(data[0], data[1] * 0.001f, data[2] * 0.001f, data[3] * 0.001f, (int)data[4]);
+//                        mDailyChart.appendChartValue(data[0], data[1] * 0.001f, data[2] * 0.001f, data[3] * 0.001f, (int)data[4]);
                         break;
                 }
             }
@@ -115,67 +123,69 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
 
-        mRgChartType = findViewById(R.id.rg_chart_type);
-        mRgChartType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup radioGroup, int id) {
-                // ポイント地点の情報をクリア
-                displayValues(id, null);
-                // チャートの種類が変更されたので、新規にチャートを書き直す
-                switch(id) {
-                    case R.id.btn_altitude:
-                        mDailyChart.setChartType(0);
-                        break;
-                    case R.id.btn_accumulate:
-                        mDailyChart.setChartType(1);
-                        break;
-                }
-            }
-        });
-
         // チャートの表示設定
-        LineChart lineChart = findViewById(R.id.line_chart);
-        mDailyChart = new DailyChart(this, lineChart, new OnChartValueSelectedListener() {
+        LineChartPagerAdapter adapter = new LineChartPagerAdapter(this, mDateList);
+        mViewPager = findViewById(R.id.viewpager);
+        mViewPager.setAdapter(adapter);
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onValueSelected(Entry e, Highlight h) {
-                // ポイント地点の情報を表示
-                displayValues(mRgChartType.getCheckedRadioButtonId(), e);
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
             }
 
             @Override
-            public void onNothingSelected() {
+            public void onPageSelected(int position) {
+                setTitleByDate(position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
             }
         });
+        setTitleByDate(0);
+        if (mDateList != null && mDateList.size() >= 1) mViewPager.setCurrentItem(mDateList.size() - 1);    // 最新日を表示
 
-        mDailyChart.drawChart();
         updateUi();
     }
 
-
-    private void displayValues(int chartId, Entry entry) {
-        String msg = null;
-
-        if (entry != null) {
-            switch (chartId) {
-                case R.id.btn_altitude:
-                    msg = getString(R.string.fmt_value_altitude, mDailyChart.getXAxisLabel(entry.getX()), mDailyChart.getYAxisLabel(entry.getY()));
-                    break;
-
-                case R.id.btn_accumulate:
-                    msg = getString(R.string.fmt_value_accumulate, mDailyChart.getXAxisLabel(entry.getX()), mDailyChart.getYAxisLabel(entry.getY()));
-                    break;
-            }
+    private void setTitleByDate(int position) {
+        if (mDateList != null && position >= 0 && position < mDateList.size()) {
+            setTitle(getString(R.string.fmt_title_chart, AppUtils.toDateString(mDateList.get(position))));
         }
-        UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, msg);
     }
 
 
+//    private void displayValues(int chartId, Entry entry) {
+//        String msg = null;
+//
+//        if (entry != null) {
+//            switch (chartId) {
+//                case R.id.btn_altitude:
+//                    msg = getString(R.string.fmt_value_altitude, mDailyChart.getXAxisLabel(entry.getX()), mDailyChart.getYAxisLabel(entry.getY()));
+//                    break;
+//
+//                case R.id.btn_accumulate:
+//                    msg = getString(R.string.fmt_value_accumulate, mDailyChart.getXAxisLabel(entry.getX()), mDailyChart.getYAxisLabel(entry.getY()));
+//                    break;
+//            }
+//        }
+//        UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, msg);
+//    }
+
+
     private void updateUi() {
-        setTitle(mDailyChart.getSubject());
+//        setTitle(mDailyChart.getSubject());
 
         // 前データ、次データへのボタンの 有効無効
-        UiUtils.setEnabled(this, R.id.btn_negative, mDailyChart.hasPreviousPage());
-        UiUtils.setEnabled(this, R.id.btn_positive, mDailyChart.hasNextPage());
+//        UiUtils.setEnabled(this, R.id.btn_negative, mDailyChart.hasPreviousPage());
+//        UiUtils.setEnabled(this, R.id.btn_positive, mDailyChart.hasNextPage());
+    }
+
+    private Date getSelectedDate() {
+        int position = mViewPager.getCurrentItem();
+        if (mDateList != null && position >= 0 && position < mDateList.size()) {
+            return mDateList.get(position);
+        }
+        return null;
     }
 
 
@@ -183,17 +193,18 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-            case R.id.btn_negative:
-                mDailyChart.goPreviousPage();
-                updateUi();
-                break;
-
-            case R.id.btn_positive:
-                mDailyChart.goNextPage();
-                updateUi();
-                break;
+//            case R.id.btn_negative:
+//                mDailyChart.goPreviousPage();
+//                updateUi();
+//                break;
+//
+//            case R.id.btn_positive:
+//                mDailyChart.goNextPage();
+//                updateUi();
+//                break;
 
             case R.id.btn_chart2:
+                // サマリー画面表示
                 UiUtils.setSelected(this, R.id.btn_chart1, false);
                 UiUtils.setSelected(this, R.id.btn_chart2, true);
                 BarChartActivity.startActivity(this);
@@ -216,7 +227,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        Date targetDate = mDailyChart.getSelectedDate();
+        Date targetDate = getSelectedDate();
 
         MenuItem tagsMenu = menu.findItem(R.id.menu_list_tags);
         MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
@@ -268,7 +279,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     }
 
     private void confirmDeleteLogs() {
-        Date targetDate = mDailyChart.getSelectedDate();
+        Date targetDate = getSelectedDate();
         if (targetDate == null) return;
 
         // データ削除
@@ -291,8 +302,8 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             DbUtils.deleteTags(this, targetDate);
 
             // 指定日付を 選択可能日から削除する。
-            mDailyChart.delete(targetDate);
-            mDailyChart.updateChart();
+//            mDailyChart.delete(targetDate);
+//            mDailyChart.updateChart();
             updateUi();
         }
     }
@@ -311,7 +322,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         // 選択用リストを作成
         String[] arrayTag = AppUtils.toStringArray(mAllTags);
-        String title = getString(R.string.fmt_title_list_tags, AppUtils.toDateString(mDailyChart.getSelectedDate()));
+        String title = getString(R.string.fmt_title_list_tags, AppUtils.toDateString(getSelectedDate()));
         new DialogUi.Builder(this)
                 .setTitle(title)
                 .setSingleChoiceItems(arrayTag, -1)
@@ -409,7 +420,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
         switch (requestCode) {
             case RC_DELETE_LOG:
                 if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
-                    deleteLogs(mDailyChart.getSelectedDate());
+                    deleteLogs(getSelectedDate());
                 }
                 break;
 
@@ -496,7 +507,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
                     case DialogUi.EVENT_BUTTON_POSITIVE:
                         // 入力されたタグを登録
                         if (editText != null) {
-                            Date targetDate = mDailyChart.getSelectedDate();
+                            Date targetDate = getSelectedDate();
                             String tag = editText.getText().toString();
                             if (!tag.isEmpty() && targetDate != null) {
                                 DbUtils.insertTag(this, new TagDb(targetDate, tag));
@@ -518,7 +529,7 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
                         case DialogUi.EVENT_BUTTON_POSITIVE:
                             // 入力されたタグを登録
-                            Date targetDate = mDailyChart.getSelectedDate();
+                            Date targetDate = getSelectedDate();
                             String tag = ((ListView) view).getAdapter().getItem(pos).toString();
                             if (!tag.isEmpty() && targetDate != null) {
                                 DbUtils.insertTag(this, new TagDb(targetDate, tag));

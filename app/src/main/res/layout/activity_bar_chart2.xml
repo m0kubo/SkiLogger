@@ -10,23 +10,18 @@
         style="@style/SubjectText"
         />
 
-    <FrameLayout
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/bar_chart"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginStart="2dp"/>
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingTop="3dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp">
-        </FrameLayout>
-    </FrameLayout>
+        android:layout_weight="1"
+        />
+    <!--<com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/line_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginStart="2dp"/>-->
 
     <!--<include layout="@layout/inc_footer" />-->
     <LinearLayout

@@ -1,7 +1,11 @@
 package com.insprout.okubo.skilog.util;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.text.Spanned;
 import android.view.View;
 import android.widget.ImageButton;
@@ -55,6 +59,17 @@ public class UiUtils {
             ((ImageButton)view).setImageResource(foregroundResId);
             ((ImageButton)view).setBackgroundResource(backgroundResId);
         }
+    }
+
+    public static boolean intentActionView(Context context, Uri uri) {
+        // 別アプリで 指定のUrlを開く
+        try {
+            context.startActivity(new Intent(Intent.ACTION_VIEW, uri));
+        } catch (ActivityNotFoundException e) {
+            // 対応するアプリがインストールされていない場合
+            return false;
+        }
+        return true;
     }
 
     /**

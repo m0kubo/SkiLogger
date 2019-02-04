@@ -7,6 +7,9 @@
     <color name="colorAltitude">#3F51E8</color>
     <!--<color name="colorAccumulateAsc">#000000</color>-->
     <color name="colorAccumulateDesc">#dc143c</color>
+    <!--<color name="colorAccumulateDesc2">#503F9F</color>-->
+    <!--<color name="colorAccumulateDesc2">#4FB05F</color>-->
+    <color name="colorAccumulateDesc2">#c86959</color>
 
     <color name="colorIcon">#808080</color>
 

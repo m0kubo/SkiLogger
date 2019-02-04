@@ -5,37 +5,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <RadioGroup
-        android:id="@+id/rg_chart_type"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tv_chart_value"
         android:layout_height="wrap_content"
-        android:paddingTop="3dp"
-        android:paddingStart="0dp"
-        android:paddingEnd="12dp"
-        android:layout_gravity="end"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/tv_chart_value"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            style="@style/SubjectText"
-            />
-
-        <RadioButton
-            android:id="@+id/btn_altitude"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/text_size_regular"
-            android:text="@string/label_altitude"
-            android:checked="true"/>
-        <RadioButton
-            android:id="@+id/btn_accumulate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/text_size_regular"
-            android:text="@string/label_accumulate"/>
-    </RadioGroup>
+        android:layout_weight="1"
+        style="@style/SubjectText"
+        />
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/line_chart"
