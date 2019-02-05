@@ -58,9 +58,9 @@ public class AltitudeChart {
     private List<Uri> photos = null;
 
 
-//    public AltitudeChart(Context context, Chart lineChart) {
-//        this(context, lineChart, null);
-//    }
+    public AltitudeChart(Context context, Chart lineChart, Date target) {
+        this(context, lineChart, target, null);
+    }
 
     public AltitudeChart(Context context, Chart lineChart, Date target, OnChartValueSelectedListener listener) {
         mContext = context;
@@ -69,6 +69,11 @@ public class AltitudeChart {
         mValueSelectedListener = listener;
 
         initVars();
+    }
+
+    public void setOnChartValueSelectedListener(OnChartValueSelectedListener listener) {
+        mValueSelectedListener = listener;
+        mChart.setOnChartValueSelectedListener(mValueSelectedListener);
     }
 
     private void initVars() {
@@ -145,12 +150,6 @@ public class AltitudeChart {
     }
 
 
-    // タイトル表記を返す。
-    public String getSubject() {
-        Date date = mSelectedDate;
-        return mContext.getString(R.string.fmt_title_chart, AppUtils.toDateString(date != null ? date : new Date(System.currentTimeMillis())));
-    }
-
 //////////////////////////////////////////////////////////////////////////////////////////
 
     private boolean setupChartValues() {
@@ -204,6 +203,7 @@ public class AltitudeChart {
 
         // 写真データを取得する
         photos = ContentsUtils.getImageList(mContext, data.get(0).getCreated(), data.get(data.size() - 1).getCreated());
+        // 写真データがあったら、表示用のグラフデータを作成する
         if (photos.size() >= 1) {
             int photoCount = photos.size();
             Date[] photoTimes = new Date[photos.size()];
@@ -267,8 +267,16 @@ public class AltitudeChart {
     }
 
     public Uri getPhotoUri() {
-        if (photos.size() == 0) return null;
+        if (photos == null || photos.size() == 0) return null;
         return photos.get(0);
+    }
+
+    public Uri getPhotoUri(Entry entry) {
+        if (photos == null || photos.size() == 0) return null;
+        for (int i=0; i<mChartValues12.size(); i++) {
+            if (mChartValues12.get(i).equalTo(entry)) return photos.get(i);
+        }
+        return null;
     }
 
 
@@ -296,42 +304,6 @@ public class AltitudeChart {
         //mChart.animateX(2500);
         mChart.invalidate();
     }
-
-
-    // 同じチャートタイプで、違う期間のチャートを描画する
-    // (LineDataSetを再利用して、別のチャートを描画する)
-//    public void updateChart() {
-//        // 表示データを取得する
-//        if (!setupChartValues()) {
-//            // 表示データなし
-//            clearChart();
-//            return;
-//        }
-//
-//        LineData lineData = mChart.getData();
-//        if (lineData == null) {
-//            // Chart.clear()などが行われるとLineDataは nullになっているので、その場合は新規にチャートを描く
-//            drawNewChart();
-//            return;
-//        }
-//
-//        // チャートの 軸表示設定
-//        setupAxis(mChartAxis1);
-//        ((LineDataSet) lineData.getDataSetByIndex(0)).setValues(mChartValues11);
-//        if (mChartValues12.size() >= 1)
-//            ((LineDataSet) lineData.getDataSetByIndex(1)).setValues(mChartValues12);
-//
-//        setDescription();
-//        mChart.getData().notifyDataChanged();
-//        mChart.notifyDataSetChanged();
-//
-//        //mChart.animateX(2500);
-//        mChart.invalidate();
-//
-//        // 別のチャートを描画したので、selectionは未選択状態にする
-//        nothingSelected();
-//    }
-
 
 
     private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean lineFilled, boolean marker) {

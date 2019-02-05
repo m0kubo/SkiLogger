@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.hardware.Sensor;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -91,6 +92,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initView() {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setIcon(R.drawable.ic_settings);
+        }
         UiUtils.setDrawables(this, R.id.btn_positive, R.drawable.ic_record, R.drawable.bg_circle2_large);
         UiUtils.setDrawables(this, R.id.btn_negative, R.mipmap.ic_pause_white_36dp, R.drawable.bg_circle2_large);
 
@@ -117,16 +123,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onPause();
     }
 
-    @Override
-    public void onBackPressed() {
-        // アプリ終了確認ダイアログを出す
-        new DialogUi.Builder(this)
-                .setMessage(R.string.msg_close_application)
-                .setPositiveButton(R.string.btn_finish_app)
-                .setNegativeButton(R.string.btn_cancel)
-                .setRequestCode(REQ_CODE_FINISH_APP)
-                .show();
-    }
+// 確認ダイアログを出さずに、そのまま終了するように仕様変更
+//    @Override
+//    public void onBackPressed() {
+//        // アプリ終了確認ダイアログを出す
+//        new DialogUi.Builder(this)
+//                .setMessage(R.string.msg_close_application)
+//                .setPositiveButton(R.string.btn_finish_app)
+//                .setNegativeButton(R.string.btn_cancel)
+//                .setRequestCode(REQ_CODE_FINISH_APP)
+//                .show();
+//    }
 
     private void startService() {
         Log.d("WatchService", "startService()");

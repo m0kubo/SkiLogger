@@ -3,6 +3,7 @@ package com.insprout.okubo.skilog;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
@@ -21,6 +22,7 @@ import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
+import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.UiUtils;
 
@@ -38,6 +40,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private List<TagDb> mTags;
     private int mIndexTag = -1;
     private Date mTargetDate = null;
+    private Uri mPhotoUri = null;
 
 
     @Override
@@ -87,7 +90,11 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
         // タイトルバーに backボタンを表示する
         ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+        if (actionBar != null) {
+//            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setIcon(R.drawable.ic_bar_chart);
+        }
 
         BarChart barChart = findViewById(R.id.bar_chart);
         mSummaryChart = new SummaryChart(this, barChart, new OnChartValueSelectedListener() {
@@ -116,13 +123,58 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void displayValue(Entry entry) {
+        mPhotoUri = null;
         String text = null;
         if (entry != null) {
-            text = getString(R.string.fmt_value_accumulate,
+            // 計測期間内に撮影された画像があるか確認する
+            Date[] period = DbUtils.selectTimePeriods(this, mSummaryChart.getLogDate((int)entry.getX()));
+            if (period != null && period.length == 2) {
+                List<Uri> photoList = ContentsUtils.getImageList(this, period[0], period[1]);
+                if (photoList.size() >= 1) mPhotoUri = photoList.get(0);
+            }
+            text = getString(mPhotoUri != null ? R.string.fmt_value_accumulate_photo : R.string.fmt_value_accumulate,
                     mSummaryChart.getXAxisLabelFull(entry.getX()),
-                    mSummaryChart.getYAxisLabel(entry.getY()));
+                    mSummaryChart.getYAxisLabel(entry.getY())
+            );
         }
         UiUtils.setText(this, R.id.tv_chart_value, text);
+        UiUtils.setEnabled(this, R.id.btn_detail, mPhotoUri != null);
+    }
+
+
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        switch(id) {
+            case R.id.btn_back:
+                finish();
+                break;
+
+            case R.id.btn_negative:
+                mSummaryChart.goPreviousPage();
+                updateUi();
+                break;
+
+            case R.id.btn_positive:
+                mSummaryChart.goNextPage();
+                updateUi();
+                break;
+
+            case R.id.btn_chart1:
+                UiUtils.setSelected(this, R.id.btn_chart1, true);
+                UiUtils.setSelected(this, R.id.btn_chart2, false);
+                LineChartActivity.startActivity(this, mSummaryChart.getSelectedDate());
+                finish();
+                break;
+
+            case R.id.btn_tag:
+                selectTag();
+                break;
+
+            case R.id.btn_detail:
+                if (mPhotoUri != null) UiUtils.intentActionView(this, mPhotoUri);
+                break;
+        }
     }
 
 
@@ -252,34 +304,6 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                         updateUi();
                     }
                 }
-                break;
-        }
-    }
-
-
-    @Override
-    public void onClick(View view) {
-        int id = view.getId();
-        switch(id) {
-            case R.id.btn_negative:
-                mSummaryChart.goPreviousPage();
-                updateUi();
-                break;
-
-            case R.id.btn_positive:
-                mSummaryChart.goNextPage();
-                updateUi();
-                break;
-
-            case R.id.btn_chart1:
-                UiUtils.setSelected(this, R.id.btn_chart1, true);
-                UiUtils.setSelected(this, R.id.btn_chart2, false);
-                LineChartActivity.startActivity(this);
-                finish();
-                break;
-
-            case R.id.btn_tag:
-                selectTag();
                 break;
         }
     }

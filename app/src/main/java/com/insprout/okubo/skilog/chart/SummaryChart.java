@@ -139,16 +139,14 @@ public class SummaryChart {
     }
 
     public String getXAxisLabelFull(float value) {
-        if (mSkiLogs == null || mSkiLogs.isEmpty()) return null;
-        int index = (int)value;
-        if (index >= 0 && index < mSkiLogs.size()) {
-            Date date = mSkiLogs.get(index).getCreated();
-            if (date != null) {
-                SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault());
-                return mDateFormat.format(date);
-            }
-        }
-        return null;
+        Date date = getLogDate((int)value);
+        if (date == null) return null;
+        SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault());
+        return mDateFormat.format(date);
+    }
+
+    public Date getLogDate(int index) {
+        return mSkiLogs != null && index >= 0 && index < mSkiLogs.size() ? mSkiLogs.get(index).getCreated() : null;
     }
 
     public String getYAxisLabel(float value) {

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.annotation.NonNull;
@@ -29,6 +30,7 @@ import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
+import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.webapi.RequestUrlTask;
@@ -36,7 +38,9 @@ import com.insprout.okubo.skilog.webapi.WebApiUtils;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class LineChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUi.DialogEventListener {
@@ -55,16 +59,18 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     private ServiceMessenger mServiceMessenger;
 
     private ViewPager mViewPager;
-    private List<Date> mDateList;
+    private int mTargetIndex = 0;
+    private List<Date> mDateList = new ArrayList<>();
     private List<TagDb> mAllTags;
     private TagDb mTargetTag = null;
+    private Map<Date, Uri> mUriMap = new HashMap<>();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTheme(Settings.getThemeStyle(this));
-        setContentView(R.layout.activity_bar_chart2);
+        setContentView(R.layout.activity_line_chart2);
 
         initVars();                                             // 変数などの初期化
         initView();                                             // View関連の初期化
@@ -88,17 +94,20 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
 
     private void initVars() {
-
-        mDateList = new ArrayList<>();
+        mDateList.clear();
         List<SkiLogDb>data = DbUtils.selectLogSummaries(this, 0, 0);
         if (data != null && !data.isEmpty()) {
+            mTargetIndex = data.size() - 1;     // 初期表示するページ
+            // 初期表示する日付が指定されていた場合は、そのページを初期ページにする
+            Date target = (Date) getIntent().getSerializableExtra(EXTRA_PARAM1);
+
             // 取得したログの 日付情報のリストを作成する
             for(int i = 0; i<data.size(); i++) {
                 SkiLogDb log = data.get(i);
                 mDateList.add(log.getCreated());
+                if (MiscUtils.isSameDate(target, log.getCreated())) mTargetIndex = i;
             }
         }
-
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -121,10 +130,20 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
         // タイトルバーに backボタンを表示する
         ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) actionBar.setDisplayHomeAsUpEnabled(true);
+        if (actionBar != null) {
+//            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowHomeEnabled(true);
+            actionBar.setIcon(R.drawable.ic_line_chart);
+        }
 
         // チャートの表示設定
-        LineChartPagerAdapter adapter = new LineChartPagerAdapter(this, mDateList);
+        LineChartPagerAdapter adapter = new LineChartPagerAdapter(this, mDateList, new LineChartPagerAdapter.PhotoUriListener() {
+            @Override
+            public void photoPicked(Date date, Uri photo) {
+                mUriMap.put(date, photo);
+                enablePhotoButton(mViewPager.getCurrentItem());
+            }
+        });
         mViewPager = findViewById(R.id.viewpager);
         mViewPager.setAdapter(adapter);
         mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
@@ -134,55 +153,54 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
 
             @Override
             public void onPageSelected(int position) {
-                setTitleByDate(position);
+                updateView(position);
             }
 
             @Override
             public void onPageScrollStateChanged(int state) {
             }
         });
-        setTitleByDate(0);
-        if (mDateList != null && mDateList.size() >= 1) mViewPager.setCurrentItem(mDateList.size() - 1);    // 最新日を表示
 
-        updateUi();
+        updateView(0);
+        setPage(mTargetIndex, false);    // 最新日を表示
     }
 
-    private void setTitleByDate(int position) {
-        if (mDateList != null && position >= 0 && position < mDateList.size()) {
+    private void updateView(int position) {
+        int pageSize = mDateList.size();
+        if (position >= 0 && position < pageSize) {
             setTitle(getString(R.string.fmt_title_chart, AppUtils.toDateString(mDateList.get(position))));
         }
+        UiUtils.setEnabled(this, R.id.btn_prev, position >= 1);
+        UiUtils.setEnabled(this, R.id.btn_next, position + 1 < pageSize);
+        enablePhotoButton(position);
+    }
+
+    private void enablePhotoButton(int position) {
+        UiUtils.setEnabled(this, R.id.btn_detail, getPhotoUri(position) != null);
+    }
+
+    private Uri getPhotoUri(int position) {
+        return (position >= 0 && position < mDateList.size()) ? mUriMap.get(mDateList.get(position)) : null;
     }
 
 
-//    private void displayValues(int chartId, Entry entry) {
-//        String msg = null;
-//
-//        if (entry != null) {
-//            switch (chartId) {
-//                case R.id.btn_altitude:
-//                    msg = getString(R.string.fmt_value_altitude, mDailyChart.getXAxisLabel(entry.getX()), mDailyChart.getYAxisLabel(entry.getY()));
-//                    break;
-//
-//                case R.id.btn_accumulate:
-//                    msg = getString(R.string.fmt_value_accumulate, mDailyChart.getXAxisLabel(entry.getX()), mDailyChart.getYAxisLabel(entry.getY()));
-//                    break;
-//            }
-//        }
-//        UiUtils.setText(LineChartActivity.this, R.id.tv_chart_value, msg);
-//    }
+    private void setPage(int index, boolean smoothScroll) {
+        if (index >= 0 && index < mDateList.size()) mViewPager.setCurrentItem(index, smoothScroll);
+    }
 
+    private void goPrevPage() {
+        int index = mViewPager.getCurrentItem() - 1;
+        setPage(index, true);
+    }
 
-    private void updateUi() {
-//        setTitle(mDailyChart.getSubject());
-
-        // 前データ、次データへのボタンの 有効無効
-//        UiUtils.setEnabled(this, R.id.btn_negative, mDailyChart.hasPreviousPage());
-//        UiUtils.setEnabled(this, R.id.btn_positive, mDailyChart.hasNextPage());
+    private void goNextPage() {
+        int index = mViewPager.getCurrentItem() + 1;
+        setPage(index, true);
     }
 
     private Date getSelectedDate() {
         int position = mViewPager.getCurrentItem();
-        if (mDateList != null && position >= 0 && position < mDateList.size()) {
+        if (position >= 0 && position < mDateList.size()) {
             return mDateList.get(position);
         }
         return null;
@@ -193,15 +211,22 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-//            case R.id.btn_negative:
-//                mDailyChart.goPreviousPage();
-//                updateUi();
-//                break;
-//
-//            case R.id.btn_positive:
-//                mDailyChart.goNextPage();
-//                updateUi();
-//                break;
+            case R.id.btn_back:
+                finish();
+                break;
+
+            case R.id.btn_prev:
+                goPrevPage();;
+                break;
+
+            case R.id.btn_next:
+                goNextPage();
+                break;
+
+            case R.id.btn_detail:
+                Uri photo = getPhotoUri(mViewPager.getCurrentItem());
+                if (photo != null) UiUtils.intentActionView(this, photo);
+                break;
 
             case R.id.btn_chart2:
                 // サマリー画面表示
@@ -304,7 +329,6 @@ public class LineChartActivity extends AppCompatActivity implements View.OnClick
             // 指定日付を 選択可能日から削除する。
 //            mDailyChart.delete(targetDate);
 //            mDailyChart.updateChart();
-            updateUi();
         }
     }
 

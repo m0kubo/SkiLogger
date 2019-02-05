@@ -5,25 +5,29 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/tv_chart_value"
-        style="@style/SubjectText"
-        />
-
-    <android.support.v4.view.ViewPager
-        android:id="@+id/viewpager"
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        />
-    <!--<com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/line_chart"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginStart="2dp"/>-->
+        android:layout_weight="1">
+        <android.support.v4.view.ViewPager
+            android:id="@+id/viewpager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+        <ImageButton
+            android:id="@+id/btn_prev"
+            android:layout_gravity="center_vertical|start"
+            android:src="@mipmap/ic_arrow_left_white_48dp"
+            android:background="@drawable/bg_circle_small"
+            style="@style/ActionButton" />
+        <ImageButton
+            android:id="@+id/btn_next"
+            android:layout_gravity="center_vertical|end"
+            android:src="@mipmap/ic_arrow_right_white_48dp"
+            android:background="@drawable/bg_circle_small"
+            style="@style/ActionButton" />
+    </FrameLayout>
 
-    <!--<include layout="@layout/inc_footer" />-->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -35,13 +39,13 @@
         android:orientation="horizontal">
 
         <ImageButton
-            android:id="@+id/btn_chart2"
-            android:src="@mipmap/ic_equalizer_white_36dp"
+            android:id="@+id/btn_back"
+            android:src="@mipmap/ic_settings_white_48dp"
             android:background="@drawable/bg_circle_medium"
             style="@style/ActionButton" />
         <ImageButton
-            android:id="@+id/btn_chart1"
-            android:src="@mipmap/ic_timeline_white_36dp"
+            android:id="@+id/btn_chart2"
+            android:src="@mipmap/ic_equalizer_white_36dp"
             android:background="@drawable/bg_circle_medium"
             style="@style/ActionButton" />
 
@@ -51,8 +55,8 @@
             android:layout_weight="1" />
 
         <ImageButton
-            android:id="@+id/btn_tag"
-            android:src="@mipmap/ic_search_white_48dp"
+            android:id="@+id/btn_detail"
+            android:src="@mipmap/ic_collections_white_48dp"
             android:background="@drawable/bg_circle_medium"
             style="@style/ActionButton" />
 
