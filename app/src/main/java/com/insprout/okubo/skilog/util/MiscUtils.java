@@ -232,6 +232,11 @@ public class MiscUtils {
         return (time1[0]==time2[0] && time1[1]==time2[1] && time1[2]==time2[2]);
     }
 
+    // 指定日付が 本日かどうかを判別する。
+    public static boolean isToday(Date date) {
+        return isSameDate(date, new Date(System.currentTimeMillis()));
+    }
+
     /**
      * 指定日付の 0時0分の時刻を Date型で返す
      * @param date 指定日時

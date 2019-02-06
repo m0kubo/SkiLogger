@@ -22,13 +22,14 @@ import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
+import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.util.Date;
 import java.util.List;
 
 
-public class BarChartActivity extends BaseActivity implements View.OnClickListener/*, DialogUi.DialogEventListener*/ {
+public class BarChartActivity extends BaseActivity implements View.OnClickListener, DialogUi.DialogEventListener {
 //    private final static int RC_DELETE_LOG = 1;
     private final static int RC_SELECT_TAG = 2;
 
@@ -37,11 +38,10 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     private SummaryChart mSummaryChart;
     private List<TagDb> mAllTags;
     private int mIndexTag = -1;
-    private Date mTargetDate = null;
     private Uri mPhotoUri = null;
 
     private boolean mValueSelected = false;
-    private long mTimeToast = 0;
+    //private long mTimeToast = 0;
 
 
     @Override
@@ -68,7 +68,6 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     }
 
     private void initVars() {
-        mValueSelected = false;
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -102,13 +101,12 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         mSummaryChart = new SummaryChart(this, barChart, new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry entry, Highlight h) {
-                displayValue(entry, true);
-                mValueSelected = true;
+                displayValue(entry);
             }
 
             @Override
             public void onNothingSelected() {
-                displayValue(null, mValueSelected);
+                displayValue(null);
             }
         });
 
@@ -130,54 +128,35 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         // 前データ、次データへのボタンの 有効無効
         UiUtils.setEnabled(this, R.id.btn_negative, mSummaryChart.hasPreviousPage());
         UiUtils.setEnabled(this, R.id.btn_positive, mSummaryChart.hasNextPage());
-        displayValue(null, false);
+        displayValue(null);
     }
 
-    private void displayValue(Entry entry, boolean fromLestener) {
+    private void displayValue(Entry entry) {
         mPhotoUri = null;
         String text = null;
-        String toast;
+//        String toast;
         if (entry != null) {
             String dateString = mSummaryChart.getXAxisLabelFull(entry.getX());
             text = getString(R.string.fmt_value_accumulate, dateString);
             // 計測期間内に撮影された画像があるか確認する
             Date[] period = DbUtils.selectTimePeriods(this, mSummaryChart.getLogDate((int)entry.getX()));
             if (period != null && period.length == 2) {
-                List<Uri> photoList = ContentsUtils.getImageList(this, period[0], period[1]);
+                // 撮影した写真がすぐグラフに反映されるように修正
+                Date endTime = period[1];
+                if (MiscUtils.isToday(endTime) && SkiLogService.isRunning(this)) endTime = new Date(System.currentTimeMillis());
+                List<Uri> photoList = ContentsUtils.getImageList(this, period[0], endTime);
                 if (photoList.size() >= 1) {
                     mPhotoUri = photoList.get(0);
                     text += getString(R.string.fmt_photo_count, photoList.size());
                 }
             }
-            toast = getString(R.string.fmt_date_selected, dateString);
-        } else {
-            toast = getString(R.string.msg_unselect);
-        }
-        if (fromLestener && System.currentTimeMillis() >= mTimeToast + 1500) {
-            // Toastが連続で表示されないように制限を掛ける
-            mTimeToast = System.currentTimeMillis();
-            Toast.makeText(this, toast, Toast.LENGTH_SHORT).show();
+            if (!mValueSelected) {
+                Toast.makeText(this, R.string.msg_date_selected, Toast.LENGTH_LONG).show();
+                mValueSelected = true;
+            }
         }
         UiUtils.setText(this, R.id.tv_chart_value, text);
         UiUtils.setEnabled(this, R.id.btn_detail, mPhotoUri != null);
-    }
-
-    @Override
-    protected Date getTargetDate() {
-        return mSummaryChart.getSelectedDate();
-    }
-
-    @Override
-    protected void redrawChart(Date deletedLogDate) {
-        mSummaryChart.drawChart();
-    }
-
-    @Override
-    protected void redrawChart(String deletedTag) {
-        if (deletedTag != null && deletedTag.equals(mSummaryChart.getFilter())) {
-            mSummaryChart.drawChart();
-        }
-        setupFilteringTag();
     }
 
     private void setupFilteringTag() {
@@ -202,6 +181,31 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
                 super.onClick(view);
                 break;
         }
+    }
+
+
+    ////////////////////////////////////////////////////////////////////
+    //
+    // 親クラスのメソッドをOverrideする
+    //
+
+
+    @Override
+    protected Date getTargetDate() {
+        return mSummaryChart.getSelectedDate();
+    }
+
+    @Override
+    protected void redrawChart(Date deletedLogDate) {
+        mSummaryChart.drawChart();
+    }
+
+    @Override
+    protected void redrawChart(String deletedTag) {
+        if (deletedTag != null && deletedTag.equals(mSummaryChart.getFilter())) {
+            mSummaryChart.drawChart();
+        }
+        setupFilteringTag();
     }
 
 

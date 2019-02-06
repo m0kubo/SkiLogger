@@ -3,7 +3,6 @@ package com.insprout.okubo.skilog;
 import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -17,11 +16,10 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.chart.AltitudeChart;
+import com.insprout.okubo.skilog.util.MiscUtils;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class LineChartPagerAdapter extends PagerAdapter {
 
@@ -33,8 +31,9 @@ public class LineChartPagerAdapter extends PagerAdapter {
 
     private Context mContext;
     private List<Date> mDateList;
-    //private Map<Date, Uri> mPhoto = new HashMap<>();
     private PhotoUriListener mListener = null;
+    private boolean mHasToday = false;
+    private AltitudeChart mChartOfToday = null;
 
 
     public LineChartPagerAdapter(Activity activity, List<Date> dates) {
@@ -46,6 +45,8 @@ public class LineChartPagerAdapter extends PagerAdapter {
         mInflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mDateList = dates;
         mListener = listener;
+        // 日付リストが 本日のものかチェックしておく
+        mHasToday = (mDateList != null && MiscUtils.isToday(mDateList.get(mDateList.size() - 1)));
     }
 
     @Override
@@ -58,11 +59,11 @@ public class LineChartPagerAdapter extends PagerAdapter {
         LineChart lineChartView = layout.findViewById(R.id.line_chart);
         final TextView tvValue = layout.findViewById(R.id.tv_chart_value);
         final AltitudeChart dailyChart = new AltitudeChart(mContext, lineChartView, date);
+        if (mHasToday && (position == getCount() - 1)) mChartOfToday = dailyChart;   // 当日のチャートを保持
         final OnChartValueSelectedListener listener = new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, Highlight h) {
                 // ポイント地点の情報を表示
-//                tvValue.setText(mContext.getString(R.string.fmt_value_altitude, dailyChart.getXAxisLabel(e.getX()), dailyChart.getYAxisLabel(e.getY())));
                 Uri photo = dailyChart.getPhotoUri(e);
                 tvValue.setText(mContext.getString(
                         photo != null ? R.string.fmt_value_photo : R.string.fmt_value_altitude,
@@ -95,6 +96,8 @@ public class LineChartPagerAdapter extends PagerAdapter {
     public void destroyItem(ViewGroup container, int position, Object object) {
         ViewPager viewPager = (ViewPager)container;
         viewPager.removeView((View)object);
+
+        if (position == getCount() - 1) mChartOfToday = null;   // 当日のチャートが破棄された
     }
 
     @Override
@@ -107,17 +110,19 @@ public class LineChartPagerAdapter extends PagerAdapter {
         return view.equals(object);
     }
 
-//    private class LineChartTask extends AsyncTask<Void, Void, Void> {
-//
-//        public LineChartTask() {
-//
-//        }
-//
-//        @Override
-//        protected Void doInBackground(Void... voids) {
-//            return null;
-//        }
-//    }
+    public void updateChart() {
+        // 当日のチャートが存在していれば、表示を最新にする
+        if (mChartOfToday != null) {
+            mChartOfToday.drawChart();
+        }
+    }
+
+    public void appendChartValue(long time, float altitude, float ascent, float descent, int runCount) {
+        // 当日のチャートが存在していれば、新規データをチャートに反映する
+        if (mChartOfToday != null) {
+            mChartOfToday.appendChartValue(time, altitude, ascent, descent, runCount);
+        }
+    }
 
 }
 

@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -88,6 +87,14 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                     ).show();
                 }
                 LineChartActivity.startActivity(this, target);
+                finish();
+                break;
+
+            case R.id.btn_chart2:
+                // サマリー画面表示
+                UiUtils.setSelected(this, R.id.btn_chart1, false);
+                UiUtils.setSelected(this, R.id.btn_chart2, true);
+                BarChartActivity.startActivity(this);
                 finish();
                 break;
 

@@ -18,6 +18,7 @@ import com.github.mikephil.charting.formatter.IAxisValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.R;
+import com.insprout.okubo.skilog.SkiLogService;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.util.AppUtils;
@@ -202,7 +203,10 @@ public class AltitudeChart {
         mChartAxis1 = new RectF(minX, (float)(Math.ceil(maxY1 / boundary) * boundary), maxX, (float)(Math.floor(minY1 / boundary) * boundary));
 
         // 写真データを取得する
-        photos = ContentsUtils.getImageList(mContext, data.get(0).getCreated(), data.get(data.size() - 1).getCreated());
+        // 撮影した写真がすぐグラフに反映されるように修正
+        Date endTime = data.get(data.size() - 1).getCreated();
+        if (MiscUtils.isToday(endTime) && SkiLogService.isRunning(mContext)) endTime = new Date(System.currentTimeMillis());
+        photos = ContentsUtils.getImageList(mContext, data.get(0).getCreated(), endTime);
         // 写真データがあったら、表示用のグラフデータを作成する
         if (photos.size() >= 1) {
             int photoCount = photos.size();
