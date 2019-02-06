@@ -7,9 +7,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -31,19 +28,20 @@ import java.util.Date;
 import java.util.List;
 
 
-public class BarChartActivity extends AppCompatActivity implements View.OnClickListener, DialogUi.DialogEventListener {
-    private final static int RC_DELETE_LOG = 1;
+public class BarChartActivity extends BaseActivity implements View.OnClickListener/*, DialogUi.DialogEventListener*/ {
+//    private final static int RC_DELETE_LOG = 1;
     private final static int RC_SELECT_TAG = 2;
 
     private ServiceMessenger mServiceMessenger;
 
     private SummaryChart mSummaryChart;
-    private List<TagDb> mTags;
+    private List<TagDb> mAllTags;
     private int mIndexTag = -1;
     private Date mTargetDate = null;
     private Uri mPhotoUri = null;
 
     private boolean mValueSelected = false;
+    private long mTimeToast = 0;
 
 
     @Override
@@ -70,7 +68,6 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     }
 
     private void initVars() {
-        mTags = AppUtils.getTags(this);                         // 絞り込み用のタグリスト取得
         mValueSelected = false;
 
         // Serviceプロセスとの 通信クラス作成
@@ -91,6 +88,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
     private void initView() {
         UiUtils.setSelected(this, R.id.btn_chart2, true);
+        setupFilteringTag();
 
         // タイトルバーに backボタンを表示する
         ActionBar actionBar = getSupportActionBar();
@@ -132,7 +130,6 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         // 前データ、次データへのボタンの 有効無効
         UiUtils.setEnabled(this, R.id.btn_negative, mSummaryChart.hasPreviousPage());
         UiUtils.setEnabled(this, R.id.btn_positive, mSummaryChart.hasNextPage());
-        UiUtils.setEnabled(this, R.id.btn_tag, !(mTags == null || mTags.isEmpty()));
         displayValue(null, false);
     }
 
@@ -156,39 +153,43 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         } else {
             toast = getString(R.string.msg_unselect);
         }
-        if (fromLestener && System.currentTimeMillis() >= mTimeToast + 2000) {
+        if (fromLestener && System.currentTimeMillis() >= mTimeToast + 1500) {
+            // Toastが連続で表示されないように制限を掛ける
             mTimeToast = System.currentTimeMillis();
             Toast.makeText(this, toast, Toast.LENGTH_SHORT).show();
         }
         UiUtils.setText(this, R.id.tv_chart_value, text);
         UiUtils.setEnabled(this, R.id.btn_detail, mPhotoUri != null);
     }
-    private long mTimeToast = 0;
+
+    @Override
+    protected Date getTargetDate() {
+        return mSummaryChart.getSelectedDate();
+    }
+
+    @Override
+    protected void redrawChart(Date deletedLogDate) {
+        mSummaryChart.drawChart();
+    }
+
+    @Override
+    protected void redrawChart(String deletedTag) {
+        if (deletedTag != null && deletedTag.equals(mSummaryChart.getFilter())) {
+            mSummaryChart.drawChart();
+        }
+        setupFilteringTag();
+    }
+
+    private void setupFilteringTag() {
+        mAllTags = AppUtils.getTags(this);
+        UiUtils.setEnabled(this, R.id.btn_tag, (mAllTags != null && !mAllTags.isEmpty()));
+    }
 
 
     @Override
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-            case R.id.btn_back:
-                finish();
-                break;
-
-            case R.id.btn_chart1:
-                UiUtils.setSelected(this, R.id.btn_chart1, true);
-                UiUtils.setSelected(this, R.id.btn_chart2, false);
-                Date target = mSummaryChart.getSelectedDate();
-                if (target != null) {
-                    Toast.makeText(
-                            this,
-                            getString(R.string.fmt_toast_daily_chart, AppUtils.toDateString(target)),
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-                LineChartActivity.startActivity(this, mSummaryChart.getSelectedDate());
-                finish();
-                break;
-
             case R.id.btn_tag:
                 selectTag();
                 break;
@@ -196,92 +197,30 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             case R.id.btn_detail:
                 if (mPhotoUri != null) UiUtils.intentActionView(this, mPhotoUri);
                 break;
+
+            default:
+                super.onClick(view);
+                break;
         }
     }
-
 
 
     ////////////////////////////////////////////////////////////////////
     //
-    // Optionメニュー関連
+    // Dialog関連
     //
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.titlebar, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        // 削除メニューの状態を設定
-        MenuItem deleteMenu = menu.findItem(R.id.menu_delete_logs);
-        mTargetDate = mSummaryChart.getSelectedDate();
-        if (mTargetDate != null) {
-            deleteMenu.setEnabled(true);
-            deleteMenu.setTitle(getString(R.string.fmt_menu_delete_logs, AppUtils.toDateString(mTargetDate)));
-
-        } else {
-            deleteMenu.setEnabled(false);
-            deleteMenu.setTitle(R.string.menu_delete_logs);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-
-            case R.id.menu_delete_logs:
-                confirmDeleteLogs();
-                return true;
-
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void confirmDeleteLogs() {
-        if (mTargetDate == null) return;       // 念のためチェック
-        // データ削除
-        String title = getString(R.string.title_delete_logs);
-        String message = getString(R.string.fmt_delete_daily_logs,  AppUtils.toDateString(mTargetDate));
-        new DialogUi.Builder(this)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton()
-                .setNegativeButton()
-                .setRequestCode(RC_DELETE_LOG)
-                .show();
-    }
-
-
-    private void deleteLogs() {
-        if (mTargetDate == null) return;       // 念のためチェック
-
-        // 指定日のログをDBから削除する
-        boolean res = DbUtils.deleteLogs(this, mTargetDate);
-        if (res) {
-            // 紐づいたタグ情報もDBから削除する
-            DbUtils.deleteTags(this, mTargetDate);
-
-            // チャートの表示を更新する
-            updateChart();
-        }
-    }
-
+    // 絞り込み用 タグ選択ダイアログ表示
     private void selectTag() {
         // tag一覧
         // tagがない場合 ボタン無効になっている筈だが念のためチェック
-        if (mTags == null || mTags.isEmpty()) {
+        if (mAllTags == null || mAllTags.isEmpty()) {
             return;
         }
         // 選択用リストを作成
-        String[] arrayTag = new String[ mTags.size() + 1 ];
-        for (int i=0; i<mTags.size(); i++) {
-            arrayTag[i] = mTags.get(i).getTag();
+        String[] arrayTag = new String[ mAllTags.size() + 1 ];
+        for (int i = 0; i< mAllTags.size(); i++) {
+            arrayTag[i] = mAllTags.get(i).getTag();
         }
         arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
         new DialogUi.Builder(this)
@@ -293,22 +232,18 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                 .show();
     }
 
+
     @Override
     public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch (requestCode) {
-            case RC_DELETE_LOG:
-                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
-                    deleteLogs();
-                }
-                break;
-
             case RC_SELECT_TAG:
                 if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
+                    // 絞り込み処理 実行
                     if (view instanceof ListView) {
                         int pos = ((ListView)view).getCheckedItemPosition();
-                        if (mTags != null && pos >= 0 && pos < mTags.size()) {
+                        if (mAllTags != null && pos >= 0 && pos < mAllTags.size()) {
                             mIndexTag = pos;
-                            mSummaryChart.setFilter(mTags.get(mIndexTag).getTag());
+                            mSummaryChart.setFilter(mAllTags.get(mIndexTag).getTag());
 
                         } else {
                             if (mIndexTag >= 0) {
@@ -326,8 +261,13 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                     }
                 }
                 break;
+
+            default:
+                super.onDialogEvent(requestCode, dialog, which, view);
+                break;
         }
     }
+
 
     public static void startActivity(Activity context) {
         Intent intent = new Intent(context, BarChartActivity.class);
