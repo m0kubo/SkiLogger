@@ -359,7 +359,7 @@ public class SummaryChart {
 
         } else {
             // シーズン表示
-            return mContext.getString(R.string.label_graph_desc);
+            return mContext.getString(R.string.title_chart_desc);
         }
     }
 

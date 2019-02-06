@@ -9,23 +9,28 @@
     <string name="fmt_time">%d:%02d</string>
     <string name="fmt_value_altitude">標高 %2$s ＠%1$s</string>
     <string name="fmt_value_photo">標高 %2$s ＠%1$s  撮影</string>
-    <string name="fmt_value_accumulate">積算 %2$s ＠%1$s</string>
-    <string name="fmt_value_accumulate_photo">積算 %2$s ＠%1$s  写真あり</string>
+    <!--<string name="fmt_value_accumulate">積算%2$s ＠%1$s</string>-->
+    <string name="fmt_value_accumulate">選択日：%s</string>
+    <string name="fmt_photo_count">（写真%d枚）</string>
     <string name="fmt_run_count">滑走本数：%d</string>
     <string name="fmt_accumulate">&lt;font color=\"#%06x\"&gt;%,3.0fm&lt;/font&gt; /&lt;font color=\"#%06x\"&gt;%,3.0fm&lt;/font&gt;</string>
     <string name="fmt_ski_log">RUN：%d / 下降 %,3.0fm</string>
-    <string name="fmt_title_chart">表示日 %s</string>
+    <string name="fmt_title_chart">高度グラフ %s</string>
     <string name="fmt_title_chart2">シーズン %d</string>
     <string name="fmt_title_tag">検索：%s</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
     <string name="fmt_photo_viewer">記録期間に撮影された写真が%d枚あります。\n表示しますか?</string>
+    <string name="fmt_date_selected">%sのデータを選択しました。\n選択日の高度グラフ表示、キーワード設定、データ削除などが行えます。</string>
+    <string name="fmt_toast_daily_chart">%sの高度グラフを表示します</string>
+
+    <string name="msg_unselect">選択を解除しました。</string>
 
     <string name="menu_theme">アプリ テーマ変更</string>
     <string name="menu_not_targeted">(対象日が選択されていません)</string>
     <string name="menu_targeted_fmt">対象日：%s</string>
     <string name="menu_delete_logs">記録削除</string>
-    <string name="menu_list_tags">タグ一覧/削除</string>
-    <string name="menu_add_tags">タグ追加</string>
+    <string name="menu_list_tags">キーワード一覧/削除</string>
+    <string name="menu_add_tags">キーワード追加</string>
 
     <string-array name="app_themes">
         <item>テーマ：Light</item>
@@ -33,19 +38,20 @@
     </string-array>
     <string-array name="menu_add_tag">
         <item>直接入力する</item>
-        <item>既存のタグから選択</item>
+        <item>既存のキーワードから選択</item>
         <item>近隣の施設名から選択</item>
     </string-array>
 
+    <string name="title_chart_desc">下降積算グラフ</string>
     <string name="label_accumulate">積算高度</string>
     <string name="label_altitude">高度</string>
     <string name="label_photo">写真あり</string>
     <string name="label_count_lift">RUN</string>
     <string name="label_graph_asc">上昇積算</string>
     <string name="label_graph_desc">下降積算</string>
-    <string name="label_status_stop">状態：STOP</string>
-    <string name="label_status_start">状態：START</string>
-    <string name="label_status_starting">状態：Starting&#8230;</string>
+    <string name="label_status_stop">計測：STOP</string>
+    <string name="label_status_start">計測：START</string>
+    <string name="label_status_starting">計測：Starting&#8230;</string>
 
     <string name="btn_ok">OK</string>
     <string name="btn_cancel">キャンセル</string>
@@ -53,18 +59,18 @@
     <string name="btn_delete">削除</string>
     <string name="btn_finish_app">アプリ終了</string>
 
-    <string name="fmt_title_list_tags">%sにつけられたタグ</string>
-    <string name="msg_delete_tags">タグを削除します</string>
-    <string name="fmt_msg_deleted_tags">%sのタグから「%s」を削除しました</string>
+    <string name="fmt_title_list_tags">%s のキーワード</string>
+    <string name="msg_delete_tags">キーワードを削除します</string>
+    <string name="fmt_msg_deleted_tags">%sからキーワード「%s」を削除しました</string>
 
     <string name="default_altitude"> --- m</string>
     <string name="default_run_count">0</string>
 
-    <string name="title_input_tag">タグ設定</string>
-    <string name="hint_tag">設定するタグを入力してください</string>
-    <string name="title_select_tag">タグで検索</string>
+    <string name="title_input_tag">キーワード設定</string>
+    <string name="hint_tag">設定キーワードを入力してください</string>
+    <string name="title_select_tag">キーワードで検索</string>
     <string name="menu_reset_tag">(絞りこみ解除)</string>
-    <string name="msg_no_more_tags">選択可能なタグがありません</string>
+    <string name="msg_no_more_tags">選択可能なキーワードがありません</string>
     <string name="msg_getting_tags">施設情報を取得しています&#8230;</string>
     <string name="msg_no_place_tags">近隣の施設情報はみつかりませんでした</string>
     <string name="msg_fail_to_google_place_api">情報が取得できませんでした。通信環境の良い場所で再度お試しください</string>

@@ -291,9 +291,9 @@ public class AltitudeChart {
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
         // 高度チャートの 軸表示設定
         setupAxis(mChartAxis1);
-        dataSets.add(newLineDataSet(mChartValues11, mChartLabel11, mColor, true, false));
+        dataSets.add(newLineDataSet(mChartValues11, mChartLabel11, mColor, false));
         if (mChartValues12.size() >= 1) {
-            dataSets.add(newLineDataSet(mChartValues12, mChartLabel12, mColorPhoto, false, true));
+            dataSets.add(newLineDataSet(mChartValues12, mChartLabel12, mColorPhoto, true));
         }
 
         setDescription();
@@ -306,25 +306,27 @@ public class AltitudeChart {
     }
 
 
-    private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean lineFilled, boolean marker) {
+    private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean marker) {
         LineDataSet dataSet = new LineDataSet(yValues, label);
 
         dataSet.setDrawIcons(false);
         dataSet.setLineWidth(2f);
-        dataSet.setCircleRadius(marker ? 6f : 1f);
         dataSet.setDrawCircleHole(false);
         dataSet.setValueTextSize(0f);
         dataSet.setFormLineWidth(1f);
         dataSet.setFormLineDashEffect(new DashPathEffect(new float[]{10f, 5f}, 0f));
         dataSet.setFormSize(15.f);
 
-        dataSet.setColor(color);
         dataSet.setCircleColor(color);
-        if (lineFilled) {
+        if (marker) {
+            dataSet.setColor(0x00000000);
+            dataSet.setDrawFilled(false);
+            dataSet.setCircleRadius(6f);
+        } else {
+            dataSet.setColor(color);
             dataSet.setDrawFilled(true);
             dataSet.setFillColor(color);
-        } else {
-            dataSet.setDrawFilled(false);
+            dataSet.setCircleRadius(1f);
         }
 
         return dataSet;

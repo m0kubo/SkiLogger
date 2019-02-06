@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.data.Entry;
@@ -42,6 +43,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
     private Date mTargetDate = null;
     private Uri mPhotoUri = null;
 
+    private boolean mValueSelected = false;
+
 
     @Override
     public void onResume() {
@@ -68,6 +71,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
 
     private void initVars() {
         mTags = AppUtils.getTags(this);                         // 絞り込み用のタグリスト取得
+        mValueSelected = false;
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -100,46 +104,66 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
         mSummaryChart = new SummaryChart(this, barChart, new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry entry, Highlight h) {
-                displayValue(entry);
+                displayValue(entry, true);
+                mValueSelected = true;
             }
 
             @Override
             public void onNothingSelected() {
-                displayValue(null);
+                displayValue(null, mValueSelected);
             }
         });
-        mSummaryChart.drawChart();
-        updateUi();
+
+        // チャートの表示を更新する
+        updateChart();
     }
 
 
-    private void updateUi() {
+    // チャートの表示を更新する
+    private void updateChart() {
+        mValueSelected = false;     // 選択解除の表示を行わせない
+        mSummaryChart.drawChart();
+        updateView();
+    }
+
+
+    private void updateView() {
         setTitle(mSummaryChart.getSubject());
         // 前データ、次データへのボタンの 有効無効
         UiUtils.setEnabled(this, R.id.btn_negative, mSummaryChart.hasPreviousPage());
         UiUtils.setEnabled(this, R.id.btn_positive, mSummaryChart.hasNextPage());
         UiUtils.setEnabled(this, R.id.btn_tag, !(mTags == null || mTags.isEmpty()));
-        displayValue(null);
+        displayValue(null, false);
     }
 
-    private void displayValue(Entry entry) {
+    private void displayValue(Entry entry, boolean fromLestener) {
         mPhotoUri = null;
         String text = null;
+        String toast;
         if (entry != null) {
+            String dateString = mSummaryChart.getXAxisLabelFull(entry.getX());
+            text = getString(R.string.fmt_value_accumulate, dateString);
             // 計測期間内に撮影された画像があるか確認する
             Date[] period = DbUtils.selectTimePeriods(this, mSummaryChart.getLogDate((int)entry.getX()));
             if (period != null && period.length == 2) {
                 List<Uri> photoList = ContentsUtils.getImageList(this, period[0], period[1]);
-                if (photoList.size() >= 1) mPhotoUri = photoList.get(0);
+                if (photoList.size() >= 1) {
+                    mPhotoUri = photoList.get(0);
+                    text += getString(R.string.fmt_photo_count, photoList.size());
+                }
             }
-            text = getString(mPhotoUri != null ? R.string.fmt_value_accumulate_photo : R.string.fmt_value_accumulate,
-                    mSummaryChart.getXAxisLabelFull(entry.getX()),
-                    mSummaryChart.getYAxisLabel(entry.getY())
-            );
+            toast = getString(R.string.fmt_date_selected, dateString);
+        } else {
+            toast = getString(R.string.msg_unselect);
+        }
+        if (fromLestener && System.currentTimeMillis() >= mTimeToast + 2000) {
+            mTimeToast = System.currentTimeMillis();
+            Toast.makeText(this, toast, Toast.LENGTH_SHORT).show();
         }
         UiUtils.setText(this, R.id.tv_chart_value, text);
         UiUtils.setEnabled(this, R.id.btn_detail, mPhotoUri != null);
     }
+    private long mTimeToast = 0;
 
 
     @Override
@@ -150,19 +174,17 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                 finish();
                 break;
 
-            case R.id.btn_negative:
-                mSummaryChart.goPreviousPage();
-                updateUi();
-                break;
-
-            case R.id.btn_positive:
-                mSummaryChart.goNextPage();
-                updateUi();
-                break;
-
             case R.id.btn_chart1:
                 UiUtils.setSelected(this, R.id.btn_chart1, true);
                 UiUtils.setSelected(this, R.id.btn_chart2, false);
+                Date target = mSummaryChart.getSelectedDate();
+                if (target != null) {
+                    Toast.makeText(
+                            this,
+                            getString(R.string.fmt_toast_daily_chart, AppUtils.toDateString(target)),
+                            Toast.LENGTH_SHORT
+                    ).show();
+                }
                 LineChartActivity.startActivity(this, mSummaryChart.getSelectedDate());
                 finish();
                 break;
@@ -246,8 +268,7 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
             DbUtils.deleteTags(this, mTargetDate);
 
             // チャートの表示を更新する
-            mSummaryChart.drawChart();
-            updateUi();
+            updateChart();
         }
     }
 
@@ -300,8 +321,8 @@ public class BarChartActivity extends AppCompatActivity implements View.OnClickL
                             mIndexTag = -1;
                             mSummaryChart.setFilter(null);
                         }
-                        mSummaryChart.drawChart();
-                        updateUi();
+                        // チャートの表示を更新する
+                        updateChart();
                     }
                 }
                 break;
