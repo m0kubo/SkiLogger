@@ -245,13 +245,13 @@ public class SummaryChart {
         xAxis.setDrawAxisLine(true);
 
         int MAX_X_LABELS = 7;
+        mChart.setVisibleXRange(MAX_X_LABELS, MAX_X_LABELS + 0.5f);     // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
         int dataCount = mXAxisLabels.size();
         if (dataCount > MAX_X_LABELS) {
-            mChart.setVisibleXRange(MAX_X_LABELS + 0.5f, MAX_X_LABELS + 0.5f);      // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
-            mChart.moveViewToX((float) dataCount - MAX_X_LABELS);
+            mChart.moveViewToX((float) dataCount - MAX_X_LABELS);       // 末尾が表示されるようにスクロール
         } else {
-            mChart.setVisibleXRange(MAX_X_LABELS, MAX_X_LABELS);      // 一度に表示する棒グラフの数 (スクロールアウトしているのがわかる様に 端数を指定)
-            xAxis.setLabelCount(dataCount, false);
+            xAxis.setAxisMinimum(-0.7f);    // デフォルトの -0.5のままだと 最初のラベルが2重に描かれてしまう
+            xAxis.setLabelCount(dataCount);
         }
 
         //グラフ上の表示
