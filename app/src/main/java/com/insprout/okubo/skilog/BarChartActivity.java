@@ -31,14 +31,12 @@ import java.util.List;
 
 public class BarChartActivity extends BaseActivity implements View.OnClickListener, DialogUi.DialogEventListener {
 //    private final static int RC_DELETE_LOG = 1;
-    private final static int RC_SELECT_TAG = 2;
+//    private final static int RC_SELECT_TAG = 2;
     private final static int RC_SELECT_CHART_COUNT = 3;
 
     private ServiceMessenger mServiceMessenger;
 
     private SummaryChart mSummaryChart;
-    private List<TagDb> mAllTags;
-    private int mIndexTag = -1;
     private Uri mPhotoUri = null;
 
     private boolean mValueSelected = false;
@@ -87,8 +85,8 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     }
 
     private void initView() {
+        onInitialize();
         UiUtils.setSelected(this, R.id.btn_chart2, true);
-        setupFilteringTag();
 
         // タイトルバーに backボタンを表示する
         ActionBar actionBar = getSupportActionBar();
@@ -161,33 +159,25 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         UiUtils.setEnabled(this, R.id.btn_detail, mPhotoUri != null);
     }
 
-    private void setupFilteringTag() {
-        mAllTags = AppUtils.getTags(this);
-        UiUtils.setEnabled(this, R.id.btn_tag, (mAllTags != null && !mAllTags.isEmpty()));
-    }
-
 
     @Override
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-            case R.id.btn_tag:
-                selectTag();
-                break;
 
             case R.id.btn_detail:
                 if (mPhotoUri != null) UiUtils.intentActionView(this, mPhotoUri);
                 break;
 
-            case R.id.btn_chart1:
-                // データが
-                int count = mSummaryChart.getCount();
-                if (mSummaryChart.getFilter() != null && count >= 1) {
-                    confirmStartLineChart(count);
-                } else {
-                    startLineChartActivity();
-                }
-                break;
+//            case R.id.btn_chart1:
+//                // データが
+//                int count = mSummaryChart.getCount();
+//                if (mSummaryChart.getFilter() != null && count >= 1) {
+//                    confirmStartLineChart(count);
+//                } else {
+//                    startLineChartActivity();
+//                }
+//                break;
 
             default:
                 super.onClick(view);
@@ -217,7 +207,12 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         if (deletedTag != null && deletedTag.equals(mSummaryChart.getFilter())) {
             mSummaryChart.drawChart();
         }
-        setupFilteringTag();
+    }
+
+    @Override
+    protected void redrawChartByFilter(String filter) {
+        mSummaryChart.setFilter(filter);
+        mSummaryChart.drawChart();
     }
 
 
@@ -225,28 +220,6 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     //
     // Dialog関連
     //
-
-    // 絞り込み用 タグ選択ダイアログ表示
-    private void selectTag() {
-        // tag一覧
-        // tagがない場合 ボタン無効になっている筈だが念のためチェック
-        if (mAllTags == null || mAllTags.isEmpty()) {
-            return;
-        }
-        // 選択用リストを作成
-        String[] arrayTag = new String[ mAllTags.size() + 1 ];
-        for (int i = 0; i< mAllTags.size(); i++) {
-            arrayTag[i] = mAllTags.get(i).getTag();
-        }
-        arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
-        new DialogUi.Builder(this)
-                .setTitle(R.string.title_select_tag)
-                .setSingleChoiceItems(arrayTag, mIndexTag)
-                .setPositiveButton()
-                .setNegativeButton()
-                .setRequestCode(RC_SELECT_TAG)
-                .show();
-    }
 
     private void confirmStartLineChart(int count) {
         new DialogUi.Builder(this)
@@ -262,32 +235,6 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     @Override
     public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
         switch (requestCode) {
-            case RC_SELECT_TAG:
-                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
-                    // 絞り込み処理 実行
-                    if (view instanceof ListView) {
-                        int pos = ((ListView)view).getCheckedItemPosition();
-                        if (mAllTags != null && pos >= 0 && pos < mAllTags.size()) {
-                            mIndexTag = pos;
-                            mSummaryChart.setFilter(mAllTags.get(mIndexTag).getTag());
-
-                        } else {
-                            if (mIndexTag >= 0) {
-                                Intent intent = new Intent(this, BarChartActivity.class);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
-                                //finish();
-                                return;
-                            }
-                            mIndexTag = -1;
-                            mSummaryChart.setFilter(null);
-                        }
-                        // チャートの表示を更新する
-                        updateChart();
-                    }
-                }
-                break;
-
             case RC_SELECT_CHART_COUNT:
                 switch(which) {
                     case DialogUi.EVENT_BUTTON_POSITIVE:

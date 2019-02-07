@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -38,7 +39,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     private final static int RP_LOCATION = 100;
 
     private final static int RC_DELETE_LOG = 100;
-//    private final static int RC_SELECT_TAG = 200;
+    private final static int RC_SELECT_TAG = 200;
     private final static int RC_LIST_TAG = 201;
     private final static int RC_ADD_TAG = 202;
     private final static int RC_ADD_TAG_INPUT = 300;
@@ -52,6 +53,8 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     private Date mTargetDate = null;
     private TagDb mTargetTag = null;
     private List<Uri> mPhotoList = null;
+    private List<TagDb> mAllTags;
+    private int mIndexTag = -1;
 
 
 
@@ -64,6 +67,13 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     protected void redrawChart(String deletedTag) {
+    }
+
+    protected void redrawChartByFilter(String filter) {
+    }
+
+    protected void onInitialize() {
+        setupFilteringTag();
     }
 
     protected void startLineChartActivity() {
@@ -83,6 +93,12 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
         }
         LineChartActivity.startActivity(this, target, dates);
         finish();
+    }
+
+
+    private void setupFilteringTag() {
+        mAllTags = AppUtils.getTags(this);
+        UiUtils.setEnabled(this, R.id.btn_tag, (mAllTags != null && !mAllTags.isEmpty()));
     }
 
 
@@ -106,6 +122,9 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                 finish();
                 break;
 
+            case R.id.btn_tag:
+                selectTag();
+                break;
         }
     }
 
@@ -260,6 +279,28 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // 絞り込み用 タグ選択ダイアログ表示
+    private void selectTag() {
+        // tag一覧
+        // tagがない場合 ボタン無効になっている筈だが念のためチェック
+        if (mAllTags == null || mAllTags.isEmpty()) {
+            return;
+        }
+        // 選択用リストを作成
+        String[] arrayTag = new String[ mAllTags.size() + 1 ];
+        for (int i = 0; i< mAllTags.size(); i++) {
+            arrayTag[i] = mAllTags.get(i).getTag();
+        }
+        arrayTag[ arrayTag.length - 1 ] = getString(R.string.menu_reset_tag);
+        new DialogUi.Builder(this)
+                .setTitle(R.string.title_select_tag)
+                .setSingleChoiceItems(arrayTag, mIndexTag)
+                .setPositiveButton()
+                .setNegativeButton()
+                .setRequestCode(RC_SELECT_TAG)
+                .show();
+    }
+
 
     private void measureLocation() {
         if (!LocationProvider.isEnabled(this)) {
@@ -384,6 +425,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                             if (result) {
                                 String msg = getString(R.string.fmt_msg_deleted_tags,  AppUtils.toDateString(mTargetTag.getDate()), mTargetTag.getTag());
                                 Toast.makeText(this, msg ,Toast.LENGTH_SHORT).show();
+                                setupFilteringTag();
 
                                 // 削除されたタグが絞り込み表示に指定されていた場合は、チャートを再描画する
                                 redrawChart(mTargetTag.getTag());
@@ -417,8 +459,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                                 DbUtils.insertTag(this, new TagDb(mTargetDate, tag));
 
                                 // 絞り込み用のタグリスト再取得
-                                //setupFilteringTag();
-                                redrawChart((String)null);
+                                setupFilteringTag();
                             }
                         }
                         break;
@@ -455,6 +496,33 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
                 break;
+
+            case RC_SELECT_TAG:
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
+                    // 絞り込み処理 実行
+                    if (view instanceof ListView) {
+                        String filter = null;
+                        int pos = ((ListView)view).getCheckedItemPosition();
+                        if (mAllTags != null && pos >= 0 && pos < mAllTags.size()) {
+                            mIndexTag = pos;
+                            filter = mAllTags.get(mIndexTag).getTag();
+
+                        } else {
+                            if (mIndexTag >= 0) {
+                                Intent intent = new Intent(this, BarChartActivity.class);
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                                //finish();
+                                return;
+                            }
+                            mIndexTag = -1;
+                        }
+                        // チャートの表示を更新する
+                        redrawChartByFilter(filter);
+                    }
+                }
+                break;
+
 
             case RC_DIALOG_PHOTO:
                 if (which == DialogUi.EVENT_BUTTON_POSITIVE) {

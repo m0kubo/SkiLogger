@@ -66,6 +66,8 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
 
 
     private void initVars() {
+        onInitialize();
+
         // 初期表示する日付が指定されていた場合は、そのページを初期ページにする
         Date target = (Date) getIntent().getSerializableExtra(EXTRA_PARAM1);
         long[] dates = getIntent().getLongArrayExtra(EXTRA_PARAM2);
@@ -225,24 +227,49 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     }
 
     @Override
+    protected void redrawChartByFilter(String filter) {
+        // ViewPagerは動的にサイズを変更できないので、Activityごと描きなおす
+        long[] dates = null;
+        if (filter != null) {
+            List<SkiLogDb>logs = DbUtils.selectLogSummaries(this, filter);
+            dates = new long[logs != null ? logs.size() : 0];
+            if (logs != null) {
+                for (int i=0; i<logs.size(); i++) {
+                    Date date = logs.get(i).getCreated();
+                    dates[i] = date != null ? date.getTime() : 0;
+                }
+            }
+        }
+        restartActivity(null, dates);
+    }
+
+    @Override
     protected void redrawChart(String deletedTag) {
         // タグの削除については何もしない
     }
 
     @Override
     protected void redrawChart(Date deletedLogDate) {
-        // 表示ページ数が変更になるので Activityごと再描画する
-        Intent intent = new Intent(this, LineChartActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        Date target = null;
         if (deletedLogDate != null) {
             // 初期ページの処理
             // 表示中のデータが消去されるので次の日付を初期表示ページにする
             int index = mDateList.indexOf(deletedLogDate) + 1;
             if (index >= 1 && index < mDateList.size()) {
-                intent.putExtra(EXTRA_PARAM1, mDateList.get(index));
+                target = mDateList.get(index);
             }
         }
+        restartActivity(target, null);
+    }
+
+    private void restartActivity(Date extra1, long[] extra2) {
+        // ViewPagerは動的にサイズを変更できないので、サイズが変わる場合にはActivityごと描きなおす
+        Intent intent = new Intent(this, LineChartActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (extra1 != null) intent.putExtra(EXTRA_PARAM1, extra1);
+        if (extra2 != null) intent.putExtra(EXTRA_PARAM2, extra2);
         startActivity(intent);
+        overridePendingTransition(0, 0);    // Activity遷移時のアニメーションを無効化
     }
 
 
@@ -251,12 +278,8 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     // Activity起動 staticメソッド
     //
 
-    public static void startActivity(Activity contactivityxt) {
-        startActivity(contactivityxt, null, null);
-    }
-
-    public static void startActivity(Activity activity, Date targetDate) {
-        startActivity(activity, targetDate, null);
+    public static void startActivity(Activity activity) {
+        startActivity(activity, null, null);
     }
 
     public static void startActivity(Activity activity, Date targetDate, Date[] dates) {
