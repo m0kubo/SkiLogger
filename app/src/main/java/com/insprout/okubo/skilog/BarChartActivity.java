@@ -119,6 +119,7 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     private void updateChart() {
         mValueSelected = false;     // 選択解除の表示を行わせない
         mSummaryChart.drawChart();
+        UiUtils.setText(this, R.id.tv_count, getString(R.string.fmt_count_summaries, mSummaryChart.getCount()));
         updateView();
     }
 

@@ -23,6 +23,8 @@
     <string name="fmt_date_selected">%sのデータを選択しました。\n選択日の高度グラフ表示、キーワード設定、データ削除などが行えます。</string>
     <string name="msg_date_selected">データを選択しました。\n\n選択日の高度グラフ表示、キーワード設定、データ削除などが行えます。</string>
     <string name="fmt_toast_daily_chart">%sの高度グラフを表示します</string>
+    <string name="fmt_count_summaries">%d件</string>
+    <string name="fmt_pager">%1$d/%2$d</string>
 
     <string name="msg_unselect">選択を解除しました。</string>
 

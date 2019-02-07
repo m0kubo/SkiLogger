@@ -343,6 +343,12 @@ public class SummaryChart {
         mChart.invalidate();
     }
 
+    // データの件数を取得する
+    // drawChart()実行後に有効
+    public int getCount() {
+        return mSkiLogs != null ? mSkiLogs.size() : 0;
+    }
+
     private int indexOfLogs(Date date) {
         if (date == null || mSkiLogs == null || mSkiLogs.size() == 0) return -1;
         for (int i=0; i<mSkiLogs.size(); i++) {

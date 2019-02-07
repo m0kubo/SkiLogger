@@ -56,6 +56,10 @@ public class LineChartPagerAdapter extends PagerAdapter {
 
         final Date date = mDateList.get(position);
 
+        if (getCount() >= 1) {
+            TextView tv = layout.findViewById(R.id.tv_count);
+            tv.setText(mContext.getString(R.string.fmt_pager, position + 1, getCount()));
+        }
         LineChart lineChartView = layout.findViewById(R.id.line_chart);
         final TextView tvValue = layout.findViewById(R.id.tv_chart_value);
         final AltitudeChart dailyChart = new AltitudeChart(mContext, lineChartView, date);
