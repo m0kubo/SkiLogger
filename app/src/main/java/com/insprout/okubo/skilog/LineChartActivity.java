@@ -25,17 +25,9 @@ import java.util.Map;
 
 
 public class LineChartActivity extends BaseActivity implements View.OnClickListener, DialogUi.DialogEventListener {
-    private final static int RP_LOCATION = 100;
-
-    private final static int RC_DELETE_LOG = 100;
-    private final static int RC_LIST_TAG = 200;
-    private final static int RC_ADD_TAG = 201;
-    private final static int RC_ADD_TAG_INPUT = 300;
-    private final static int RC_ADD_TAG_SELECTION = 301;
-    private final static int RC_ADD_TAG_LOCATION = 302;
-    private final static int RC_DELETE_TAG = 400;
 
     private final static String EXTRA_PARAM1 = "intent.extra.PARAM1";
+    private final static String EXTRA_PARAM2 = "intent.extra.PARAM2";
 
     private ServiceMessenger mServiceMessenger;
 
@@ -74,18 +66,31 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
 
 
     private void initVars() {
-        mDateList.clear();
-        List<SkiLogDb>data = DbUtils.selectLogSummaries(this, 0, 0);
-        if (data != null && !data.isEmpty()) {
-            mTargetIndex = data.size() - 1;     // 初期表示するページ
-            // 初期表示する日付が指定されていた場合は、そのページを初期ページにする
-            Date target = (Date) getIntent().getSerializableExtra(EXTRA_PARAM1);
+        // 初期表示する日付が指定されていた場合は、そのページを初期ページにする
+        Date target = (Date) getIntent().getSerializableExtra(EXTRA_PARAM1);
+        long[] dates = getIntent().getLongArrayExtra(EXTRA_PARAM2);
 
-            // 取得したログの 日付情報のリストを作成する
-            for(int i = 0; i<data.size(); i++) {
-                SkiLogDb log = data.get(i);
-                mDateList.add(log.getCreated());
-                if (MiscUtils.isSameDate(target, log.getCreated())) mTargetIndex = i;
+        mDateList.clear();
+
+        if (dates != null) {
+            // 渡された日付のリストを作成する
+            for (int i = 0; i < dates.length; i++) {
+                Date date = new Date(dates[i]);
+                mDateList.add(date);
+                if (MiscUtils.isSameDate(target, date)) mTargetIndex = i;
+            }
+
+        } else {
+            List<SkiLogDb> data = DbUtils.selectLogSummaries(this, 0, 0);
+            if (data != null && !data.isEmpty()) {
+                mTargetIndex = data.size() - 1;     // 初期表示するページ
+
+                // 取得したログの 日付情報のリストを作成する
+                for (int i = 0; i < data.size(); i++) {
+                    SkiLogDb log = data.get(i);
+                    mDateList.add(log.getCreated());
+                    if (MiscUtils.isSameDate(target, log.getCreated())) mTargetIndex = i;
+                }
             }
         }
 
@@ -245,15 +250,30 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     // Activity起動 staticメソッド
     //
 
-    public static void startActivity(Activity context) {
-        startActivity(context, null);
+    public static void startActivity(Activity contactivityxt) {
+        startActivity(contactivityxt, null, null);
     }
 
-    public static void startActivity(Activity context, Date targetDate) {
-        Intent intent = new Intent(context, LineChartActivity.class);
+    public static void startActivity(Activity activity, Date targetDate) {
+        startActivity(activity, targetDate, null);
+    }
+
+    public static void startActivity(Activity activity, Date targetDate, Date[] dates) {
+        Intent intent = new Intent(activity, LineChartActivity.class);
         if (targetDate != null) {
             intent.putExtra(EXTRA_PARAM1, targetDate);
         }
-        context.startActivity(intent);
+        if (dates != null) intent.putExtra(EXTRA_PARAM2, toLongArray(dates));
+        activity.startActivity(intent);
     }
+
+    public static long[] toLongArray(Date[] dates) {
+        if (dates == null) return null;
+        long[] times = new long[dates.length];
+        for(int i = 0; i<dates.length; i++) {
+            times[i] = dates[i] != null ? dates[i].getTime() : 0;
+        }
+        return times;
+    }
+
 }

@@ -149,6 +149,15 @@ public class SummaryChart {
         return mSkiLogs != null && index >= 0 && index < mSkiLogs.size() ? mSkiLogs.get(index).getCreated() : null;
     }
 
+    public Date[] getLogDates() {
+        if (mSkiLogs == null) return null;
+        Date[] dates = new Date[mSkiLogs.size()];
+        for(int i=0; i<mSkiLogs.size(); i++) {
+            dates[i] = mSkiLogs.get(i).getCreated();
+        }
+        return dates;
+    }
+
     public String getYAxisLabel(float value) {
         // 縦軸の valueは高度
         return AppUtils.getFormattedMeter(mContext, value);

@@ -60,11 +60,15 @@
     <string name="btn_cancel">キャンセル</string>
     <string name="btn_close">閉じる</string>
     <string name="btn_delete">削除</string>
+    <string name="btn_all_items">全件</string>
     <string name="btn_finish_app">アプリ終了</string>
 
     <string name="fmt_title_list_tags">%s のキーワード</string>
     <string name="msg_delete_tags">キーワードを削除します</string>
     <string name="fmt_msg_deleted_tags">%sからキーワード「%s」を削除しました</string>
+
+    <string name="title_line_chart">高度グラフ表示</string>
+    <string name="fmt_msg_select_count">検索された%d件のデータのみを表示しますか?</string>
 
     <string name="default_altitude"> --- m</string>
     <string name="default_run_count">0</string>

@@ -66,6 +66,25 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     protected void redrawChart(String deletedTag) {
     }
 
+    protected void startLineChartActivity() {
+        startLineChartActivity(null);
+    }
+
+    protected void startLineChartActivity(Date[] dates) {
+        UiUtils.setSelected(this, R.id.btn_chart1, true);
+        UiUtils.setSelected(this, R.id.btn_chart2, false);
+        Date target = getTargetDate();
+        if (target != null) {
+            Toast.makeText(
+                    this,
+                    getString(R.string.fmt_toast_daily_chart, AppUtils.toDateString(target)),
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+        LineChartActivity.startActivity(this, target, dates);
+        finish();
+    }
+
 
     @Override
     public void onClick(View view) {
@@ -76,18 +95,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.btn_chart1:
-                UiUtils.setSelected(this, R.id.btn_chart1, true);
-                UiUtils.setSelected(this, R.id.btn_chart2, false);
-                Date target = getTargetDate();
-                if (target != null) {
-                    Toast.makeText(
-                            this,
-                            getString(R.string.fmt_toast_daily_chart, AppUtils.toDateString(target)),
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-                LineChartActivity.startActivity(this, target);
-                finish();
+                startLineChartActivity();
                 break;
 
             case R.id.btn_chart2:

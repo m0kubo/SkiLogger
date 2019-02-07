@@ -32,6 +32,7 @@ import java.util.List;
 public class BarChartActivity extends BaseActivity implements View.OnClickListener, DialogUi.DialogEventListener {
 //    private final static int RC_DELETE_LOG = 1;
     private final static int RC_SELECT_TAG = 2;
+    private final static int RC_SELECT_CHART_COUNT = 3;
 
     private ServiceMessenger mServiceMessenger;
 
@@ -178,6 +179,16 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
                 if (mPhotoUri != null) UiUtils.intentActionView(this, mPhotoUri);
                 break;
 
+            case R.id.btn_chart1:
+                // データが
+                int count = mSummaryChart.getCount();
+                if (mSummaryChart.getFilter() != null && count >= 1) {
+                    confirmStartLineChart(count);
+                } else {
+                    startLineChartActivity();
+                }
+                break;
+
             default:
                 super.onClick(view);
                 break;
@@ -237,6 +248,16 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
                 .show();
     }
 
+    private void confirmStartLineChart(int count) {
+        new DialogUi.Builder(this)
+                .setTitle(R.string.title_line_chart)
+                .setMessage(getString(R.string.fmt_msg_select_count, count))
+                .setPositiveButton(getString(R.string.fmt_count_summaries, count))
+                .setNeutralButton(R.string.btn_all_items)
+                .setRequestCode(RC_SELECT_CHART_COUNT)
+                .show();
+    }
+
 
     @Override
     public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
@@ -264,6 +285,20 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
                         // チャートの表示を更新する
                         updateChart();
                     }
+                }
+                break;
+
+            case RC_SELECT_CHART_COUNT:
+                switch(which) {
+                    case DialogUi.EVENT_BUTTON_POSITIVE:
+                        // 検索されたデータのみ表示
+                        startLineChartActivity(mSummaryChart.getLogDates());
+                        break;
+
+                    case DialogUi.EVENT_BUTTON_NEUTRAL:
+                        // 全件表示
+                        startLineChartActivity();
+                        break;
                 }
                 break;
 
