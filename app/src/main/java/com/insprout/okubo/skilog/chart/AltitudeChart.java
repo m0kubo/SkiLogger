@@ -49,6 +49,7 @@ public class AltitudeChart {
 
     private ArrayList<Entry> mChartValues11;
     private ArrayList<Entry> mChartValues12;    // 写真用
+    private ArrayList<Entry> mChartValues13;    // 写真用
     private RectF mChartAxis1;
     private String mChartLabel11;
     private String mChartLabel12;
@@ -156,6 +157,7 @@ public class AltitudeChart {
     private boolean setupChartValues() {
         mChartValues11 = new ArrayList<>();
         mChartValues12 = new ArrayList<>();
+        mChartValues13 = new ArrayList<>();
         mAccumulateDesc = 0f;
         mRunCount = 0;
 
@@ -222,6 +224,7 @@ public class AltitudeChart {
                     if (photoTimes[j] != null && photoTimes[j].after(logTime)) {
                         float hours = (photoTimes[j].getTime() - timeAm0) / (60 * 60 * 1000.0f);
                         mChartValues12.add(0, new Entry(hours, log.getAltitude()));
+                        if (mChartValues13.isEmpty()) mChartValues13.add(0, new Entry(hours, log.getAltitude()));
                         photoTimes[j] = null;
                         photoCount--;
                     }
@@ -295,9 +298,10 @@ public class AltitudeChart {
         ArrayList<ILineDataSet> dataSets = new ArrayList<>();
         // 高度チャートの 軸表示設定
         setupAxis(mChartAxis1);
-        dataSets.add(newLineDataSet(mChartValues11, mChartLabel11, mColor, false));
+        dataSets.add(newLineDataSet(mChartValues11, mChartLabel11, mColor, false, false));
         if (mChartValues12.size() >= 1) {
-            dataSets.add(newLineDataSet(mChartValues12, mChartLabel12, mColorPhoto, true));
+            dataSets.add(newLineDataSet(mChartValues13, mChartLabel12, mColorPhoto, true, true));
+            dataSets.add(newLineDataSet(mChartValues12, "", mColorPhoto, true, false));
         }
 
         setDescription();
@@ -310,7 +314,7 @@ public class AltitudeChart {
     }
 
 
-    private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean marker) {
+    private LineDataSet newLineDataSet(List<Entry>yValues, String label, int color, boolean marker, boolean legendOnly) {
         LineDataSet dataSet = new LineDataSet(yValues, label);
 
         dataSet.setDrawIcons(false);
@@ -323,7 +327,7 @@ public class AltitudeChart {
 
         dataSet.setCircleColor(color);
         if (marker) {
-            dataSet.setColor(0x00000000);
+            dataSet.setColor(legendOnly ? color : 0x00000000);
             dataSet.setDrawFilled(false);
             dataSet.setCircleRadius(6f);
         } else {

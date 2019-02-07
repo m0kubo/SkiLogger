@@ -48,7 +48,7 @@
     <string name="title_chart_desc">下降積算グラフ</string>
     <string name="label_accumulate">積算高度</string>
     <string name="label_altitude">高度</string>
-    <string name="label_photo">写真あり</string>
+    <string name="label_photo">写真撮影</string>
     <string name="label_count_lift">RUN</string>
     <string name="label_graph_asc">上昇積算</string>
     <string name="label_graph_desc">下降積算</string>
