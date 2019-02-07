@@ -73,6 +73,7 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
         mDateList.clear();
 
         if (dates != null) {
+            mTargetIndex = dates.length - 1;     // 初期表示するページ
             // 渡された日付のリストを作成する
             for (int i = 0; i < dates.length; i++) {
                 Date date = new Date(dates[i]);
