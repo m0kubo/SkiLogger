@@ -85,6 +85,7 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
                 mDateList.add(log.getCreated());
                 if (MiscUtils.isSameDate(target, log.getCreated())) mTargetIndex = i;
             }
+            UiUtils.setVisibility(this, R.id.tv_no_data, View.GONE); // no data 表示を消しておく
         }
 
         // Serviceプロセスとの 通信クラス作成

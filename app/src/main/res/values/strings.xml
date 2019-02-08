@@ -81,6 +81,7 @@
 
     <string name="glue_join">,　</string>
 
+    <string name="msg_no_data">No chart data available.</string>
     <string name="msg_close_application">アプリを終了します</string>
 
     <string name="title_delete_logs">記録削除</string>

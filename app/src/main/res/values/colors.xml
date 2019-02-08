@@ -15,4 +15,6 @@
 
     <color name="orange">#ff8c00</color>
     <color name="orange_dark">#c06900</color>
+
+    <color name="no_data">#f7bd33</color>
 </resources>

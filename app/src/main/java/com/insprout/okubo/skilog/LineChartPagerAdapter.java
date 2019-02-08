@@ -54,7 +54,7 @@ public class LineChartPagerAdapter extends PagerAdapter {
         mListener = listener;
         mMapTvKeyword.clear();
         // 日付リストが 本日のものかチェックしておく
-        mHasToday = (mDateList != null && MiscUtils.isToday(mDateList.get(mDateList.size() - 1)));
+        mHasToday = (mDateList != null && !mDateList.isEmpty() && MiscUtils.isToday(mDateList.get(mDateList.size() - 1)));
     }
 
     @Override
