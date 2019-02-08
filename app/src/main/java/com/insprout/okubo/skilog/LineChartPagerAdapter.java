@@ -16,11 +16,16 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.chart.AltitudeChart;
+import com.insprout.okubo.skilog.database.DbUtils;
+import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
+import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LineChartPagerAdapter extends PagerAdapter {
 
@@ -35,6 +40,7 @@ public class LineChartPagerAdapter extends PagerAdapter {
     private PhotoUriListener mListener = null;
     private boolean mHasToday = false;
     private AltitudeChart mChartOfToday = null;
+    private Map<Date, TextView> mMapTvKeyword = new HashMap();
 
 
     public LineChartPagerAdapter(Activity activity, List<Date> dates) {
@@ -46,6 +52,7 @@ public class LineChartPagerAdapter extends PagerAdapter {
         mInflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mDateList = dates;
         mListener = listener;
+        mMapTvKeyword.clear();
         // 日付リストが 本日のものかチェックしておく
         mHasToday = (mDateList != null && MiscUtils.isToday(mDateList.get(mDateList.size() - 1)));
     }
@@ -94,6 +101,15 @@ public class LineChartPagerAdapter extends PagerAdapter {
             }
         });
 
+        // 紐付けられたキーワードを表示する
+//        List<TagDb> tagsOnTarget = DbUtils.selectTags(mContext, date);
+//        String tags = TagDb.join(mContext.getString(R.string.glue_join), tagsOnTarget);
+//        TextView tvKeywords = layout.findViewById(R.id.tv_keywords);
+//        mMapTvKeyword.put(date, tvKeywords);
+//        tvKeywords.setText(tags);
+        mMapTvKeyword.put(date, (TextView) layout.findViewById(R.id.tv_keywords));
+        notifyTagChanged(date);
+
         return layout;
     }
 
@@ -104,6 +120,7 @@ public class LineChartPagerAdapter extends PagerAdapter {
         ViewPager viewPager = (ViewPager)container;
         viewPager.removeView((View)object);
 
+        mMapTvKeyword.remove(mDateList.get(position));
         if (position == getCount() - 1) mChartOfToday = null;   // 当日のチャートが破棄された
     }
 
@@ -128,6 +145,15 @@ public class LineChartPagerAdapter extends PagerAdapter {
         // 当日のチャートが存在していれば、新規データをチャートに反映する
         if (mChartOfToday != null) {
             mChartOfToday.appendChartValue(time, altitude, ascent, descent, runCount);
+        }
+    }
+
+    public void notifyTagChanged(Date date) {
+        TextView tv = mMapTvKeyword.get(date);
+        if (tv != null) {
+            List<TagDb> tagsOnTarget = DbUtils.selectTags(mContext, date);
+            String tags = TagDb.join(mContext.getString(R.string.glue_join), tagsOnTarget);
+            tv.setText(tags);
         }
     }
 

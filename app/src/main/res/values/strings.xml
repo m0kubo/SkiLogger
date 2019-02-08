@@ -9,7 +9,6 @@
     <string name="fmt_time">%d:%02d</string>
     <string name="fmt_value_altitude">%1$s 　標高%2$s</string>
     <string name="fmt_value_photo">%1$s 　標高%2$s　撮影</string>
-    <!--<string name="fmt_value_accumulate">積算%2$s ＠%1$s</string>-->
     <string name="fmt_value_accumulate">選択日：%s</string>
     <string name="fmt_photo_count">（写真%d枚）</string>
     <string name="fmt_run_count">滑走本数：%d</string>
@@ -79,6 +78,8 @@
     <string name="msg_no_place_tags">近隣の施設情報はみつかりませんでした</string>
     <string name="msg_fail_to_google_place_api">情報が取得できませんでした。通信環境の良い場所で再度お試しください</string>
     <string name="msg_gps_not_available">位置情報の設定が無効です</string>
+
+    <string name="glue_join">,　</string>
 
     <string name="msg_close_application">アプリを終了します</string>
 

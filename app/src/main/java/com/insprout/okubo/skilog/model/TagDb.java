@@ -7,6 +7,7 @@ import com.insprout.okubo.skilog.database.DbConfiguration;
 import com.insprout.okubo.skilog.database.DbSQLite;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -43,6 +44,17 @@ public class TagDb implements DbSQLite.IModelSQLite {
         mTag = tag;
         mCreated = created;
         mUpdated = updated;
+    }
+
+
+    public static String join(String glue, List<TagDb> tags) {
+        if (tags == null) return "";
+        StringBuilder builder = new StringBuilder();
+        for(int i=0; i<tags.size(); i++) {
+            if (i >= 1) builder.append(glue);
+            builder.append(tags.get(i).toString());
+        }
+        return builder.toString();
     }
 
 

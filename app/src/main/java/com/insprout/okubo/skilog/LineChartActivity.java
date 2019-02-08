@@ -11,6 +11,7 @@ import android.view.View;
 
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.SkiLogDb;
+import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.MiscUtils;
@@ -218,25 +219,33 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     }
 
     @Override
-    protected void redrawChartByFilter(String filter) {
+    protected void notifyFilterSpecified(String filter) {
         // ViewPagerは動的にサイズを変更できないので、Activityごと描きなおす
         startActivity(this, null, filter);
     }
 
     @Override
-    protected void redrawChart(String deletedTag) {
+    protected void notifyTagRemoved(TagDb deletedTag) {
+        if (deletedTag == null) return;
         // 削除されたキーワードが現在フィルタリングに使用しているものの場合は、
         // 表示中のページが対象外になるのでアクティビティを再描画する
-        if (deletedTag != null && deletedTag.equals(mFilter)) {
+        if (deletedTag.getTag() != null && deletedTag.getTag().equals(mFilter)) {
             Date target = null;
             int index = mViewPager.getCurrentItem() + 1;
             if (index < mDateList.size()) target = mDateList.get(index);
             startActivity(this, target, mFilter);
+        } else {
+            mChartPagerAdapter.notifyTagChanged(deletedTag.getDate());
         }
     }
 
     @Override
-    protected void redrawChart(Date deletedLogDate) {
+    protected void notifyTagAdded(TagDb tag) {
+        if (tag != null) mChartPagerAdapter.notifyTagChanged(tag.getDate());
+    }
+
+    @Override
+    protected void notifyLogsDeleted(Date deletedLogDate) {
         Date target = null;
         if (deletedLogDate != null) {
             // 初期ページの処理
@@ -248,7 +257,6 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
         }
         startActivity(this, target, mFilter);
     }
-
 
 
     ////////////////////////////////////////////////////////////////////

@@ -63,13 +63,16 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    protected void redrawChart(Date deletedLogDate) {
+    protected void notifyLogsDeleted(Date deletedLogDate) {
     }
 
-    protected void redrawChart(String deletedTag) {
+    protected void notifyTagAdded(TagDb tag) {
     }
 
-    protected void redrawChartByFilter(String filter) {
+    protected void notifyTagRemoved(TagDb tag) {
+    }
+
+    protected void notifyFilterSpecified(String filter) {
     }
 
     protected void onInitialize() {
@@ -208,7 +211,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
             DbUtils.deleteTags(this, mTargetDate);
 
             // チャートの表示を更新する
-            redrawChart(mTargetDate);
+            notifyLogsDeleted(mTargetDate);
         }
     }
 
@@ -425,7 +428,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                                 setupFilteringTag();
 
                                 // 削除されたタグが絞り込み表示に指定されていた場合は、チャートを再描画する
-                                redrawChart(mTargetTag.getTag());
+                                notifyTagRemoved(mTargetTag);
                             }
                         }
                         mTargetTag = null;
@@ -453,10 +456,12 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                         if (editText != null) {
                             String tag = editText.getText().toString();
                             if (!tag.isEmpty() && mTargetDate != null) {
-                                DbUtils.insertTag(this, new TagDb(mTargetDate, tag));
+                                TagDb newTag = new TagDb(mTargetDate, tag);
+                                DbUtils.insertTag(this, newTag);
 
                                 // 絞り込み用のタグリスト再取得
                                 setupFilteringTag();
+                                notifyTagAdded(newTag);
                             }
                         }
                         break;
@@ -477,11 +482,12 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                             // 入力されたタグを登録
                             String tag = ((ListView) view).getAdapter().getItem(pos).toString();
                             if (!tag.isEmpty() && mTargetDate != null) {
-                                DbUtils.insertTag(this, new TagDb(mTargetDate, tag));
+                                TagDb newTag = new TagDb(mTargetDate, tag);
+                                DbUtils.insertTag(this, newTag);
 
                                 // 絞り込み用のタグリスト再取得
-                                //setupFilteringTag();
-                                redrawChart((String)null);
+                                setupFilteringTag();
+                                notifyTagAdded(newTag);
                             }
                             break;
 
@@ -498,24 +504,15 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                 if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
                     // 絞り込み処理 実行
                     if (view instanceof ListView) {
+                        mIndexTag = -1;
                         String filter = null;
                         int pos = ((ListView)view).getCheckedItemPosition();
                         if (mAllTags != null && pos >= 0 && pos < mAllTags.size()) {
                             mIndexTag = pos;
                             filter = mAllTags.get(mIndexTag).getTag();
-
-                        } else {
-                            if (mIndexTag >= 0) {
-                                Intent intent = new Intent(this, BarChartActivity.class);
-                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
-                                //finish();
-                                return;
-                            }
-                            mIndexTag = -1;
                         }
                         // チャートの表示を更新する
-                        redrawChartByFilter(filter);
+                        notifyFilterSpecified(filter);
                     }
                 }
                 break;

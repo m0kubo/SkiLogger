@@ -5,8 +5,10 @@ import android.graphics.Bitmap;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by okubo on 2018/02/01.
@@ -265,6 +267,13 @@ public class MiscUtils {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
+    }
+
+
+    public static String toDateString(Date date) {
+        if (date == null) return "";
+        SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault());
+        return mDateFormat.format(date);
     }
 
 //    /**

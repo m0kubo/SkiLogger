@@ -1,14 +1,12 @@
 package com.insprout.okubo.skilog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.support.v7.app.ActionBar;
 import android.view.View;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -19,7 +17,6 @@ import com.insprout.okubo.skilog.chart.SummaryChart;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.setting.Settings;
-import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.MiscUtils;
@@ -32,7 +29,7 @@ import java.util.List;
 public class BarChartActivity extends BaseActivity implements View.OnClickListener, DialogUi.DialogEventListener {
 //    private final static int RC_DELETE_LOG = 1;
 //    private final static int RC_SELECT_TAG = 2;
-    private final static int RC_SELECT_CHART_COUNT = 3;
+//    private final static int RC_SELECT_CHART_COUNT = 3;
 
     private ServiceMessenger mServiceMessenger;
 
@@ -100,12 +97,12 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         mSummaryChart = new SummaryChart(this, barChart, new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry entry, Highlight h) {
-                displayValue(entry);
+                showValue(entry);
             }
 
             @Override
             public void onNothingSelected() {
-                displayValue(null);
+                showValue(null);
             }
         });
 
@@ -121,17 +118,21 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         UiUtils.setText(this, R.id.tv_count, getString(R.string.fmt_count_summaries, mSummaryChart.getCount()));
 
         setTitle(mSummaryChart.getSubject());
-        displayValue(null);
+        showValue(null);
     }
 
-    private void displayValue(Entry entry) {
+    private void showValue(Entry entry) {
         mPhotoUri = null;
         String text = null;
         if (entry != null) {
-            String dateString = mSummaryChart.getXAxisLabelFull(entry.getX());
-            text = getString(R.string.fmt_value_accumulate, dateString);
+            Date date = mSummaryChart.getLogDate(entry.getX());
+            text = getString(R.string.fmt_value_accumulate, MiscUtils.toDateString(date));
+            // キーワードを表示する
+            // 付与されているタグ一覧
+            showTags(date);
+
             // 計測期間内に撮影された画像があるか確認する
-            Date[] period = DbUtils.selectTimePeriods(this, mSummaryChart.getLogDate((int)entry.getX()));
+            Date[] period = DbUtils.selectTimePeriods(this, date);
             if (period != null && period.length == 2) {
                 // 撮影した写真がすぐグラフに反映されるように修正
                 Date endTime = period[1];
@@ -146,9 +147,20 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
                 Toast.makeText(this, R.string.msg_date_selected, Toast.LENGTH_LONG).show();
                 mValueSelected = true;
             }
+        } else {
+            showTags(null);
         }
         UiUtils.setText(this, R.id.tv_chart_value, text);
         UiUtils.setEnabled(this, R.id.btn_detail, mPhotoUri != null);
+    }
+
+    private void showTags(Date date) {
+        String tags = "";
+        if (date != null) {
+            List<TagDb> tagsOnTarget = DbUtils.selectTags(this, date);
+            tags = TagDb.join(getString(R.string.glue_join), tagsOnTarget);
+        }
+        UiUtils.setText(this, R.id.tv_keywords, tags);
     }
 
 
@@ -179,19 +191,34 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     }
 
     @Override
-    protected void redrawChart(Date deletedLogDate) {
+    protected void notifyLogsDeleted(Date deletedLogDate) {
         updateChart();
     }
 
     @Override
-    protected void redrawChart(String deletedTag) {
-        if (deletedTag != null && deletedTag.equals(mSummaryChart.getFilter())) {
-            updateChart();
+    protected void notifyTagRemoved(TagDb deletedTag) {
+        if (deletedTag != null) {
+            showTags(deletedTag.getDate());
+            String tag = deletedTag.getTag();
+
+            // 絞り込み中に、その条件となっているタグが消された場合は、グラフを更新する
+            if (tag != null && tag.equals(mSummaryChart.getFilter())) {
+                // グラフを再描画すると、計測日の選択は解除される
+                updateChart();
+            }
         }
     }
 
     @Override
-    protected void redrawChartByFilter(String filter) {
+    protected void notifyTagAdded(TagDb addedTag) {
+        if (addedTag != null) {
+            showTags(addedTag.getDate());
+            String tag = addedTag.getTag();
+        }
+    }
+
+    @Override
+    protected void notifyFilterSpecified(String filter) {
         if (filter != null) {
             setTitle(getString(R.string.fmt_title_tag, filter));
         } else {

@@ -145,6 +145,10 @@ public class SummaryChart {
         return mDateFormat.format(date);
     }
 
+    public Date getLogDate(float value) {
+        return getLogDate((int)value);
+    }
+
     public Date getLogDate(int index) {
         return mSkiLogs != null && index >= 0 && index < mSkiLogs.size() ? mSkiLogs.get(index).getCreated() : null;
     }
