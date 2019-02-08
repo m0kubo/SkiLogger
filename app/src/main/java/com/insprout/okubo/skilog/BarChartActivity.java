@@ -119,22 +119,14 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         mValueSelected = false;     // 選択解除の表示を行わせない
         mSummaryChart.drawChart();
         UiUtils.setText(this, R.id.tv_count, getString(R.string.fmt_count_summaries, mSummaryChart.getCount()));
-        updateView();
-    }
 
-
-    private void updateView() {
         setTitle(mSummaryChart.getSubject());
-        // 前データ、次データへのボタンの 有効無効
-        UiUtils.setEnabled(this, R.id.btn_negative, mSummaryChart.hasPreviousPage());
-        UiUtils.setEnabled(this, R.id.btn_positive, mSummaryChart.hasNextPage());
         displayValue(null);
     }
 
     private void displayValue(Entry entry) {
         mPhotoUri = null;
         String text = null;
-//        String toast;
         if (entry != null) {
             String dateString = mSummaryChart.getXAxisLabelFull(entry.getX());
             text = getString(R.string.fmt_value_accumulate, dateString);
@@ -164,20 +156,9 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     public void onClick(View view) {
         int id = view.getId();
         switch(id) {
-
             case R.id.btn_detail:
                 if (mPhotoUri != null) UiUtils.intentActionView(this, mPhotoUri);
                 break;
-
-//            case R.id.btn_chart1:
-//                // データが
-//                int count = mSummaryChart.getCount();
-//                if (mSummaryChart.getFilter() != null && count >= 1) {
-//                    confirmStartLineChart(count);
-//                } else {
-//                    startLineChartActivity();
-//                }
-//                break;
 
             default:
                 super.onClick(view);
@@ -199,13 +180,13 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
 
     @Override
     protected void redrawChart(Date deletedLogDate) {
-        mSummaryChart.drawChart();
+        updateChart();
     }
 
     @Override
     protected void redrawChart(String deletedTag) {
         if (deletedTag != null && deletedTag.equals(mSummaryChart.getFilter())) {
-            mSummaryChart.drawChart();
+            updateChart();
         }
     }
 
@@ -217,47 +198,7 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
             setTitle(R.string.title_chart_desc);
         }
         mSummaryChart.setFilter(filter);
-        mSummaryChart.drawChart();
-    }
-
-
-    ////////////////////////////////////////////////////////////////////
-    //
-    // Dialog関連
-    //
-
-    private void confirmStartLineChart(int count) {
-        new DialogUi.Builder(this)
-                .setTitle(R.string.title_line_chart)
-                .setMessage(getString(R.string.fmt_msg_select_count, count))
-                .setPositiveButton(getString(R.string.fmt_count_summaries, count))
-                .setNeutralButton(R.string.btn_all_items)
-                .setRequestCode(RC_SELECT_CHART_COUNT)
-                .show();
-    }
-
-
-    @Override
-    public void onDialogEvent(int requestCode, AlertDialog dialog, int which, View view) {
-        switch (requestCode) {
-            case RC_SELECT_CHART_COUNT:
-                switch(which) {
-                    case DialogUi.EVENT_BUTTON_POSITIVE:
-                        // 検索されたデータのみ表示
-                        startLineChartActivity(mSummaryChart.getLogDates());
-                        break;
-
-                    case DialogUi.EVENT_BUTTON_NEUTRAL:
-                        // 全件表示
-                        startLineChartActivity();
-                        break;
-                }
-                break;
-
-            default:
-                super.onDialogEvent(requestCode, dialog, which, view);
-                break;
-        }
+        updateChart();
     }
 
 

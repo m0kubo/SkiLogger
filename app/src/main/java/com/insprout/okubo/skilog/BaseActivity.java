@@ -76,11 +76,8 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
         setupFilteringTag();
     }
 
-    protected void startLineChartActivity() {
-        startLineChartActivity(null);
-    }
 
-    protected void startLineChartActivity(Date[] dates) {
+    protected void startLineChartActivity() {
         UiUtils.setSelected(this, R.id.btn_chart1, true);
         UiUtils.setSelected(this, R.id.btn_chart2, false);
         Date target = getTargetDate();
@@ -91,7 +88,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.LENGTH_SHORT
             ).show();
         }
-        LineChartActivity.startActivity(this, target, dates);
+        LineChartActivity.startActivity(this, target);
         finish();
     }
 

@@ -12,7 +12,6 @@ import android.view.View;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.setting.Settings;
-import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
@@ -36,6 +35,7 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     private int mTargetIndex = 0;
     private List<Date> mDateList = new ArrayList<>();
     private Map<Date, Uri> mUriMap = new HashMap<>();
+    private String mFilter = null;
 
 
     @Override
@@ -70,30 +70,19 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
 
         // 初期表示する日付が指定されていた場合は、そのページを初期ページにする
         Date target = (Date) getIntent().getSerializableExtra(EXTRA_PARAM1);
-        long[] dates = getIntent().getLongArrayExtra(EXTRA_PARAM2);
+        mFilter = getIntent().getStringExtra(EXTRA_PARAM2);
 
         mDateList.clear();
 
-        if (dates != null) {
-            mTargetIndex = dates.length - 1;     // 初期表示するページ
-            // 渡された日付のリストを作成する
-            for (int i = 0; i < dates.length; i++) {
-                Date date = new Date(dates[i]);
-                mDateList.add(date);
-                if (MiscUtils.isSameDate(target, date)) mTargetIndex = i;
-            }
+        List<SkiLogDb> data = DbUtils.selectLogSummaries(this, mFilter);
+        if (data != null && !data.isEmpty()) {
+            mTargetIndex = data.size() - 1;     // 初期表示するページ
 
-        } else {
-            List<SkiLogDb> data = DbUtils.selectLogSummaries(this, 0, 0);
-            if (data != null && !data.isEmpty()) {
-                mTargetIndex = data.size() - 1;     // 初期表示するページ
-
-                // 取得したログの 日付情報のリストを作成する
-                for (int i = 0; i < data.size(); i++) {
-                    SkiLogDb log = data.get(i);
-                    mDateList.add(log.getCreated());
-                    if (MiscUtils.isSameDate(target, log.getCreated())) mTargetIndex = i;
-                }
+            // 取得したログの 日付情報のリストを作成する
+            for (int i = 0; i < data.size(); i++) {
+                SkiLogDb log = data.get(i);
+                mDateList.add(log.getCreated());
+                if (MiscUtils.isSameDate(target, log.getCreated())) mTargetIndex = i;
             }
         }
 
@@ -114,13 +103,17 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     }
 
     private void initView() {
-        setTitle(R.string.title_chart_altitude);
         UiUtils.setSelected(this, R.id.btn_chart1, true);
 
-        // タイトルバーに backボタンを表示する
+        // タイトル表示
+        if (mFilter != null) {
+            setTitle(getString(R.string.fmt_title_tag, mFilter));
+        } else {
+            setTitle(R.string.title_chart_altitude);
+        }
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-//            actionBar.setDisplayHomeAsUpEnabled(true);
+//            actionBar.setDisplayHomeAsUpEnabled(true);    // タイトルバーに backボタンを表示する
             actionBar.setDisplayShowHomeEnabled(true);
             actionBar.setIcon(R.drawable.ic_line_chart);
         }
@@ -227,23 +220,19 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     @Override
     protected void redrawChartByFilter(String filter) {
         // ViewPagerは動的にサイズを変更できないので、Activityごと描きなおす
-        long[] dates = null;
-        if (filter != null) {
-            List<SkiLogDb>logs = DbUtils.selectLogSummaries(this, filter);
-            dates = new long[logs != null ? logs.size() : 0];
-            if (logs != null) {
-                for (int i=0; i<logs.size(); i++) {
-                    Date date = logs.get(i).getCreated();
-                    dates[i] = date != null ? date.getTime() : 0;
-                }
-            }
-        }
-        restartActivity(null, dates);
+        startActivity(this, null, filter);
     }
 
     @Override
     protected void redrawChart(String deletedTag) {
-        // TODO 削除されたキーワードが現在フィルタリングに使用しているものの場合は、アクティビティを再描画する
+        // 削除されたキーワードが現在フィルタリングに使用しているものの場合は、
+        // 表示中のページが対象外になるのでアクティビティを再描画する
+        if (deletedTag != null && deletedTag.equals(mFilter)) {
+            Date target = null;
+            int index = mViewPager.getCurrentItem() + 1;
+            if (index < mDateList.size()) target = mDateList.get(index);
+            startActivity(this, target, mFilter);
+        }
     }
 
     @Override
@@ -257,18 +246,9 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
                 target = mDateList.get(index);
             }
         }
-        restartActivity(target, null);
+        startActivity(this, target, mFilter);
     }
 
-    private void restartActivity(Date extra1, long[] extra2) {
-        // ViewPagerは動的にサイズを変更できないので、サイズが変わる場合にはActivityごと描きなおす
-        Intent intent = new Intent(this, LineChartActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        if (extra1 != null) intent.putExtra(EXTRA_PARAM1, extra1);
-        if (extra2 != null) intent.putExtra(EXTRA_PARAM2, extra2);
-        startActivity(intent);
-        overridePendingTransition(0, 0);    // Activity遷移時のアニメーションを無効化
-    }
 
 
     ////////////////////////////////////////////////////////////////////
@@ -280,22 +260,24 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
         startActivity(activity, null, null);
     }
 
-    public static void startActivity(Activity activity, Date targetDate, Date[] dates) {
-        Intent intent = new Intent(activity, LineChartActivity.class);
-        if (targetDate != null) {
-            intent.putExtra(EXTRA_PARAM1, targetDate);
-        }
-        if (dates != null) intent.putExtra(EXTRA_PARAM2, toLongArray(dates));
-        activity.startActivity(intent);
+    public static void startActivity(Activity activity, Date targetDate) {
+        startActivity(activity, targetDate, null);
     }
 
-    public static long[] toLongArray(Date[] dates) {
-        if (dates == null) return null;
-        long[] times = new long[dates.length];
-        for(int i = 0; i<dates.length; i++) {
-            times[i] = dates[i] != null ? dates[i].getTime() : 0;
+    public static void startActivity(Activity activity, Date targetDate, String filter) {
+        Intent intent = new Intent(activity, LineChartActivity.class);
+        if (targetDate != null) intent.putExtra(EXTRA_PARAM1, targetDate);
+        if (filter!= null) intent.putExtra(EXTRA_PARAM2, filter);
+
+        if (activity instanceof LineChartActivity) {
+            // 本アクティビティ自身から呼び出された場合は、遷移時のアニメーションなし かつ よびだし元アクティビティをクリアする
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            activity.startActivity(intent);
+            activity.overridePendingTransition(0, 0);    // Activity遷移時のアニメーションを無効化
+
+        } else {
+            activity.startActivity(intent);
         }
-        return times;
     }
 
 }

@@ -20,7 +20,6 @@
     <string name="fmt_title_tag">検索：%s</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
     <string name="fmt_photo_viewer">記録期間に撮影された写真が%d枚あります。\n表示しますか?</string>
-    <string name="fmt_date_selected">%sのデータを選択しました。\n選択日の高度グラフ表示、キーワード設定、データ削除などが行えます。</string>
     <string name="msg_date_selected">データを選択しました。\n\n選択日の高度グラフ表示、キーワード設定、データ削除などが行えます。</string>
     <string name="fmt_toast_daily_chart">%sの高度グラフを表示します</string>
     <string name="fmt_count_summaries">%d件</string>
@@ -61,15 +60,12 @@
     <string name="btn_cancel">キャンセル</string>
     <string name="btn_close">閉じる</string>
     <string name="btn_delete">削除</string>
-    <string name="btn_all_items">全件</string>
     <string name="btn_finish_app">アプリ終了</string>
 
     <string name="fmt_title_list_tags">%s のキーワード</string>
     <string name="msg_delete_tags">キーワードを削除します</string>
     <string name="fmt_msg_deleted_tags">%sからキーワード「%s」を削除しました</string>
 
-    <string name="title_line_chart">高度グラフ表示</string>
-    <string name="fmt_msg_select_count">検索された%d件のデータのみを表示しますか?</string>
 
     <string name="default_altitude"> --- m</string>
     <string name="default_run_count">0</string>

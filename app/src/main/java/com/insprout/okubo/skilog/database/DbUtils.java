@@ -184,6 +184,9 @@ public class DbUtils {
      */
     @SuppressWarnings("unchecked")
     public static List<SkiLogDb> selectLogSummaries(Context context, String tag) {
+        // タグが指定されてない場合は全日分取得
+        if (tag == null) return selectLogSummaries(context, 0, 0);
+
         String sqlCmd = String.format(
                 "SELECT * FROM ski_log WHERE _id IN (SELECT MAX(_id) FROM ski_log WHERE date(created,'%1$s') IN (SELECT date(date,'%1$s') FROM ski_tag WHERE tag = ? ) GROUP BY date(created,'%1$s'))",
                 DbSQLite.utcModifier()
