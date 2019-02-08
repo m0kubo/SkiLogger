@@ -114,6 +114,7 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     }
 
     private void initView() {
+        setTitle(R.string.title_chart_altitude);
         UiUtils.setSelected(this, R.id.btn_chart1, true);
 
         // タイトルバーに backボタンを表示する
@@ -155,9 +156,6 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
 
     private void updateView(int position) {
         int pageSize = mDateList.size();
-        if (position >= 0 && position < pageSize) {
-            setTitle(getString(R.string.fmt_title_chart, AppUtils.toDateString(mDateList.get(position))));
-        }
         UiUtils.setEnabled(this, R.id.btn_prev, position >= 1);
         UiUtils.setEnabled(this, R.id.btn_next, position + 1 < pageSize);
         enablePhotoButton(position);
@@ -245,7 +243,7 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
 
     @Override
     protected void redrawChart(String deletedTag) {
-        // タグの削除については何もしない
+        // TODO 削除されたキーワードが現在フィルタリングに使用しているものの場合は、アクティビティを再描画する
     }
 
     @Override

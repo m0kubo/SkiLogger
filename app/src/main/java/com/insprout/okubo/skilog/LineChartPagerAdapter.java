@@ -16,6 +16,7 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.chart.AltitudeChart;
+import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 
 import java.util.Date;
@@ -60,6 +61,8 @@ public class LineChartPagerAdapter extends PagerAdapter {
             TextView tv = layout.findViewById(R.id.tv_count);
             tv.setText(mContext.getString(R.string.fmt_pager, position + 1, getCount()));
         }
+        TextView tvDate = layout.findViewById(R.id.tv_date);
+        tvDate.setText(AppUtils.toDateString(date));
         LineChart lineChartView = layout.findViewById(R.id.line_chart);
         final TextView tvValue = layout.findViewById(R.id.tv_chart_value);
         final AltitudeChart dailyChart = new AltitudeChart(mContext, lineChartView, date);

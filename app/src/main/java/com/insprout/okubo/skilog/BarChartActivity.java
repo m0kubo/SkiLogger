@@ -211,6 +211,11 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
 
     @Override
     protected void redrawChartByFilter(String filter) {
+        if (filter != null) {
+            setTitle(getString(R.string.fmt_title_tag, filter));
+        } else {
+            setTitle(R.string.title_chart_desc);
+        }
         mSummaryChart.setFilter(filter);
         mSummaryChart.drawChart();
     }
