@@ -50,7 +50,6 @@ public class SummaryChart {
     private float mYAxisMax = 0f;
     private float mYAxisMin = 0f;
     private float mChartTextSize;
-    private String mChartLabel;
 
     private Date mThisSeasonFrom;
     private Date mDateOldest;
@@ -87,7 +86,6 @@ public class SummaryChart {
             mDateOldest = mThisSeasonFrom;
         }
         mChartTextSize = SdkUtils.getSpDimension(mContext, R.dimen.text_size_chart_axis);
-        mChartLabel = mContext.getString(R.string.label_graph_desc);
     }
 
 
@@ -186,8 +184,7 @@ public class SummaryChart {
             // tagで絞る
             mSkiLogs = DbUtils.selectLogSummaries(mContext, mSearchTag);
         } else {
-            // 期間で絞る
-//            mSkiLogs = DbUtils.selectLogSummaries(mContext, mDateFrom, mDateTo);
+            // 全件取得
             mSkiLogs = DbUtils.selectLogSummaries(mContext, 0, -1);
         }
         if (mSkiLogs == null || mSkiLogs.isEmpty()) return;

@@ -16,6 +16,7 @@ import java.util.Locale;
 
 public class ContentsUtils {
 
+    // この機能を利用するには、AndroidManifestで READ_EXTERNAL_STORAGE権限が必要
     public static List<Uri> getImageList(Context context, Date dateFrom, Date dateTo) {
         List<Uri> files = new ArrayList<>();
 

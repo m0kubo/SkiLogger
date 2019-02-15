@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.view.View;
@@ -12,9 +13,11 @@ import android.view.View;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.model.TagDb;
+import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.MiscUtils;
+import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.util.ArrayList;
@@ -223,6 +226,11 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     protected void notifyFilterSpecified(String filter) {
         // ViewPagerは動的にサイズを変更できないので、Activityごと描きなおす
         startActivity(this, null, filter);
+    }
+
+    @Override
+    protected void notifyChartChanged() {
+        if (mChartPagerAdapter != null) mChartPagerAdapter.notifyDataSetChanged();
     }
 
     @Override

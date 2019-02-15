@@ -36,7 +36,8 @@ import java.util.List;
 
 @SuppressLint("Registered")
 public class BaseActivity extends AppCompatActivity implements View.OnClickListener, DialogUi.DialogEventListener {
-    private final static int RP_LOCATION = 100;
+    protected final static int RP_LOCATION = 100;
+    protected final static int RP_CONTENTS = 101;
 
     private final static int RC_DELETE_LOG = 100;
     private final static int RC_SELECT_TAG = 200;
@@ -57,11 +58,19 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     private int mIndexTag = -1;
 
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        SdkUtils.requestRuntimePermissions(this, Const.PERMISSIONS_CONTENTS, RP_CONTENTS);
+    }
 
     protected Date getTargetDate() {
         return null;
     }
 
+
+    protected void notifyChartChanged() {
+    }
 
     protected void notifyLogsDeleted(Date deletedLogDate) {
     }
@@ -539,9 +548,14 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                     showAddTagDialog();
                     return;
                 }
-
                 measureLocation();
                 return;
+
+            case RP_CONTENTS:
+                if (SdkUtils.isGranted(grantResults)) {
+                    notifyChartChanged();
+                }
+                break;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }

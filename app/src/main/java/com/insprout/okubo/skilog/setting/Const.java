@@ -26,6 +26,10 @@ public class Const {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
     };
+    // コンテンツ管理DBにアクセスするには、STORAGEの読み取り権限が必要
+    public final static String[] PERMISSIONS_CONTENTS = {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    };
 
     public final static int MAX_TAG_CANDIDATE_BY_LOCATION = 8;
 

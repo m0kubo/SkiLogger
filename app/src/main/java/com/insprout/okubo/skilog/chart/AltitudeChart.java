@@ -21,6 +21,7 @@ import com.insprout.okubo.skilog.R;
 import com.insprout.okubo.skilog.SkiLogService;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.SkiLogDb;
+import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.util.AppUtils;
 import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
@@ -57,7 +58,7 @@ public class AltitudeChart {
     private float mAccumulateDesc = 0f;
     private int mRunCount = 0;
 
-    private List<Uri> photos = null;
+    private List<Uri> mPhotoList = null;
 
 
     public AltitudeChart(Context context, Chart lineChart, Date target) {
@@ -208,28 +209,31 @@ public class AltitudeChart {
         // 撮影した写真がすぐグラフに反映されるように修正
         Date endTime = data.get(data.size() - 1).getCreated();
         if (MiscUtils.isToday(endTime) && SkiLogService.isRunning(mContext)) endTime = new Date(System.currentTimeMillis());
-        photos = ContentsUtils.getImageList(mContext, data.get(0).getCreated(), endTime);
-        // 写真データがあったら、表示用のグラフデータを作成する
-        if (photos.size() >= 1) {
-            int photoCount = photos.size();
-            Date[] photoTimes = new Date[photos.size()];
-            for (int i = 0; i<photos.size(); i++) {
-                photoTimes[i] = ContentsUtils.getDate(mContext, photos.get(i));
-            }
-
-            for (int i = data.size() - 1; i >= 0; i--) {
-                SkiLogDb log = data.get(i);
-                Date logTime = log.getCreated();
-                for (int j = photos.size() - 1; j>=0 ;j--) {
-                    if (photoTimes[j] != null && photoTimes[j].after(logTime)) {
-                        float hours = (photoTimes[j].getTime() - timeAm0) / (60 * 60 * 1000.0f);
-                        mChartValues12.add(0, new Entry(hours, log.getAltitude()));
-                        if (mChartValues13.isEmpty()) mChartValues13.add(0, new Entry(hours, log.getAltitude()));
-                        photoTimes[j] = null;
-                        photoCount--;
-                    }
+        if (SdkUtils.checkSelfPermission(mContext, Const.PERMISSIONS_CONTENTS)) {
+            mPhotoList = ContentsUtils.getImageList(mContext, data.get(0).getCreated(), endTime);
+            // 写真データがあったら、表示用のグラフデータを作成する
+            if (mPhotoList != null && mPhotoList.size() >= 1) {
+                int photoCount = mPhotoList.size();
+                Date[] photoTimes = new Date[mPhotoList.size()];
+                for (int i = 0; i < mPhotoList.size(); i++) {
+                    photoTimes[i] = ContentsUtils.getDate(mContext, mPhotoList.get(i));
                 }
-                if (photoCount <= 0) break;
+
+                for (int i = data.size() - 1; i >= 0; i--) {
+                    SkiLogDb log = data.get(i);
+                    Date logTime = log.getCreated();
+                    for (int j = mPhotoList.size() - 1; j >= 0; j--) {
+                        if (photoTimes[j] != null && photoTimes[j].after(logTime)) {
+                            float hours = (photoTimes[j].getTime() - timeAm0) / (60 * 60 * 1000.0f);
+                            mChartValues12.add(0, new Entry(hours, log.getAltitude()));
+                            if (mChartValues13.isEmpty())
+                                mChartValues13.add(0, new Entry(hours, log.getAltitude()));
+                            photoTimes[j] = null;
+                            photoCount--;
+                        }
+                    }
+                    if (photoCount <= 0) break;
+                }
             }
         }
 
@@ -274,14 +278,14 @@ public class AltitudeChart {
     }
 
     public Uri getPhotoUri() {
-        if (photos == null || photos.size() == 0) return null;
-        return photos.get(0);
+        if (mPhotoList == null || mPhotoList.size() == 0) return null;
+        return mPhotoList.get(0);
     }
 
     public Uri getPhotoUri(Entry entry) {
-        if (photos == null || photos.size() == 0) return null;
+        if (mPhotoList == null || mPhotoList.size() == 0) return null;
         for (int i=0; i<mChartValues12.size(); i++) {
-            if (mChartValues12.get(i).equalTo(entry)) return photos.get(i);
+            if (mChartValues12.get(i).equalTo(entry)) return mPhotoList.get(i);
         }
         return null;
     }

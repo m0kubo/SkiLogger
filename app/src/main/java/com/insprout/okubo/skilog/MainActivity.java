@@ -19,7 +19,6 @@ import android.widget.TextView;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.DialogUi;
-import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.SensorUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 

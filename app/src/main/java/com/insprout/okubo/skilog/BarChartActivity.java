@@ -16,10 +16,12 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.insprout.okubo.skilog.chart.SummaryChart;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.TagDb;
+import com.insprout.okubo.skilog.setting.Const;
 import com.insprout.okubo.skilog.setting.Settings;
 import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.DialogUi;
 import com.insprout.okubo.skilog.util.MiscUtils;
+import com.insprout.okubo.skilog.util.SdkUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.util.Date;
@@ -27,9 +29,6 @@ import java.util.List;
 
 
 public class BarChartActivity extends BaseActivity implements View.OnClickListener, DialogUi.DialogEventListener {
-//    private final static int RC_DELETE_LOG = 1;
-//    private final static int RC_SELECT_TAG = 2;
-//    private final static int RC_SELECT_CHART_COUNT = 3;
 
     private ServiceMessenger mServiceMessenger;
 
@@ -137,10 +136,13 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
                 // 撮影した写真がすぐグラフに反映されるように修正
                 Date endTime = period[1];
                 if (MiscUtils.isToday(endTime) && SkiLogService.isRunning(this)) endTime = new Date(System.currentTimeMillis());
-                List<Uri> photoList = ContentsUtils.getImageList(this, period[0], endTime);
-                if (photoList.size() >= 1) {
-                    mPhotoUri = photoList.get(0);
-                    text += getString(R.string.fmt_photo_count, photoList.size());
+
+                if (SdkUtils.checkSelfPermission(this, Const.PERMISSIONS_CONTENTS)) {
+                    List<Uri> photoList = ContentsUtils.getImageList(this, period[0], endTime);
+                    if (photoList.size() >= 1) {
+                        mPhotoUri = photoList.get(0);
+                        text += getString(R.string.fmt_photo_count, photoList.size());
+                    }
                 }
             }
             if (!mValueSelected) {
@@ -188,6 +190,11 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     @Override
     protected Date getTargetDate() {
         return mSummaryChart.getSelectedDate();
+    }
+
+    @Override
+    protected void notifyChartChanged() {
+        updateChart();
     }
 
     @Override
