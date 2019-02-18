@@ -6,4 +6,14 @@
         android:orderInCategory="100"
         android:title="@string/menu_theme"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/menu_export_data"
+        android:orderInCategory="101"
+        android:title="@string/menu_export"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/menu_import_data"
+        android:orderInCategory="102"
+        android:title="@string/menu_import"
+        app:showAsAction="never"/>
 </menu>

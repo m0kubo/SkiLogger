@@ -7,6 +7,7 @@ import com.insprout.okubo.skilog.database.DbConfiguration;
 import com.insprout.okubo.skilog.database.DbSQLite;
 
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by okubo on 2018/01/30.
@@ -101,12 +102,40 @@ public class SkiLogDb implements DbSQLite.IModelSQLite {
     }
 
     @Override
+    public String toCsvString() {
+        return String.format(
+                Locale.ENGLISH,
+                "%d,%f,%f,%f,%d,%d",
+                mId,
+                mAltitude,
+                mAscTotal,
+                mDescTotal,
+                mCount,
+                (mCreated != null ? mCreated.getTime() : 0L));
+    }
+
+    @Override
+    public DbSQLite.IModelSQLite fromCsvString(String csv) {
+        String column[] = csv != null ? csv.split(",") : new String[0];
+        return new SkiLogDb(
+                column.length >= 1 ? DbSQLite.toLong(column[0], 0) : 0L,
+                column.length >= 2 ? DbSQLite.toFloat(column[1], 0f) : 0f,
+                column.length >= 3 ? DbSQLite.toFloat(column[2], 0f) : 0f,
+                column.length >= 4 ? DbSQLite.toFloat(column[3], 0f) : 0f,
+                column.length >= 5 ? DbSQLite.toInt(column[4], 0) : 0,
+                new Date(column.length >= 6 ? DbSQLite.toLong(column[5], 0L) : 0L)
+        );
+    }
+
+    @Override
     public ContentValues toRecord() {
         ContentValues record = new ContentValues();
+        // _idは 自動採番なので設定しない
         record.put(DbConfiguration.COL_1_1, mAltitude);
         record.put(DbConfiguration.COL_1_2, mAscTotal);
         record.put(DbConfiguration.COL_1_3, mDescTotal);
         record.put(DbConfiguration.COL_1_4, mCount);
+        if (mCreated != null) record.put(DbConfiguration.COL_1_5, DbSQLite.formatUtcDateTime(mCreated));
         return record;
     }
 

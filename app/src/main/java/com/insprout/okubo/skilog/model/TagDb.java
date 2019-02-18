@@ -8,6 +8,7 @@ import com.insprout.okubo.skilog.database.DbSQLite;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -110,10 +111,36 @@ public class TagDb implements DbSQLite.IModelSQLite {
     }
 
     @Override
+    public String toCsvString() {
+        return String.format(
+                Locale.getDefault(),
+                "%d,%d,%s,%d,%d",
+                mId,
+                (mDate != null ? mDate.getTime() : 0L),
+                mTag != null ? mTag : "",
+                (mCreated != null ? mCreated.getTime() : 0L),
+                (mUpdated != null ? mUpdated.getTime() : 0L));
+    }
+
+    @Override
+    public DbSQLite.IModelSQLite fromCsvString(String csv) {
+        String column[] = csv != null ? csv.split(",") : new String[0];
+        return new TagDb(
+                column.length >= 1 ? DbSQLite.toLong(column[0], 0) : 0L,
+                new Date(column.length >= 2 ? DbSQLite.toLong(column[1], 0) : 0L),
+                column.length >= 3 ? column[2] : "",
+                new Date(column.length >= 4 ? DbSQLite.toLong(column[3], 0) : 0L),
+                new Date(column.length >= 5 ? DbSQLite.toLong(column[4], 0) : 0L)
+        );
+    }
+
+    @Override
     public ContentValues toRecord() {
         ContentValues record = new ContentValues();
+        // _idは 自動採番なので設定しない
         record.put(DbConfiguration.COL_2_1, DbSQLite.formatUtcDateTime(mDate));
         record.put(DbConfiguration.COL_2_2, mTag);
+        if (mCreated != null) record.put(DbConfiguration.COL_2_3, DbSQLite.formatUtcDateTime(mCreated));
         record.put(DbConfiguration.COL_2_4, DbSQLite.formatUtcDateTime(new Date(System.currentTimeMillis())));
         return record;
     }

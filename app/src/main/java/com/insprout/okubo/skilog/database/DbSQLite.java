@@ -9,7 +9,14 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,6 +34,10 @@ public class DbSQLite implements Closeable {
         String getPrimaryKeyName();
 
         String getPrimaryKeyValue();
+
+        String toCsvString();
+
+        IModelSQLite fromCsvString(String csv);
 
         ContentValues toRecord();
 
@@ -112,6 +123,21 @@ public class DbSQLite implements Closeable {
             // 全削除の際 DROP TABLEは使用しない。 次回使用時に Helperコンストラクタの、onCreate()が呼ばれない為エラーになる
             mDb.delete(tableName, "1", null);
             mDb.execSQL( "vacuum" );
+
+        } catch (SQLException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+            return false;
+        }
+        return true;
+    }
+
+    public boolean resetAutoIncrement(String tableName) {
+        if (tableName == null || tableName.isEmpty()) return false;
+
+        try {
+            // sqlite_sequenceのオートインクリメント値を削除する
+            mDb.delete("sqlite_sequence", "name = ?", new String[]{tableName});
 
         } catch (SQLException e) {
             // SQLite error
@@ -313,6 +339,76 @@ public class DbSQLite implements Closeable {
     }
 
 
+    public int exportToFile(IModelSQLite model, File file) {
+        if (model == null || file == null) return -1;
+        try {
+            // フォルダが存在しない場合は作成する
+            File folder = file.getParentFile();
+            if (!folder.exists()) {
+                if (!folder.mkdirs()) return -1;
+            }
+            // ファイルが存在しない場合は作成する
+            if (!file.exists()) {
+                if (!file.createNewFile()) return -1;
+            }
+            if (!file.canWrite()) return -1;
+        } catch (IOException e) {
+            return -1;
+        }
+
+        int count = 0;
+
+        try (
+                PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(file, false)));
+                Cursor cursor = mDb.query(model.getTable(), null,null, null, null,  null, null)) {
+
+            while (cursor.moveToNext()) {
+                // 取得したデータを格納する
+                IModelSQLite data = model.fromDatabase(cursor);
+                writer.println(data.toCsvString());
+                count++;
+            }
+
+        } catch (SQLiteException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+
+        } catch (IOException e) {
+            Log.e(TAG, "File error: " + e.toString());
+        }
+
+        return count;
+    }
+
+
+    public int importFromFile(IModelSQLite model, File file) {
+        if (model == null || file == null || !file.exists() || !file.isFile()) return -1;
+
+        int count = 0;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+
+            String csvString;
+            while ((csvString = reader.readLine()) != null) {
+                csvString = csvString.trim();
+                if (csvString.isEmpty()) continue;
+                ContentValues record = model.fromCsvString(csvString).toRecord();
+                if (mDb.insert(model.getTable(), null, record) != -1) count++;
+            }
+
+        } catch (SQLiteException e) {
+            // SQLite error
+            Log.e(TAG, "DB error: " + e.toString());
+
+        } catch (IOException e) {
+            Log.e(TAG, "File error: " + e.toString());
+        }
+
+        return count;
+    }
+
+
+
     /**
      * SQLを rawQueryで実行して その結果を SkiLogDataクラスの Listを返す
      * ただし、SQLの結果列は、SkiLogDataクラスに格納できる形式であること
@@ -440,6 +536,30 @@ public class DbSQLite implements Closeable {
         // 現在の端末設定の TimeZoneと UTCの時差(秒数)を取得
         int timeDiff = TimeZone.getDefault().getRawOffset() / 1000;
         return String.format(Locale.ENGLISH, "%+d seconds", timeDiff);
+    }
+
+    public static int toInt(String str, int defaultValue) {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public static long toLong(String str, long defaultValue) {
+        try {
+            return Long.parseLong(str);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    public static float toFloat(String str, float defaultValue) {
+        try {
+            return Float.parseFloat(str);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
     }
 
 }

@@ -27,11 +27,24 @@
     <string name="msg_unselect">選択を解除しました。</string>
 
     <string name="menu_theme">アプリ テーマ変更</string>
+    <string name="menu_export">ログ export</string>
+    <string name="menu_import">ログ import</string>
     <string name="menu_not_targeted">(対象日が選択されていません)</string>
     <string name="menu_targeted_fmt">対象日：%s</string>
     <string name="menu_delete_logs">記録削除</string>
     <string name="menu_list_tags">キーワード一覧/削除</string>
     <string name="menu_add_tags">キーワード追加</string>
+
+    <!-- インポート/エクスポート関連 -->
+    <string name="msg_select_import_log">importするデータを選択してください</string>
+    <string name="msg_export_log_fmt">データを以下のフォルダに出力します\n%s</string>
+    <string name="msg_no_exported_logs">Exportされたデータはありません</string>
+    <string name="msg_export_logs_fmt">%1$d件のログ、%2$d件のキーワード情報をexportしました</string>
+    <string name="msg_import_logs_fmt">%1$d件のログ、%2$d件のキーワード情報をimportしました</string>
+    <string name="wrn_export_logs_fmt">%d件のログ情報をexportしました\nキーワード情報のexportに失敗しました</string>
+    <string name="wrn_import_logs_fmt">%d件のログ情報をimportしました\nキーワード情報のimportに失敗しました</string>
+    <string name="err_export_logs">exportに失敗しました</string>
+    <string name="err_import_logs">importに失敗しました</string>
 
     <string-array name="app_themes">
         <item>テーマ：Light</item>

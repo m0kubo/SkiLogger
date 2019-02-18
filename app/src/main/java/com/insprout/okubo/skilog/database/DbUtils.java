@@ -5,6 +5,7 @@ import android.content.Context;
 import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.model.TagDb;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -208,6 +209,49 @@ public class DbUtils {
             }
         }
         return limitCmd;
+    }
+
+
+    public static int exportLogs(Context context, File exportFile) {
+        if (exportFile == null) return -1;
+
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
+            return database.exportToFile(new SkiLogDb(), exportFile);
+        }
+    }
+
+    public static int importLogs(Context context, File importFile) {
+        if (importFile == null || !importFile.exists() || !importFile.isFile()) return -1;
+
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
+            DbSQLite.IModelSQLite model = new SkiLogDb();
+            database.deleteAllFromTable(model.getTable());      // 全てのレコードを削除
+            database.resetAutoIncrement(model.getTable());      // auto-incrementの情報をリセット
+            return database.importFromFile(model, importFile);  // データimport
+        }
+    }
+
+    public static int exportTags(Context context, File exportFile) {
+        if (exportFile == null) return -1;
+
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
+            return database.exportToFile(new TagDb(), exportFile);
+        }
+    }
+
+    public static int importTags(Context context, File importFile) {
+        if (importFile == null || !importFile.exists() || !importFile.isFile()) return -1;
+
+        // try-with-resources構文で closeを自動的に呼び出す
+        try (DbSQLite database = new DbSQLite(new DbConfiguration(context))) {
+            DbSQLite.IModelSQLite model = new TagDb();
+            database.deleteAllFromTable(model.getTable());      // 全てのレコードを削除
+            database.resetAutoIncrement(model.getTable());      // auto-incrementの情報をリセット
+            return database.importFromFile(model, importFile);  // データimport
+        }
     }
 
 

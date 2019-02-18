@@ -20,6 +20,11 @@ public class Const {
     public final static String EXTRA_PARAM1 = "extra.PARAM_1";
     public final static String EXTRA_PARAM2 = "extra.PARAM_2";
 
+    public final static String APP_FOLDER_NAME = "SkiLogger";
+    public final static String FILENAME_LOGS_CSV = "logs.csv";
+    public final static String FILENAME_TAGS_CSV = "tags.csv";
+    public final static String DATE_FORMAT_EXPORT_FOLDER = "yyyy-MM-dd HH-mm-ss SSS";
+
 
     @SuppressLint("InlinedApi")
     public final static String[] PERMISSIONS_LOCATION = {
@@ -28,6 +33,11 @@ public class Const {
     };
     // コンテンツ管理DBにアクセスするには、STORAGEの読み取り権限が必要
     public final static String[] PERMISSIONS_CONTENTS = {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    };
+    // コンテンツ管理DBにアクセスするには、STORAGEの書き込み権限が必要
+    public final static String[] PERMISSIONS_EXPORT = {
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE
     };
 
