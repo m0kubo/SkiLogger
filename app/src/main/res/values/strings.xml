@@ -27,8 +27,9 @@
     <string name="msg_unselect">選択を解除しました。</string>
 
     <string name="menu_theme">アプリ テーマ変更</string>
-    <string name="menu_export">ログ export</string>
-    <string name="menu_import">ログ import</string>
+    <string name="menu_export">ログをバックアップ</string>
+    <string name="menu_import">バックアップからログを復帰</string>
+    <string name="menu_delete_backup">バックアップを削除</string>
     <string name="menu_not_targeted">(対象日が選択されていません)</string>
     <string name="menu_targeted_fmt">対象日：%s</string>
     <string name="menu_delete_logs">記録削除</string>
@@ -36,15 +37,24 @@
     <string name="menu_add_tags">キーワード追加</string>
 
     <!-- インポート/エクスポート関連 -->
-    <string name="msg_select_import_log">importするデータを選択してください</string>
-    <string name="msg_export_log_fmt">データを以下のフォルダに出力します\n%s</string>
-    <string name="msg_no_exported_logs">Exportされたデータはありません</string>
-    <string name="msg_export_logs_fmt">%1$d件のログ、%2$d件のキーワード情報をexportしました</string>
-    <string name="msg_import_logs_fmt">%1$d件のログ、%2$d件のキーワード情報をimportしました</string>
-    <string name="wrn_export_logs_fmt">%d件のログ情報をexportしました\nキーワード情報のexportに失敗しました</string>
-    <string name="wrn_import_logs_fmt">%d件のログ情報をimportしました\nキーワード情報のimportに失敗しました</string>
-    <string name="err_export_logs">exportに失敗しました</string>
-    <string name="err_import_logs">importに失敗しました</string>
+    <string name="msg_select_import_log">復帰するバックアップを選択</string>
+    <string name="msg_select_delete_backup">削除するバックアップを選択</string>
+    <string name="msg_confirm_import_backup_fmt">以下のバックアップからログの復帰を行います。\n※ 現状のログは上書きされます\n\n%s</string>
+    <string name="msg_confirm_delete_backup_fmt">以下のバックアップ データを削除します\n\n%s</string>
+    <string name="msg_export_log_fmt">以下のフォルダにバックアップを作成します\n\n%s</string>
+    <string name="msg_no_exported_logs">バックアップされたデータはありません</string>
+    <string name="msg_exporting_logs">バックアップを作成しています&#8230;</string>
+    <string name="msg_importing_logs">ログ情報を復帰しています&#8230;\n\n件数など条件によっては数分かかる場合があります</string>
+    <string name="msg_export_logs_fmt">%1$d件のログ、%2$d件のキーワード情報をバックアップしました</string>
+    <string name="msg_import_logs_fmt">%1$d件のログ、%2$d件のキーワード情報を復帰しました</string>
+    <string name="msg_delete_backup">バックアップを削除しました</string>
+    <string name="wrn_no_data_selected">バックアップが選択されませんでした。</string>
+    <string name="wrn_export_logs_fmt">%d件のログ情報をバックアップしました\nキーワード情報のバックアップに失敗しました</string>
+    <string name="wrn_import_logs_fmt">%d件のログ情報を復帰しました\nキーワード情報の復帰に失敗しました</string>
+    <string name="wrn_import_svc_running">ログの復帰は、計測停止時に行ってください</string>
+    <string name="err_export_logs">バックアップの作成に失敗しました</string>
+    <string name="err_import_logs">バックアップからの復帰に失敗しました</string>
+    <string name="err_delete_backup">バックアップの削除に失敗しました</string>
 
     <string-array name="app_themes">
         <item>テーマ：Light</item>
@@ -72,6 +82,7 @@
     <string name="btn_cancel">キャンセル</string>
     <string name="btn_close">閉じる</string>
     <string name="btn_delete">削除</string>
+    <string name="btn_restore">復帰</string>
     <string name="btn_finish_app">アプリ終了</string>
 
     <string name="fmt_title_list_tags">%s のキーワード</string>

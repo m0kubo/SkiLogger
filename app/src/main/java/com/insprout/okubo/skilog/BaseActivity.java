@@ -14,6 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -329,14 +330,14 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onLocationChanged(Location location) {
                 if (location == null) {
-                    dialog.dismiss();
+                    dialog.dismissAllowingStateLoss();
                     Toast.makeText(BaseActivity.this, R.string.msg_fail_to_google_place_api, Toast.LENGTH_SHORT).show();
 
                 } else {
                     WebApiUtils.googlePlaceApi(getString(R.string.google_maps_key), location, new RequestUrlTask.OnResponseListener() {
                         @Override
                         public void onResponse(String responseBody) {
-                            dialog.dismiss();
+                            dialog.dismissAllowingStateLoss();
                             if (responseBody == null) return;
                             ResponsePlaceData places = ResponsePlaceData.fromJson(responseBody);
                             if (places == null || places.getPlaces() == null) {
@@ -394,12 +395,7 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                 // タグ一覧ダイアログのコールバック
                 if (view instanceof ListView) {      // 念のためチェック
                     int pos = ((ListView)view).getCheckedItemPosition();
-
                     switch (which) {
-                        case DialogUi.EVENT_DIALOG_SHOWN:
-                            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(pos >= 0);
-                            break;
-
                         case DialogUi.EVENT_BUTTON_POSITIVE:
                             // 削除ボタンが押された
                             if (pos >= 0 && pos < mTagsOnTarget.size()) {
@@ -416,9 +412,9 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                             break;
 
                         default:
-                            if (pos >= 0) {
-                                dialog.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
-                            }
+                            // 選択状態によって OKボタンを有効化/無効化する
+                            Button button = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                            if (button != null) button.setEnabled(pos >= 0);    // EVENT_DIALOG_CREATEDの時点では buttonはまだnullなので注意
                             break;
                     }
                 }

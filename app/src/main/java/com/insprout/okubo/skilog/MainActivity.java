@@ -1,9 +1,11 @@
 package com.insprout.okubo.skilog;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.Sensor;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -15,6 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,14 +32,11 @@ import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 
@@ -44,7 +44,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final static int RC_CHANGE_THEME = 1;
     private final static int RC_DATA_EXPORT = 2;
     private final static int RC_DATA_IMPORT = 3;
-    private final static int REQ_CODE_FINISH_APP = 101;
+    private final static int RC_DATA_DELETE = 4;
+    private final static int RC_DATA_IMPORT_CONFIRM = 5;
+    private final static int RC_DATA_DELETE_CONFIRM = 6;
+    private final static int RC_PROGRESS_DIALOG = 10;
+//    private final static int RC_FINISH_APP = 101;
 
     private ServiceMessenger mServiceMessenger;
 
@@ -54,11 +58,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView mTvTotalDesc;
     private TextView mTvCount;
 
-    private boolean mReadyData = false;
     private int mThemeIndex;
     private String[] mThemeArray;
-    private File mFolderExport = null;
-    private File[] mFolderImport = null;
+    private File mBackupFolder = null;
+    private File[] mBackupFolderList = null;
 
 
     @Override
@@ -92,7 +95,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SkiLogService.registerNotifyChannel(this);              // Android8.0対応 notificationチャンネルの登録
 
         mThemeArray = getResources().getStringArray(R.array.app_themes);
-        mReadyData = (DbUtils.countLogs(this) >= 1);                  // 記録データが存在するかどうか
 
         // Serviceプロセスとの 通信クラス作成
         mServiceMessenger = new ServiceMessenger(this, new ServiceMessenger.OnServiceMessageListener() {
@@ -151,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                .setMessage(R.string.msg_close_application)
 //                .setPositiveButton(R.string.btn_finish_app)
 //                .setNegativeButton(R.string.btn_cancel)
-//                .setRequestCode(REQ_CODE_FINISH_APP)
+//                .setRequestCode(RC_FINISH_APP)
 //                .show();
 //    }
 
@@ -191,19 +193,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // サービス起動・停止ボタンの 有効無効
         UiUtils.setEnabled(this, R.id.btn_positive, (mSensor!=null && !serviceRunning));
         UiUtils.setEnabled(this, R.id.btn_negative, (mSensor!=null && serviceRunning));
-        updateUi();
+
+        boolean  readyData = serviceRunning || (DbUtils.countLogs(this) >= 1);
+        updateChartButton(this, readyData);
     }
 
-    private void updateUi() {
-        UiUtils.setEnabled(this, R.id.btn_chart1, mReadyData);
-        UiUtils.setEnabled(this, R.id.btn_chart2, mReadyData);
-        UiUtils.setSelected(this, R.id.btn_chart1, false);
-        UiUtils.setSelected(this, R.id.btn_chart2, false);
-    }
-
-    private void updateChartButton() {
-        mReadyData = (DbUtils.countLogs(this) >= 1);                  // 記録データが存在するかどうか
-        updateUi();
+    private static void updateChartButton(Activity activity, boolean logsReady) {
+        UiUtils.setEnabled(activity, R.id.btn_chart1, logsReady);
+        UiUtils.setEnabled(activity, R.id.btn_chart2, logsReady);
+        UiUtils.setSelected(activity, R.id.btn_chart1, false);
+        UiUtils.setSelected(activity, R.id.btn_chart2, false);
     }
 
     private void confirmServiceStatus() {
@@ -212,7 +211,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
              @Override
              public void run() {
                  boolean isRunning = SkiLogService.isRunning(MainActivity.this);
-                 if (isRunning) mReadyData = true;              // サービスが起動できたら、新規データがあると見做す
                  updateUi(isRunning);
              }
         },
@@ -255,15 +253,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     showImportDialog();
                 }
                 return true;
+
+            case R.id.menu_delete_data:
+                if (SdkUtils.requestRuntimePermissions(this, Const.PERMISSIONS_EXPORT, RC_DATA_DELETE)) {
+                    // 権限がない場合、続きは onRequestPermissionsResult()から継続
+                    showDeleteBackupDialog();
+                }
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void showExportDialog() {
-        mFolderExport = getExportFolder();
+        mBackupFolder = newBackupFolder();
         new DialogUi.Builder(this)
                 .setTitle(R.string.menu_export)
-                .setMessage(getString(R.string.msg_export_log_fmt, mFolderExport.toString()))
+                .setMessage(getString(R.string.msg_export_log_fmt, mBackupFolder.toString()))
                 .setPositiveButton()
                 .setNegativeButton()
                 .setRequestCode(RC_DATA_EXPORT)
@@ -271,22 +276,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void showImportDialog() {
-        mFolderImport = getExportRoot().listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                if (!file.isDirectory()) return false;
-
-                //return file.getName().matches("\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}.*");
-                // 指定のフォルダ内に ログ情報のCSVファイルがあるかも確認する
-                return new File(file, Const.FILENAME_LOGS_CSV).exists();
-            }
-        });
-        if (mFolderImport == null || mFolderImport.length == 0) {
-            showNoExported();
+        // ログ記録サービス実行中なら警告メッセージを表示
+        if (SkiLogService.isRunning(this)) {
+            new DialogUi.Builder(this)
+                    .setMessage(R.string.wrn_import_svc_running)
+                    .setPositiveButton()
+                    .show();
             return;
         }
+
+        mBackupFolderList = getExportedFolderList();
+        if (mBackupFolderList == null) return;
+
+        new DialogUi.Builder(this)
+                .setTitle(R.string.msg_select_import_log)
+                .setSingleChoiceItems(toStringArray(mBackupFolderList))
+                .setPositiveButton()
+                .setNegativeButton()
+                .setRequestCode(RC_DATA_IMPORT)
+                .show();
+    }
+
+    private void showDeleteBackupDialog() {
+        mBackupFolderList = getExportedFolderList();
+        if (mBackupFolderList == null) return;
+
+        new DialogUi.Builder(this)
+                .setTitle(R.string.msg_select_delete_backup)
+                .setSingleChoiceItems(toStringArray(mBackupFolderList))
+                .setPositiveButton()
+                .setNegativeButton()
+                .setRequestCode(RC_DATA_DELETE)
+                .show();
+    }
+
+    private File[] getExportedFolderList() {
+        File[] exportedFolders = getExportRoot().listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                // ディレクトリで、その直下に logs.csvファイルが存在するものをexportされたディレクトリとみなす
+                if (!file.isDirectory()) return false;
+                // 指定のフォルダ内に ログ情報のCSVファイルがあるかも確認する
+                File csvFile = new File(file, Const.FILENAME_LOGS_CSV);
+                return csvFile.exists() && csvFile.isFile();
+            }
+        });
+        if (exportedFolders == null || exportedFolders.length == 0) {
+            // エクスポートされたデータがない場合
+            showNoExported();
+            return null;
+        }
         // フォルダリストを作成時間降順にする
-        Arrays.sort(mFolderImport, new Comparator<File>() {
+        Arrays.sort(exportedFolders, new Comparator<File>() {
             @Override
             public int compare(File file1, File file2) {
                 long timeStamp1 = file1.lastModified();
@@ -295,14 +336,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return timeStamp1 < timeStamp2 ? 1 : -1;
             }
         });
-
-        new DialogUi.Builder(this)
-                .setTitle(R.string.msg_select_import_log)
-                .setSingleChoiceItems(toStringArray(mFolderImport))
-                .setPositiveButton()
-                .setNegativeButton()
-                .setRequestCode(RC_DATA_IMPORT)
-                .show();
+        return exportedFolders;
     }
 
     private String[] toStringArray(File[] files) {
@@ -326,60 +360,55 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), Const.APP_FOLDER_NAME);
     }
 
-    private File getExportFolder() {
+    private File newBackupFolder() {
         SimpleDateFormat mDateFormat = new SimpleDateFormat(Const.DATE_FORMAT_EXPORT_FOLDER, Locale.getDefault());
         return new File(getExportRoot(), mDateFormat.format(new Date(System.currentTimeMillis())));
     }
 
-
-    private void exportData() {
-        if (mFolderExport == null) return;
-        File exportLogFile = new File(mFolderExport, Const.FILENAME_LOGS_CSV);
-        int exportLogCount = DbUtils.exportLogs(this, exportLogFile);
-        if (exportLogCount < 0) {
-            Toast.makeText(this, R.string.err_export_logs, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        File exportTagFile = new File(mFolderExport, Const.FILENAME_TAGS_CSV);
-        int exportTagCount = DbUtils.exportTags(this, exportTagFile);
-        if (exportTagCount < 0) {
-            String msg = getString(R.string.wrn_export_logs_fmt, exportLogCount);
-            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String msg = getString(R.string.msg_export_logs_fmt, exportLogCount, exportTagCount);
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    private void confirmImportData(File backupFolder) {
+        if (backupFolder == null) return;
+        mBackupFolder = backupFolder;
+        String msg = getString(R.string.msg_confirm_import_backup_fmt, mBackupFolder.getName());
+        new DialogUi.Builder(this)
+                .setMessage(msg)
+                .setPositiveButton(R.string.btn_restore)
+                .setNegativeButton()
+                .setRequestCode(RC_DATA_IMPORT_CONFIRM)
+                .show();
     }
 
-    private void importData(File importFolder) {
-        if (importFolder == null || !importFolder.isDirectory()) return;
+    private void confirmDeleteData(File backupFolder) {
+        if (backupFolder == null) return;
+        mBackupFolder = backupFolder;
+        String msg = getString(R.string.msg_confirm_delete_backup_fmt, mBackupFolder.getName());
+        new DialogUi.Builder(this)
+                .setMessage(msg)
+                .setPositiveButton(R.string.btn_delete)
+                .setNegativeButton()
+                .setRequestCode(RC_DATA_DELETE_CONFIRM)
+                .show();
+    }
 
-        int importedTagCount = 0;
-        int importedLogCount = 0;
-        File logsFile = new File(importFolder, Const.FILENAME_LOGS_CSV);
-        if (logsFile.exists() && logsFile.isFile()) {
-            importedLogCount = DbUtils.importLogs(this, logsFile);
-            if (importedLogCount < 0) {
-                Toast.makeText(this, R.string.err_import_logs, Toast.LENGTH_SHORT).show();
-                return;
+    private void deleteData(File backupFolder) {
+        if (deleteFolderWithChildren(backupFolder)) {
+            Toast.makeText(this, R.string.msg_delete_backup, Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, R.string.err_delete_backup, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean deleteFolderWithChildren(File file) {
+        // 存在しない場合は処理終了
+        if (!file.exists()) return true;
+
+        // 対象がディレクトリの場合は再帰処理
+        if (file.isDirectory()) {
+            for (File child : file.listFiles()) {
+                if (!deleteFolderWithChildren(child)) return false;
             }
         }
-        File tagsFile = new File(importFolder, Const.FILENAME_TAGS_CSV);
-        if (tagsFile.exists() && tagsFile.isFile()) {
-            importedTagCount = DbUtils.importTags(this, tagsFile);
-            if (importedTagCount < 0) {
-                String msg = getString(R.string.wrn_import_logs_fmt, importedLogCount);
-                Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                updateChartButton();
-                return;
-            }
-        }
-
-        String msg = getString(R.string.msg_import_logs_fmt, importedLogCount, importedTagCount);
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-        updateChartButton();
+        // 対象がファイルもしくは配下が空のディレクトリの場合は削除する
+        return file.delete();
     }
 
     @Override
@@ -429,25 +458,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case RC_DATA_EXPORT:
                 if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
-                    exportData();
-                }
-                break;
-
-            case RC_DATA_IMPORT:
-                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
-                    int pos = ((ListView)view).getCheckedItemPosition();
-                    if (pos >= 0 && pos < mFolderImport.length) {
-                        importData(mFolderImport[pos]);
+                    if (mBackupFolder != null) {
+                        new BackupTask(this, BackupTask.EXPORT_BACKUP).execute(mBackupFolder);
                     }
                 }
                 break;
 
-            case REQ_CODE_FINISH_APP:
-                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
-                    // アプリ終了する
-                    finish();
+            case RC_DATA_DELETE:
+            case RC_DATA_IMPORT:
+                if (view instanceof ListView) {
+                    int pos = ((ListView) view).getCheckedItemPosition();
+                    switch (which) {
+                        case DialogUi.EVENT_BUTTON_POSITIVE:
+                            if (pos < 0) {
+                                Toast.makeText(this, R.string.wrn_no_data_selected, Toast.LENGTH_SHORT).show();
+                            } else if (pos < mBackupFolderList.length) {
+                                switch (requestCode) {
+                                    case RC_DATA_IMPORT:
+                                        confirmImportData(mBackupFolderList[pos]);
+                                        break;
+                                    case RC_DATA_DELETE:
+                                        confirmDeleteData(mBackupFolderList[pos]);
+                                        break;
+                                }
+                            }
+
+                        default:
+                            // 選択状態によって OKボタンを有効化/無効化する
+                            Button button = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                            if (button != null) button.setEnabled(pos >= 0);    // EVENT_DIALOG_CREATEDの時点では buttonはまだnullなので注意
+                            break;
+                    }
                 }
                 break;
+
+            case RC_DATA_IMPORT_CONFIRM:
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
+                    if (mBackupFolder != null && mBackupFolder.isDirectory()) {
+                        new BackupTask(this, BackupTask.IMPORT_BACKUP).execute(mBackupFolder);
+                    }
+                }
+                break;
+
+            case RC_DATA_DELETE_CONFIRM:
+                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
+                    deleteData(mBackupFolder);
+                }
+                break;
+
+//            case RC_FINISH_APP:
+//                if (which == DialogUi.EVENT_BUTTON_POSITIVE) {
+//                    // アプリ終了する
+//                    finish();
+//                }
+//                break;
         }
     }
 
@@ -465,4 +529,111 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
+    private static class BackupTask extends AsyncTask<File, Void, Void> {
+        public final static int EXPORT_BACKUP = 0;
+        public final static int IMPORT_BACKUP = 1;
+
+        private WeakReference<Activity> activityReference;
+        private int backupType;
+        private int importedLogCount = 0;
+        private String message = null;
+
+        BackupTask(Activity activity, int type) {
+            activityReference = new WeakReference<>(activity);
+            backupType = type;
+        }
+
+        @Override
+        protected Void doInBackground(File... file) {
+            if (file.length == 0 || file[0] == null) return null;
+
+            Activity activity = activityReference.get();
+            if (activity == null || activity.isFinishing()) return null;
+
+            switch(backupType) {
+                case EXPORT_BACKUP:
+                    File exportLogFile = new File(file[0], Const.FILENAME_LOGS_CSV);
+                    int exportLogCount = DbUtils.exportLogs(activity, exportLogFile);
+                    if (exportLogCount < 0) {
+                        message = activity.getString(R.string.err_export_logs);
+                        return null;
+                    }
+
+                    File exportTagFile = new File(file[0], Const.FILENAME_TAGS_CSV);
+                    int exportTagCount = DbUtils.exportTags(activity, exportTagFile);
+                    if (exportTagCount < 0) {
+                        message = activity.getString(R.string.wrn_export_logs_fmt, exportLogCount);
+                        return null;
+                    }
+
+                    message = activity.getString(R.string.msg_export_logs_fmt, exportLogCount, exportTagCount);
+                    break;
+
+                case IMPORT_BACKUP:
+                    if (file[0] == null || !file[0].isDirectory()) return null;
+                    int importedTagCount = 0;
+                    importedLogCount = 0;
+                    File logsFile = new File(file[0], Const.FILENAME_LOGS_CSV);
+                    if (logsFile.exists() && logsFile.isFile()) {
+                        importedLogCount = DbUtils.importLogs(activity, logsFile);
+                        if (importedLogCount < 0) {
+                            Toast.makeText(activity, R.string.err_import_logs, Toast.LENGTH_SHORT).show();
+                            return null;
+                        }
+                    }
+
+                    File tagsFile = new File(file[0], Const.FILENAME_TAGS_CSV);
+                    message = activity.getString(R.string.wrn_import_logs_fmt, importedLogCount);
+                    if (tagsFile.exists() && tagsFile.isFile()) {
+                        importedTagCount = DbUtils.importTags(activity, tagsFile);
+                        if (importedTagCount >= 0) {
+                            // タグのインポートも成功
+                            message = activity.getString(R.string.msg_import_logs_fmt, importedLogCount, importedTagCount);
+                        }
+                    }
+                    break;
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            Activity activity = activityReference.get();
+            if (activity == null || activity.isFinishing()) return;
+
+            switch(backupType) {
+                case EXPORT_BACKUP:
+                    new DialogUi.Builder(activity, DialogUi.STYLE_PROGRESS_DIALOG)
+                            .setMessage(R.string.msg_exporting_logs)
+                            .setRequestCode(RC_PROGRESS_DIALOG)
+                            .show();
+                    break;
+                case IMPORT_BACKUP:
+                    new DialogUi.Builder(activity, DialogUi.STYLE_PROGRESS_DIALOG)
+                            .setMessage(R.string.msg_importing_logs)
+                            .setRequestCode(RC_PROGRESS_DIALOG)
+                            .show();
+                    break;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            Activity activity = activityReference.get();
+            if (activity == null || activity.isFinishing()) return;
+
+            DialogUi.dismissDialog(activity, RC_PROGRESS_DIALOG);
+            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
+            if (backupType == IMPORT_BACKUP) {
+                updateChartButton(activity, importedLogCount >= 1);
+            }
+        }
+    }
+
 }

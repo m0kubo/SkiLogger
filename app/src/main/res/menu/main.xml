@@ -16,4 +16,9 @@
         android:orderInCategory="102"
         android:title="@string/menu_import"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/menu_delete_data"
+        android:orderInCategory="103"
+        android:title="@string/menu_delete_backup"
+        app:showAsAction="never"/>
 </menu>
