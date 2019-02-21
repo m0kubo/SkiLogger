@@ -530,50 +530,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private static class BackupTask extends AsyncTask<File, Void, Void> {
-        public final static int EXPORT_BACKUP = 0;
-        public final static int IMPORT_BACKUP = 1;
 
-        private WeakReference<Activity> activityReference;
-        private int backupType;
-        private int importedLogCount = 0;
-        private String message = null;
+    private static class BackupTask extends AsyncTask<File, Void, Integer> {
+        final static int EXPORT_BACKUP = 0;
+        final static int IMPORT_BACKUP = 1;
+
+        private WeakReference<Activity> mActivityWeakReference;
+        private int mBackupType;
+        private String mMessage = null;
 
         BackupTask(Activity activity, int type) {
-            activityReference = new WeakReference<>(activity);
-            backupType = type;
+            mActivityWeakReference = new WeakReference<>(activity);
+            mBackupType = type;
         }
 
+        // import/exportした高度ログの件数を返す。エラーの際は-1
+        // import/exportしたキーワードの件数については考慮しない
         @Override
-        protected Void doInBackground(File... file) {
-            if (file.length == 0 || file[0] == null) return null;
+        protected Integer doInBackground(File... file) {
+            if (file.length == 0 || file[0] == null) return -1;
 
-            Activity activity = activityReference.get();
-            if (activity == null || activity.isFinishing()) return null;
+            Activity activity = mActivityWeakReference.get();
+            if (activity == null || activity.isFinishing()) return -1;
 
-            switch(backupType) {
+            switch(mBackupType) {
                 case EXPORT_BACKUP:
                     File exportLogFile = new File(file[0], Const.FILENAME_LOGS_CSV);
                     int exportLogCount = DbUtils.exportLogs(activity, exportLogFile);
                     if (exportLogCount < 0) {
-                        message = activity.getString(R.string.err_export_logs);
-                        return null;
+                        mMessage = activity.getString(R.string.err_export_logs);
+                        return exportLogCount;
                     }
 
                     File exportTagFile = new File(file[0], Const.FILENAME_TAGS_CSV);
                     int exportTagCount = DbUtils.exportTags(activity, exportTagFile);
                     if (exportTagCount < 0) {
-                        message = activity.getString(R.string.wrn_export_logs_fmt, exportLogCount);
-                        return null;
+                        mMessage = activity.getString(R.string.wrn_export_logs_fmt, exportLogCount);
+                        return exportLogCount;
                     }
 
-                    message = activity.getString(R.string.msg_export_logs_fmt, exportLogCount, exportTagCount);
-                    break;
+                    mMessage = activity.getString(R.string.msg_export_logs_fmt, exportLogCount, exportTagCount);
+                    return exportLogCount;
 
                 case IMPORT_BACKUP:
                     if (file[0] == null || !file[0].isDirectory()) return null;
                     int importedTagCount = 0;
-                    importedLogCount = 0;
+                    int importedLogCount = 0;
                     File logsFile = new File(file[0], Const.FILENAME_LOGS_CSV);
                     if (logsFile.exists() && logsFile.isFile()) {
                         importedLogCount = DbUtils.importLogs(activity, logsFile);
@@ -584,28 +586,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
 
                     File tagsFile = new File(file[0], Const.FILENAME_TAGS_CSV);
-                    message = activity.getString(R.string.wrn_import_logs_fmt, importedLogCount);
+                    mMessage = activity.getString(R.string.wrn_import_logs_fmt, importedLogCount);
                     if (tagsFile.exists() && tagsFile.isFile()) {
                         importedTagCount = DbUtils.importTags(activity, tagsFile);
                         if (importedTagCount >= 0) {
                             // タグのインポートも成功
-                            message = activity.getString(R.string.msg_import_logs_fmt, importedLogCount, importedTagCount);
+                            mMessage = activity.getString(R.string.msg_import_logs_fmt, importedLogCount, importedTagCount);
                         }
                     }
-                    break;
-            }
+                    return importedLogCount;
 
-            return null;
+                default:
+                    return -1;
+            }
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
 
-            Activity activity = activityReference.get();
+            Activity activity = mActivityWeakReference.get();
             if (activity == null || activity.isFinishing()) return;
 
-            switch(backupType) {
+            switch(mBackupType) {
                 case EXPORT_BACKUP:
                     new DialogUi.Builder(activity, DialogUi.STYLE_PROGRESS_DIALOG)
                             .setMessage(R.string.msg_exporting_logs)
@@ -622,16 +625,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
+        protected void onPostExecute(Integer logCount) {
+            super.onPostExecute(logCount);
 
-            Activity activity = activityReference.get();
+            Activity activity = mActivityWeakReference.get();
             if (activity == null || activity.isFinishing()) return;
 
             DialogUi.dismissDialog(activity, RC_PROGRESS_DIALOG);
-            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show();
-            if (backupType == IMPORT_BACKUP) {
-                updateChartButton(activity, importedLogCount >= 1);
+            Toast.makeText(activity, mMessage, Toast.LENGTH_SHORT).show();
+            if (mBackupType == IMPORT_BACKUP) {
+                updateChartButton(activity, logCount >= 1);
             }
         }
     }
