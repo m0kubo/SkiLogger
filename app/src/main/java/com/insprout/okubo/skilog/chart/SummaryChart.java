@@ -130,6 +130,10 @@ public class SummaryChart {
         drawChart();
     }
 
+    public BarChart getChart() {
+        return mChart;
+    }
+
     public String getXAxisLabel(float value) {
         int index = (int)value;
         if (index >= 0 && index < mXAxisLabels.size()) return mXAxisLabels.get(index);

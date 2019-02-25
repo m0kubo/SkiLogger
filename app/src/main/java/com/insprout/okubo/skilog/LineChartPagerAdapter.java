@@ -4,12 +4,19 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
@@ -19,6 +26,7 @@ import com.insprout.okubo.skilog.chart.AltitudeChart;
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.TagDb;
 import com.insprout.okubo.skilog.util.AppUtils;
+import com.insprout.okubo.skilog.util.ContentsUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 import com.insprout.okubo.skilog.util.UiUtils;
 
@@ -40,7 +48,7 @@ public class LineChartPagerAdapter extends PagerAdapter {
     private PhotoUriListener mListener = null;
     private boolean mHasToday = false;
     private AltitudeChart mChartOfToday = null;
-    private Map<Date, TextView> mMapTvKeyword = new HashMap();
+    private Map<Date, TextView> mMapTvKeyword = new HashMap<>();
 
 
     public LineChartPagerAdapter(Activity activity, List<Date> dates) {
@@ -57,8 +65,9 @@ public class LineChartPagerAdapter extends PagerAdapter {
         mHasToday = (mDateList != null && !mDateList.isEmpty() && MiscUtils.isToday(mDateList.get(mDateList.size() - 1)));
     }
 
+    @NonNull
     @Override
-    public Object instantiateItem(ViewGroup container, int position) {
+    public Object instantiateItem(@NonNull ViewGroup container, int position) {
         View layout = mInflater.inflate(R.layout.cell_line_chart2, container, false);
         container.addView(layout);
 
@@ -70,8 +79,18 @@ public class LineChartPagerAdapter extends PagerAdapter {
         }
         TextView tvDate = layout.findViewById(R.id.tv_date);
         tvDate.setText(AppUtils.toDateString(date));
-        LineChart lineChartView = layout.findViewById(R.id.line_chart);
+        final LineChart lineChartView = layout.findViewById(R.id.line_chart);
         final TextView tvValue = layout.findViewById(R.id.tv_chart_value);
+        final ImageView ivPhoto = layout.findViewById(R.id.iv_photo);
+        ivPhoto.setVisibility(View.GONE);
+        ivPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (view.getTag() instanceof Uri) {
+                    UiUtils.intentActionView(mContext, (Uri)view.getTag());
+                }
+            }
+        });
         final AltitudeChart dailyChart = new AltitudeChart(mContext, lineChartView, date);
         if (mHasToday && (position == getCount() - 1)) mChartOfToday = dailyChart;   // 当日のチャートを保持
         final OnChartValueSelectedListener listener = new OnChartValueSelectedListener() {
@@ -84,6 +103,22 @@ public class LineChartPagerAdapter extends PagerAdapter {
                         dailyChart.getXAxisLabel(e.getX()),
                         dailyChart.getYAxisLabel(e.getY())
                 ));
+                ivPhoto.setTag(photo);
+                if (photo != null) {
+                    // サムネイルを右寄せにするか 左寄せにするか
+                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams)ivPhoto.getLayoutParams();
+                    if (e.getX() > (lineChartView.getXChartMin() + lineChartView.getXChartMax()) / 2) {
+                        params.gravity = Gravity.START;
+                    } else {
+                        params.gravity = Gravity.END;
+                    }
+                    ivPhoto.setLayoutParams(params);
+                    ivPhoto.setVisibility(View.VISIBLE);
+                    ivPhoto.setImageBitmap(ContentsUtils.getThumbnail(mContext, photo, MediaStore.Images.Thumbnails.MICRO_KIND));
+                } else {
+                    ivPhoto.setVisibility(View.GONE);
+                    ivPhoto.setImageDrawable(null);
+                }
                 if (photo != null && mListener != null) mListener.photoPicked(date, photo);
             }
 
@@ -102,11 +137,6 @@ public class LineChartPagerAdapter extends PagerAdapter {
         });
 
         // 紐付けられたキーワードを表示する
-//        List<TagDb> tagsOnTarget = DbUtils.selectTags(mContext, date);
-//        String tags = TagDb.join(mContext.getString(R.string.glue_join), tagsOnTarget);
-//        TextView tvKeywords = layout.findViewById(R.id.tv_keywords);
-//        mMapTvKeyword.put(date, tvKeywords);
-//        tvKeywords.setText(tags);
         mMapTvKeyword.put(date, (TextView) layout.findViewById(R.id.tv_keywords));
         notifyTagChanged(date);
 

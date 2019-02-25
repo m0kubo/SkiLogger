@@ -5,8 +5,12 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBar;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
@@ -33,6 +37,7 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     private ServiceMessenger mServiceMessenger;
 
     private SummaryChart mSummaryChart;
+    private ImageView mIvPhoto;
     private Uri mPhotoUri = null;
 
     private boolean mValueSelected = false;
@@ -91,6 +96,15 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
             actionBar.setDisplayShowHomeEnabled(true);
             actionBar.setIcon(R.drawable.ic_bar_chart);
         }
+        mIvPhoto = findViewById(R.id.iv_photo);
+        mIvPhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mPhotoUri != null) {
+                    UiUtils.intentActionView(BarChartActivity.this, mPhotoUri);
+                }
+            }
+        });
 
         BarChart barChart = findViewById(R.id.bar_chart);
         mSummaryChart = new SummaryChart(this, barChart, new OnChartValueSelectedListener() {
@@ -123,6 +137,8 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
     private void showValue(Entry entry) {
         mPhotoUri = null;
         String text = null;
+        int gravityPhoto = Gravity.NO_GRAVITY;
+
         if (entry != null) {
             Date date = mSummaryChart.getLogDate(entry.getX());
             text = getString(R.string.fmt_value_accumulate, MiscUtils.toDateString(date));
@@ -142,6 +158,14 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
                     if (photoList.size() >= 1) {
                         mPhotoUri = photoList.get(0);
                         text += getString(R.string.fmt_photo_count, photoList.size());
+
+                        BarChart chart = mSummaryChart.getChart();
+                        float visibleCountHalf = 4f;//(int)Math.ceil(chart.getVisibleXRange() / 2);
+                        if (entry.getX() >= visibleCountHalf && entry.getX() >= chart.getXChartMax() - visibleCountHalf) {
+                            gravityPhoto = Gravity.START;
+                        } else {
+                            gravityPhoto = Gravity.END;
+                        }
                     }
                 }
             }
@@ -152,6 +176,19 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
         } else {
             showTags(null);
         }
+
+        if (mPhotoUri != null) {
+            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams)mIvPhoto.getLayoutParams();
+            params.gravity = gravityPhoto;
+            mIvPhoto.setLayoutParams(params);
+            mIvPhoto.setVisibility(View.VISIBLE);
+            mIvPhoto.setImageBitmap(ContentsUtils.getThumbnail(this, mPhotoUri, MediaStore.Images.Thumbnails.MICRO_KIND));
+        } else {
+            // サムネイルを非表示
+            mIvPhoto.setVisibility(View.GONE);
+            mIvPhoto.setImageDrawable(null);
+        }
+
         UiUtils.setText(this, R.id.tv_chart_value, text);
         UiUtils.setEnabled(this, R.id.btn_detail, mPhotoUri != null);
     }

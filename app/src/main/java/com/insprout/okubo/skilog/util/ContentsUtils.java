@@ -52,6 +52,32 @@ public class ContentsUtils {
         }
     }
 
+
+    public static Bitmap getThumbnail(Context context, Uri uri, int kind) {
+        if (uri == null) return null;
+
+        Bitmap bitmap = null;
+        try {
+            long contentId = ContentUris.parseId(uri);
+            if (contentId >= 0) {
+                if (startsWith(uri, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)) {
+                    bitmap = MediaStore.Images.Thumbnails.getThumbnail(context.getContentResolver(), contentId, kind, null);
+                } else if (startsWith(uri, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)) {
+                    bitmap = MediaStore.Video.Thumbnails.getThumbnail(context.getContentResolver(), contentId, kind, null);
+                }
+            }
+            return bitmap;
+
+        } catch(SecurityException e) {
+            return null;
+        }
+    }
+
+    private static boolean startsWith(Uri uri1, Uri uri2) {
+        if (uri1 == null || uri2 == null) return false;
+        return uri1.toString().startsWith(uri2.toString() + "/");
+    }
+
     public static Date getDate(Context context, Uri contextUri) {
         ContentResolver resolver = context.getContentResolver();
         if (resolver == null) return null;
