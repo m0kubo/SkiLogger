@@ -87,7 +87,7 @@ public class BarChartActivity extends BaseActivity implements View.OnClickListen
 
     private void initView() {
         onInitialize();
-        UiUtils.setSelected(this, R.id.btn_chart2, true);
+        UiUtils.setVisibility(this, R.id.btn_chart2, View.GONE);
 
         // タイトルバーに backボタンを表示する
         ActionBar actionBar = getSupportActionBar();

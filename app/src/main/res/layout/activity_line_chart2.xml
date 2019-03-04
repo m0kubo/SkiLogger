@@ -41,45 +41,6 @@
 
     </FrameLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="bottom"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/btn_back"
-            android:src="@mipmap/ic_settings_white_48dp"
-            android:background="@drawable/bg_circle_medium"
-            style="@style/ActionButton" />
-        <ImageButton
-            android:id="@+id/btn_chart2"
-            android:src="@mipmap/ic_equalizer_white_36dp"
-            android:background="@drawable/bg_circle_medium"
-            style="@style/ActionButton" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
-
-        <ImageButton
-            android:id="@+id/btn_tag"
-            android:src="@mipmap/ic_search_white_48dp"
-            android:background="@drawable/bg_circle_medium"
-            style="@style/ActionButton" />
-
-        <ImageButton
-            android:id="@+id/btn_detail"
-            android:src="@mipmap/ic_collections_white_48dp"
-            android:background="@drawable/bg_circle_medium"
-            style="@style/ActionButton" />
-
-    </LinearLayout>
-
+    <include layout="@layout/inc_footer_chart" />
 
 </LinearLayout>

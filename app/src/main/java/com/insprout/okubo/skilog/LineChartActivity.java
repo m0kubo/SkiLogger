@@ -108,7 +108,7 @@ public class LineChartActivity extends BaseActivity implements View.OnClickListe
     }
 
     private void initView() {
-        UiUtils.setSelected(this, R.id.btn_chart1, true);
+        UiUtils.setVisibility(this, R.id.btn_chart1, View.GONE);
 
         // タイトル表示
         if (mFilter != null) {
