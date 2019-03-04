@@ -261,17 +261,17 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
                 .show();
     }
 
-    private void showPhotoViewDialog(List<Uri> photos) {
-        mPhotoList = photos;
-        if (photos != null && photos.size() > 0) {
-            new DialogUi.Builder(this)
-                    .setMessage(getString(R.string.fmt_photo_viewer, photos.size()))
-                    .setPositiveButton()
-                    .setNegativeButton()
-                    .setRequestCode(RC_DIALOG_PHOTO)
-                    .show();
-        }
-    }
+//    private void showPhotoViewDialog(List<Uri> photos) {
+//        mPhotoList = photos;
+//        if (photos != null && photos.size() > 0) {
+//            new DialogUi.Builder(this)
+//                    .setMessage(getString(R.string.fmt_photo_viewer, photos.size()))
+//                    .setPositiveButton()
+//                    .setNegativeButton()
+//                    .setRequestCode(RC_DIALOG_PHOTO)
+//                    .show();
+//        }
+//    }
 
     private void selectTagFromHistory() {
         List<TagDb> tagsCandidate = AppUtils.getTags(this, mTagsOnTarget);

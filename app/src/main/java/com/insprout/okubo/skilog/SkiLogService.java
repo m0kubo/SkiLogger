@@ -123,9 +123,9 @@ public class SkiLogService extends Service implements SensorEventListener {
      */
     private void setForegroundMode(Context context) {
         String title = getString(R.string.channel_altitude_service);
-//        String message = getString(R.string.msg_svc_ongoing);
-        SimpleDateFormat df = new SimpleDateFormat("MM/dd hh:mm", Locale.getDefault());
-        String message = getString(R.string.fmt_svc_ongoing, df.format(new Date(System.currentTimeMillis())));
+        String message = getString(R.string.msg_svc_ongoing);
+//        SimpleDateFormat df = new SimpleDateFormat("MM/dd hh:mm", Locale.getDefault());
+//        String message = getString(R.string.fmt_svc_ongoing, df.format(new Date(System.currentTimeMillis())));
         Notification.Builder builder;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

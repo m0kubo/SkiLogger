@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Ski Logger</string>
 
-    <string name="channel_altitude_service">高度記録サービス</string>
-    <!--<string name="msg_svc_ongoing">実行中</string>-->
-    <string name="fmt_svc_ongoing">開始 (%s)</string>
+    <string name="channel_altitude_service">現在高度</string>
+    <string name="msg_svc_ongoing">計測中</string>
+    <!--<string name="fmt_svc_ongoing">開始 (%s)</string>-->
 
     <string name="fmt_meter">　%,3.0fm</string>
     <string name="fmt_time">%d:%02d</string>
@@ -18,7 +18,7 @@
     <string name="fmt_title_chart2">シーズン %d</string>
     <string name="fmt_title_tag">検索：%s</string>
     <string name="fmt_menu_delete_logs">記録削除：%s</string>
-    <string name="fmt_photo_viewer">記録期間に撮影された写真が%d枚あります。\n表示しますか?</string>
+    <!--<string name="fmt_photo_viewer">記録期間に撮影された写真が%d枚あります。\n表示しますか?</string>-->
     <string name="msg_date_selected">データを選択しました。\n\n選択日の高度グラフ表示、キーワード設定、データ削除などが行えます。</string>
     <string name="fmt_toast_daily_chart">%sの高度グラフを表示します</string>
     <string name="fmt_count_summaries">データ件数:%d</string>
