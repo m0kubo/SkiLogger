@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Message;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBar;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -30,6 +29,8 @@ import com.insprout.okubo.skilog.util.UiUtils;
 
 import java.util.Date;
 import java.util.List;
+
+import androidx.appcompat.app.ActionBar;
 
 
 public class BarChartActivity extends BaseActivity implements View.OnClickListener, DialogUi.DialogEventListener {

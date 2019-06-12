@@ -16,18 +16,17 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Messenger;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import com.insprout.okubo.skilog.database.DbUtils;
 import com.insprout.okubo.skilog.model.SkiLogDb;
 import com.insprout.okubo.skilog.util.SensorUtils;
 import com.insprout.okubo.skilog.util.MiscUtils;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by okubo on 2018/01/25.

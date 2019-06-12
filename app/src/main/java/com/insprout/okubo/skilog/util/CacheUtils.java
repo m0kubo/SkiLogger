@@ -1,7 +1,10 @@
 package com.insprout.okubo.skilog.util;
 
 import android.graphics.Bitmap;
-import android.support.v4.util.LruCache;
+
+import androidx.annotation.NonNull;
+import androidx.collection.LruCache;
+
 
 public class CacheUtils {
     private static LruCache<String, Bitmap> mImageCache = null;
@@ -11,7 +14,7 @@ public class CacheUtils {
         int cacheSize = (int)Runtime.getRuntime().maxMemory() / 8;
         mImageCache = new LruCache<String, Bitmap>(cacheSize) {
             @Override
-            protected int sizeOf(String key, Bitmap value) {
+            protected int sizeOf(@NonNull String key, @NonNull Bitmap value) {
                 return value.getRowBytes() * value.getHeight();
             }
         };
