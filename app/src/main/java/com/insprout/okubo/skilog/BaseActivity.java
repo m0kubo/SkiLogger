@@ -154,21 +154,18 @@ public class BaseActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         // 削除メニューの状態を設定
-        MenuItem menuSubject = menu.findItem(R.id.menu_target_date);
-        menuSubject.setVisible(true);
-        //mTargetDate = mChartPagerAdapter.getSelectedDate(mViewPager.getCurrentItem());
         mTargetDate = getTargetDate();
         if (mTargetDate != null) {
-            menuSubject.setTitle(getString(R.string.menu_targeted_fmt, AppUtils.toDateString(mTargetDate)));
+            UiUtils.setTitle(menu, R.id.menu_target_date, getString(R.string.menu_targeted_fmt, AppUtils.toDateString(mTargetDate)));
             mTagsOnTarget = DbUtils.selectTags(this, mTargetDate);
 
         } else {
-            menuSubject.setTitle(R.string.menu_not_targeted);
+            UiUtils.setTitle(menu, R.id.menu_target_date, R.string.menu_not_targeted);
             mTagsOnTarget = null;
         }
-        menu.findItem(R.id.menu_delete_logs).setEnabled(mTargetDate != null);
-        menu.findItem(R.id.menu_list_tags).setEnabled(mTagsOnTarget != null && !mTagsOnTarget.isEmpty());
-        menu.findItem(R.id.menu_add_tags).setEnabled(mTargetDate != null);
+        UiUtils.setEnabled(menu, R.id.menu_delete_logs, (mTargetDate != null));
+        UiUtils.setEnabled(menu, R.id.menu_list_tags, (mTagsOnTarget != null && !mTagsOnTarget.isEmpty()));
+        UiUtils.setEnabled(menu, R.id.menu_add_tags, (mTargetDate != null));
         return true;
     }
 

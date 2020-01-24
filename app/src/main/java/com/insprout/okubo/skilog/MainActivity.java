@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
@@ -228,6 +229,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        // 各オプションメニューの有効無効を設定する
+        File exportFolder = getExportRoot();
+        boolean isFolderExist = (exportFolder.exists() && exportFolder.isDirectory());
+        boolean isWritable = SdkUtils.isExternalStorageWritable();
+        boolean isReadable = SdkUtils.isExternalStorageReadable();
+        UiUtils.setEnabled(menu, R.id.menu_export_data, isWritable);
+        UiUtils.setEnabled(menu, R.id.menu_import_data, isReadable && isFolderExist);
+        UiUtils.setEnabled(menu, R.id.menu_delete_data, isWritable && isFolderExist);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.menu_change_theme:
@@ -249,7 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 return true;
 
             case R.id.menu_import_data:
-                if (SdkUtils.requestRuntimePermissions(this, Const.PERMISSIONS_EXPORT, RC_DATA_EXPORT)) {
+                if (SdkUtils.requestRuntimePermissions(this, Const.PERMISSIONS_EXPORT, RC_DATA_IMPORT)) {
                     // 権限がない場合、続きは onRequestPermissionsResult()から継続
                     showImportDialog();
                 }
@@ -357,8 +371,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    @SuppressWarnings("deprecation")
     private File getExportRoot() {
-        return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), Const.APP_FOLDER_NAME);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return new File(getExternalFilesDir(null), Const.LOG_FOLDER_NAME);
+        } else {
+            return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), Const.APP_FOLDER_NAME);
+        }
     }
 
     private File newBackupFolder() {
@@ -522,6 +541,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case RC_DATA_EXPORT:
                 if (SdkUtils.isGranted(grantResults)) {
                     showExportDialog();
+                }
+                break;
+
+            case RC_DATA_IMPORT:
+                if (SdkUtils.isGranted(grantResults)) {
+                    showImportDialog();
                 }
                 break;
 

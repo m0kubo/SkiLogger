@@ -21,9 +21,10 @@ public class Const {
     public final static String EXTRA_PARAM2 = "extra.PARAM_2";
 
     public final static String APP_FOLDER_NAME = "SkiLogger";
+    public final static String LOG_FOLDER_NAME = "logs";
     public final static String FILENAME_LOGS_CSV = "logs.csv";
     public final static String FILENAME_TAGS_CSV = "tags.csv";
-    public final static String DATE_FORMAT_EXPORT_FOLDER = "yyyy-MM-dd HH-mm-ss SSS";
+    public final static String DATE_FORMAT_EXPORT_FOLDER = "yyyy-MM-dd_HH-mm-ss_SSS";
 
 
     @SuppressLint("InlinedApi")

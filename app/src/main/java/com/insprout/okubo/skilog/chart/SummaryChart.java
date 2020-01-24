@@ -1,7 +1,6 @@
 package com.insprout.okubo.skilog.chart;
 
 import android.content.Context;
-import android.util.TypedValue;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.Chart;
@@ -68,10 +67,7 @@ public class SummaryChart {
 
     private void initVars() {
         // テーマ切り替えに対応するため、フォアグランド色はテーマから取得する
-        TypedValue typedValue = new TypedValue();
-        mContext.getTheme().resolveAttribute(android.R.attr.colorForeground, typedValue, true);
-        mColorForeground = SdkUtils.getColor(mContext, typedValue.resourceId);
-
+        mColorForeground = SdkUtils.getAttributeColor(mContext, android.R.attr.colorForeground);
         mThisSeasonFrom = getStartDateOfSeason(new Date(System.currentTimeMillis()));
         mDateFormat = new SimpleDateFormat("MM/dd", Locale.getDefault());
 

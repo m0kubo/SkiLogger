@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.DashPathEffect;
 import android.graphics.RectF;
 import android.net.Uri;
-import android.util.TypedValue;
 
 import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -82,10 +81,7 @@ public class AltitudeChart {
     private void initVars() {
 
         // チャートの色/ラベルを設定
-        TypedValue typedValue = new TypedValue();
-        mContext.getTheme().resolveAttribute(android.R.attr.colorForeground, typedValue, true);
-        mColorForeground = SdkUtils.getColor(mContext, typedValue.resourceId);
-
+        mColorForeground = SdkUtils.getAttributeColor(mContext, android.R.attr.colorForeground);
         mColor = SdkUtils.getColor(mContext, R.color.colorAltitude);
         mColorPhoto = SdkUtils.getColor(mContext, R.color.orange);
         mChartLabel11 = mContext.getString(R.string.label_altitude);

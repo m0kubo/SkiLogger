@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.text.Spanned;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -71,6 +73,39 @@ public class UiUtils {
         }
         return true;
     }
+
+
+    //
+    // Menu系
+    //
+
+    public static void setEnabled(Menu menu, int id, boolean enabled) {
+        if (menu != null) {
+            MenuItem item = menu.findItem(id);
+            if (item != null) {
+                item.setEnabled(enabled);
+            }
+        }
+    }
+
+    public static void setTitle(Menu menu, int id, CharSequence text) {
+        if (menu != null) {
+            MenuItem item = menu.findItem(id);
+            if (item != null) {
+                item.setTitle(text);
+            }
+        }
+    }
+
+    public static void setTitle(Menu menu, int id, int resourceId) {
+        if (menu != null) {
+            MenuItem item = menu.findItem(id);
+            if (item != null) {
+                item.setTitle(resourceId);
+            }
+        }
+    }
+
 
     /**
      * ViewのBitmapを返す。Bitmapは不要になったら呼び出し側で recycle()を実行し

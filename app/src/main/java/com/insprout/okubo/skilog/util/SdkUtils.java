@@ -8,9 +8,11 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.text.Html;
 import android.text.Spanned;
+import android.util.TypedValue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -204,6 +206,44 @@ public class SdkUtils {
             // API level 24以降では 非推奨
             return Html.fromHtml(htmlText);
         }
+    }
+
+    /**
+     * 現在のテーマから、指定された属性IDの リソースIDを取り出す
+     * @param context コンテキスト
+     * @param attributeId 取得するColorの属性リソースID
+     * @return 取得されたColor値
+     */
+    public static int getAttributeResourceId(Context context, int attributeId) {
+        TypedValue outValue = new TypedValue();
+        context.getTheme().resolveAttribute(attributeId, outValue, true);
+        return outValue.resourceId;
+    }
+
+    /**
+     * 現在のテーマから、指定された属性IDの Color値を取り出す
+     * @param context コンテキスト
+     * @param attributeId 取得するColorの属性リソースID
+     * @return 取得されたColor値
+     */
+    public static int getAttributeColor(Context context, int attributeId) {
+        TypedValue outValue = new TypedValue();
+        context.getTheme().resolveAttribute(attributeId, outValue, true);
+        return outValue.data;
+    }
+
+
+    /* Checks if external storage is available for read and write */
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state);
+    }
+
+    /* Checks if external storage is available to at least read */
+    public static boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        return Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
     }
 
 }

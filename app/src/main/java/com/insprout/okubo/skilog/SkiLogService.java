@@ -242,6 +242,7 @@ public class SkiLogService extends Service implements SensorEventListener {
     private final static float INVALID_ALTITUDE = -99999.9f;
     private final static float THRESHOLD_ALTITUDE = 5.0f;
     private final static float THRESHOLD_LIFT_COUNT = 50.0f;
+    private final static int AVERAGE_DURATION = 5000;       // 高度の平均をとる間隔 (5000ミリ秒 = 5秒)
 
     private final static float VALID_MAX_PRESSURE = 1150.0f;        // 気圧センサーが不正な値を計測してしまう件の対応
 
@@ -253,6 +254,10 @@ public class SkiLogService extends Service implements SensorEventListener {
     private long mRecordTime = System.currentTimeMillis();
     private int mRunCount = 0;
     private int mLiftDelta = 0;
+
+    private long mTimeForAverage = 0;
+    private float mSumForAverage = 0.0f;
+    private int mCountForAverage = 0;
 
 
     @Override
@@ -267,9 +272,6 @@ public class SkiLogService extends Service implements SensorEventListener {
                 return;
             }
 
-            // 取得した気圧をログに出力する
-            float altitude = SensorUtils.getAltitude(val[0]);
-//            Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");
 
             if (!MiscUtils.getDate(mRecordTime).equals(MiscUtils.getDate(System.currentTimeMillis()))) {
                 // 日付が変わった場合は 値をリセットする
@@ -281,8 +283,26 @@ public class SkiLogService extends Service implements SensorEventListener {
                 mLiftDelta = 0;
                 mRecordTime = System.currentTimeMillis();
             }
-            //
-            logAltitude(altitude);
+
+            // 取得した気圧をログに出力する
+            float altitude = SensorUtils.getAltitude(val[0]);
+//            Log.d("pressure", "高度=" + altitude + "ｍ 気圧=" + val[0] + "hPa");
+            // pixel3だと 気圧の値が跳ねやすいので、高度をそのまま使用せず5秒間隔で平均値をとり、それを記録する
+            long timeAverage = (System.currentTimeMillis() / AVERAGE_DURATION) * AVERAGE_DURATION;
+            if (timeAverage != mTimeForAverage) {
+                if (mCountForAverage >= 1) {
+                    // 前5秒での記録があれば、その平均高度で記録を行う
+                    logAltitude(mSumForAverage / mCountForAverage, mTimeForAverage);
+                }
+                // 今回の高度を記録しておく
+                mTimeForAverage = timeAverage;
+                mCountForAverage = 1;
+                mSumForAverage = altitude;
+
+            } else {
+                mCountForAverage++;
+                mSumForAverage += altitude;
+            }
         }
     }
 
@@ -290,15 +310,16 @@ public class SkiLogService extends Service implements SensorEventListener {
     public void onAccuracyChanged(Sensor sensor, int i) {
     }
 
+
     // 高度を記録する
-    private void logAltitude(float altitude) {
+    private void logAltitude(float altitude, long time) {
         long recordedTime = -1;
 
         // 上昇累積/下降累積 算出
         if (mPrevAltitude == INVALID_ALTITUDE) {
             // 初回
             mPrevAltitude = altitude;
-            recordedTime = recordLog(altitude);
+            recordedTime = recordLog(altitude, time);
 
         } else {
             float delta = altitude - mPrevAltitude;             // 高度差分
@@ -306,13 +327,13 @@ public class SkiLogService extends Service implements SensorEventListener {
                 // 閾値以上に 登った
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalAsc += delta;                             // 登った高度を積算
-                recordedTime = recordLog(altitude);
+                recordedTime = recordLog(altitude, time);
 
             } else if (delta <= -THRESHOLD_ALTITUDE) {
                 // 閾値以上に 降りた
                 mPrevAltitude = altitude;                       // 高度を記録
                 mTotalDesc += delta;                            // 降りた高度を積算 (下降分は負の値)
-                recordedTime = recordLog(altitude);
+                recordedTime = recordLog(altitude, time);
             }
         }
 
@@ -330,7 +351,7 @@ public class SkiLogService extends Service implements SensorEventListener {
                 mLiftAltitude = altitude;                       // リフト最低地点(乗車高度用)を記録
                 mLiftDelta = delta;                             // 下降中(負の値)
 
-                recordedTime = recordLog(altitude);
+                recordedTime = recordLog(altitude, time);
 
             } else if (delta >= THRESHOLD_LIFT_COUNT && mLiftDelta <= 0) {
                 // 閾値以上に 登った
@@ -352,10 +373,24 @@ public class SkiLogService extends Service implements SensorEventListener {
     }
 
 
-    private long recordLog(float altitude) {
-        mRecordTime = System.currentTimeMillis();
+    // 現在時刻で DBに insert
+//    private long recordLog(float altitude) {
+//        mRecordTime = System.currentTimeMillis();
+//
+//        long id = DbUtils.insertLog(this, new SkiLogDb(altitude, mTotalAsc, mTotalDesc, mRunCount));
+//        if (id <= 0) {
+//            Log.e(TAG, "DB error: fail to insert");
+//            return -1;
+//        }
+//
+//        return mRecordTime;
+//    }
 
-        long id = DbUtils.insertLog(this, new SkiLogDb(altitude, mTotalAsc, mTotalDesc, mRunCount));
+    // 指定時刻で DBに insert
+    private long recordLog(float altitude, long recordTime) {
+        mRecordTime = recordTime;
+
+        long id = DbUtils.insertLog(this, new SkiLogDb(0, altitude, mTotalAsc, mTotalDesc, mRunCount, new Date(recordTime)));
         if (id <= 0) {
             Log.e(TAG, "DB error: fail to insert");
             return -1;
